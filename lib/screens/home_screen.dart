@@ -1310,27 +1310,8 @@ class _AvailableCategoryStatus extends StatelessWidget {
       height: 48,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFFFA512),
-            Color(0xFFFF7900),
-            Color(0xFFFF4B00),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFFF8A00),
-          width: 1.2,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x55FF6500),
-            blurRadius: 10,
-            spreadRadius: 0.5,
-          ),
-        ],
+        color: const Color(0xFFFE5E02),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         'PLAY',
@@ -1338,7 +1319,9 @@ class _AvailableCategoryStatus extends StatelessWidget {
         style: AppTextStyles.label.copyWith(
           color: AppColors.white,
           fontSize: 15,
+          fontWeight: FontWeight.w800,
           letterSpacing: 0.2,
+          height: 1,
         ),
       ),
     );

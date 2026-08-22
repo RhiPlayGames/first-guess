@@ -62,6 +62,8 @@ class _BooksAuthorsSubcategoryScreenState
       'Fictional Literary Locations',
       Icons.castle_rounded,
       firebaseKey: 'fictional_literary_locations',
+      imagePath:
+          'assets/images/categories/subcategories/books_authors/fictional_literary_locations.webp',
     ),
     _BooksAuthorsSubcategory(
       'Opening Lines & Quotations',
@@ -561,12 +563,12 @@ class _BooksAuthorsCard extends StatelessWidget {
               const SizedBox(width: 12),
               SubcategoryStatusBadge(
                 text: SubcategoryProgressStatus.resolve(
-                    isAvailable: isAvailable,
-                    playedQuestions: playedQuestions,
-                    totalQuestions: totalQuestions,
-                    hadPreviouslyCompleted:
-                        hadPreviouslyCompleted,
-                  ).ctaLabel,
+                  isAvailable: isAvailable,
+                  playedQuestions: playedQuestions,
+                  totalQuestions: totalQuestions,
+                  hadPreviouslyCompleted:
+                      hadPreviouslyCompleted,
+                ).ctaLabel,
                 color: isAvailable
                     ? AppColors.orange
                     : AppColors.white,

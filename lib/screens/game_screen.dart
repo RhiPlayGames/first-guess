@@ -4,9 +4,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../author_data.dart';
-import '../flag_data.dart';
-import '../game_data.dart';
 import '../models/quiz_item.dart';
 import '../services/firebase_challenge_service.dart';
 import '../services/player_stats_service.dart';
@@ -45,38 +42,6 @@ class GameScreen extends StatefulWidget {
   final QuizItem? initialItem;
   final bool launchedFromSurpriseMe;
   final bool showSurpriseToast;
-
-  const GameScreen({
-    super.key,
-    this.initialItem,
-    this.launchedFromSurpriseMe = false,
-    this.showSurpriseToast = false,
-  })  : gameType = QuizGameType.countries,
-        items = countries;
-
-  const GameScreen.countries({
-    super.key,
-    this.initialItem,
-    this.launchedFromSurpriseMe = false,
-    this.showSurpriseToast = false,
-  })  : gameType = QuizGameType.countries,
-        items = countries;
-
-  const GameScreen.flags({
-    super.key,
-    this.initialItem,
-    this.launchedFromSurpriseMe = false,
-    this.showSurpriseToast = false,
-  })  : gameType = QuizGameType.flags,
-        items = flags;
-
-  const GameScreen.authors({
-    super.key,
-    this.initialItem,
-    this.launchedFromSurpriseMe = false,
-    this.showSurpriseToast = false,
-  })  : gameType = QuizGameType.authors,
-        items = authors;
 
   const GameScreen.capitalCities({
     super.key,

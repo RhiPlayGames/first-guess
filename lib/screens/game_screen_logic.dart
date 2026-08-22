@@ -701,13 +701,13 @@ extension _GameScreenLogic on _GameScreenState {
               ? 'FIRST GUESS!'
               : 'CORRECT!',
       message: isReplay
-          ? 'You identified ${currentItem.answer}'
+          ? 'You identified ${currentItem.answer.toUpperCase()}'
           : wasFirstGuess
-              ? 'You identified ${currentItem.answer}\n\n'
+              ? 'You identified ${currentItem.answer.toUpperCase()}\n\n'
                   '$pointsAvailable XP\n'
                   '$firstGuessBonus XP First Guess Bonus\n\n'
                   '$pointsWon XP TOTAL'
-              : 'You identified ${currentItem.answer}\n\n'
+              : 'You identified ${currentItem.answer.toUpperCase()}\n\n'
                   '$pointsWon XP',
       icon: !isReplay && wasFirstGuess
           ? Icons.looks_one
