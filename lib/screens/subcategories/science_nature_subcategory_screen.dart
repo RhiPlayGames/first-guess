@@ -1,0 +1,572 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+
+import '../../services/firebase_challenge_service.dart';
+import '../../services/player_stats_service.dart';
+import '../../services/subcategory_progress_status.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_text_styles.dart';
+import '../../widgets/app_home_button.dart';
+import '../../widgets/subcategory_status_badge.dart';
+import '../../widgets/stats_panel.dart';
+import '../game_screen.dart';
+
+class ScienceNatureSubcategoryScreen extends StatefulWidget {
+  const ScienceNatureSubcategoryScreen({super.key});
+
+  @override
+  State<ScienceNatureSubcategoryScreen> createState() =>
+      _ScienceNatureSubcategoryScreenState();
+}
+
+class _ScienceNatureSubcategoryScreenState
+    extends State<ScienceNatureSubcategoryScreen> {
+  static const List<_ScienceNatureSubcategory> _items =
+      <_ScienceNatureSubcategory>[
+    _ScienceNatureSubcategory(
+      'Planets, Moons, Stars & Constellations',
+      Icons.public_rounded,
+      firebaseKey: 'planets_moons_stars_constellations',
+    ),
+    _ScienceNatureSubcategory(
+      'Space Missions',
+      Icons.rocket_launch_rounded,
+      firebaseKey: 'space_missions',
+    ),
+    _ScienceNatureSubcategory(
+      'Periodic Table',
+      Icons.science_rounded,
+      firebaseKey: 'chemical_elements_periodic_table',
+    ),
+    _ScienceNatureSubcategory(
+      'Chemistry, Physics & Biology',
+      Icons.functions_rounded,
+      firebaseKey: 'chemistry_physics_biology_maths',
+    ),
+    _ScienceNatureSubcategory(
+      'The Human Body',
+      Icons.favorite_rounded,
+      firebaseKey: 'human_body',
+    ),
+    _ScienceNatureSubcategory(
+      'Medicine & Health',
+      Icons.medical_services_rounded,
+      firebaseKey: 'medicine_health',
+    ),
+    _ScienceNatureSubcategory(
+      'Plants & Trees',
+      Icons.park_rounded,
+      firebaseKey: 'plants_trees',
+    ),
+    _ScienceNatureSubcategory(
+      'Weather, Oceans & Ecosystems',
+      Icons.waves_rounded,
+      firebaseKey: 'weather_oceans_ecosystems',
+    ),
+    _ScienceNatureSubcategory(
+      'Rocks, Minerals & Volcanoes',
+      Icons.terrain_rounded,
+      firebaseKey: 'rocks_minerals_volcanoes',
+    ),
+    _ScienceNatureSubcategory(
+      'Inventions & Technology',
+      Icons.lightbulb_rounded,
+      firebaseKey: 'inventions_technology',
+    ),
+    _ScienceNatureSubcategory(
+      'Computers & the Internet',
+      Icons.computer_rounded,
+      firebaseKey: 'computers_internet',
+    ),
+    _ScienceNatureSubcategory(
+      'Scientific Discoveries, Experiments & Theories',
+      Icons.biotech_rounded,
+      firebaseKey: 'scientific_discoveries_experiments_theories',
+    ),
+  ];
+
+  Set<String> _liveFirebaseSubcategories = <String>{};
+  Map<String, int> _liveQuestionCounts = <String, int>{};
+  Map<String, Set<String>> _liveQuestionIds = <String, Set<String>>{};
+  Map<String, int> _playedQuestionCounts = <String, int>{};
+  Map<String, int> _completedQuestionTotals = <String, int>{};
+
+  PlayerStats _playerStats = const PlayerStats();
+  bool _statsLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshSubcategoryProgress();
+  }
+
+  Future<void> _loadPlayerStats() async {
+    final PlayerStats savedStats =
+        await PlayerStatsService.loadStats();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _playerStats = savedStats;
+      _statsLoaded = true;
+    });
+  }
+
+  Future<void> _refreshSubcategoryProgress() async {
+    await _loadPlayerStats();
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadFirebaseSubcategoryAvailability();
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadPlayedQuestionCounts();
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadAndUpdateCompletionSnapshots();
+  }
+
+  Future<void> _loadPlayedQuestionCounts() async {
+    final Set<String> playedIds =
+        await QuestionHistoryService.loadPlayedQuestionIds();
+
+    if (!mounted) {
+      return;
+    }
+
+    final Map<String, int> counts = <String, int>{};
+
+    for (final _ScienceNatureSubcategory item in _items) {
+      final Set<String> liveIds =
+          _liveQuestionIds[item.firebaseKey] ?? <String>{};
+
+      counts[item.firebaseKey] =
+          liveIds.where(playedIds.contains).length;
+    }
+
+    setState(() {
+      _playedQuestionCounts = counts;
+    });
+  }
+
+  Future<void> _loadAndUpdateCompletionSnapshots() async {
+    final Map<String, int> savedCompletedTotals =
+        await SubcategoryCompletionHistoryService
+            .loadCompletedTotals(
+      category: 'science_nature',
+      subcategories:
+          _items.map((item) => item.firebaseKey),
+    );
+
+    final Map<String, int> updatedCompletedTotals =
+        Map<String, int>.from(savedCompletedTotals);
+
+    for (final _ScienceNatureSubcategory item in _items) {
+      final int totalQuestions =
+          _liveQuestionCounts[item.firebaseKey] ?? 0;
+      final int playedQuestions =
+          _playedQuestionCounts[item.firebaseKey] ?? 0;
+
+      if (totalQuestions > 0 &&
+          playedQuestions >= totalQuestions) {
+        await SubcategoryCompletionHistoryService
+            .recordCompletion(
+          category: 'science_nature',
+          subcategory: item.firebaseKey,
+          totalQuestions: totalQuestions,
+        );
+
+        updatedCompletedTotals[item.firebaseKey] =
+            totalQuestions;
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _completedQuestionTotals =
+          updatedCompletedTotals;
+    });
+  }
+
+  Future<void> _loadFirebaseSubcategoryAvailability() async {
+    try {
+      final List<Future<QuerySnapshot<Map<String, dynamic>>>> checks =
+          _items.map((_ScienceNatureSubcategory item) {
+        return FirebaseFirestore.instance
+            .collection('challenges')
+            .where('category', isEqualTo: 'science_nature')
+            .where('subcategory', isEqualTo: item.firebaseKey)
+            .where('status', isEqualTo: 'live')
+            .get();
+      }).toList();
+
+      final List<QuerySnapshot<Map<String, dynamic>>> results =
+          await Future.wait(checks);
+
+      if (!mounted) {
+        return;
+      }
+
+      final Set<String> liveSubcategories = <String>{};
+      final Map<String, int> liveQuestionCounts = <String, int>{};
+      final Map<String, Set<String>> liveQuestionIds =
+          <String, Set<String>>{};
+
+      for (int i = 0; i < _items.length; i++) {
+        final String firebaseKey = _items[i].firebaseKey;
+        final Set<String> ids = results[i].docs
+            .map((doc) => doc.id)
+            .toSet();
+
+        liveQuestionIds[firebaseKey] = ids;
+        liveQuestionCounts[firebaseKey] = ids.length;
+
+        if (ids.isNotEmpty) {
+          liveSubcategories.add(firebaseKey);
+        }
+      }
+
+      setState(() {
+        _liveFirebaseSubcategories = liveSubcategories;
+        _liveQuestionCounts = liveQuestionCounts;
+        _liveQuestionIds = liveQuestionIds;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _liveFirebaseSubcategories = <String>{};
+        _liveQuestionCounts = <String, int>{};
+        _liveQuestionIds = <String, Set<String>>{};
+      });
+    }
+  }
+
+  Future<void> _openSubcategory(
+    _ScienceNatureSubcategory item,
+  ) async {
+    if (!_liveFirebaseSubcategories.contains(item.firebaseKey)) {
+      return;
+    }
+
+    try {
+      final items =
+          await FirebaseChallengeService.loadLiveSubcategory(
+        category: 'science_nature',
+        subcategory: item.firebaseKey,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (items.isEmpty) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior: SnackBarBehavior.floating,
+              content: Text(
+                'No live ${item.title} questions were found.',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+        return;
+      }
+
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => GameScreen.firebaseDynamic(
+            items: items,
+            launchedFromSurpriseMe: false,
+            showSurpriseToast: false,
+          ),
+        ),
+      );
+
+      if (mounted) {
+        await _refreshSubcategoryProgress();
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.panel,
+            behavior: SnackBarBehavior.floating,
+            content: Text(
+              '${item.title} could not be loaded from Firebase.',
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const _Header(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+              child: StatsPanel(
+                totalScore:
+                    _statsLoaded ? _playerStats.totalScore : 0,
+                currentStreak:
+                    _statsLoaded ? _playerStats.currentStreak : 0,
+                firstGuesses:
+                    _statsLoaded ? _playerStats.firstGuesses : 0,
+                gamesPlayed:
+                    _statsLoaded ? _playerStats.gamesPlayed : 0,
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+                itemCount: _items.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final _ScienceNatureSubcategory item =
+                      _items[index];
+
+                  final bool isAvailable =
+                      _liveFirebaseSubcategories
+                          .contains(item.firebaseKey);
+
+                  final int totalQuestions =
+                      _liveQuestionCounts[item.firebaseKey] ?? 0;
+
+                  final int playedQuestions =
+                      _playedQuestionCounts[item.firebaseKey] ?? 0;
+
+                  final int completedTotal =
+                      _completedQuestionTotals[item.firebaseKey] ?? 0;
+
+                  final bool hadPreviouslyCompleted =
+                      SubcategoryCompletionHistoryService
+                          .hasNewQuestionsSinceCompletion(
+                    completedTotal: completedTotal,
+                    playedQuestions: playedQuestions,
+                    totalQuestions: totalQuestions,
+                  );
+
+                  return _ScienceNatureCard(
+                    item: item,
+                    isAvailable: isAvailable,
+                    totalQuestions: totalQuestions,
+                    playedQuestions: playedQuestions,
+                    hadPreviouslyCompleted:
+                        hadPreviouslyCompleted,
+                    onTap: () => _openSubcategory(item),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+      child: Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: 74,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Center(
+                  child: Text(
+                    'SCIENCE & NATURE',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.category.copyWith(
+                      color: AppColors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.45,
+                    ),
+                  ),
+                ),
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: FirstGuessHomeButton(),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            'Choose a subcategory to start playing',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScienceNatureCard extends StatelessWidget {
+  const _ScienceNatureCard({
+    required this.item,
+    required this.isAvailable,
+    required this.totalQuestions,
+    required this.playedQuestions,
+    required this.hadPreviouslyCompleted,
+    required this.onTap,
+  });
+
+  final _ScienceNatureSubcategory item;
+  final bool isAvailable;
+  final int totalQuestions;
+  final int playedQuestions;
+  final bool hadPreviouslyCompleted;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: isAvailable ? onTap : null,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          padding: const EdgeInsets.fromLTRB(12, 13, 12, 13),
+          decoration: BoxDecoration(
+            color: AppColors.panel,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color:
+                  isAvailable ? AppColors.orange : AppColors.darkGrey,
+              width: isAvailable ? 1.4 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.orange,
+                    width: 1.2,
+                  ),
+                ),
+                child: Icon(
+                  item.icon,
+                  color: AppColors.orange,
+                  size: 36,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.category.copyWith(
+                        color: AppColors.white,
+                        fontSize: 18.5,
+                        fontWeight: FontWeight.w600,
+                        height: 1.08,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      '${playedQuestions > totalQuestions ? totalQuestions : playedQuestions} of $totalQuestions played',
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.white,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              SubcategoryStatusBadge(
+                text: SubcategoryProgressStatus.resolve(
+                    isAvailable: isAvailable,
+                    playedQuestions: playedQuestions,
+                    totalQuestions: totalQuestions,
+                    hadPreviouslyCompleted:
+                        hadPreviouslyCompleted,
+                  ).ctaLabel,
+                color: isAvailable
+                    ? AppColors.orange
+                    : AppColors.white,
+                filled: isAvailable,
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ScienceNatureSubcategory {
+  const _ScienceNatureSubcategory(
+    this.title,
+    this.icon, {
+    required this.firebaseKey,
+  });
+
+  final String title;
+  final IconData icon;
+  final String firebaseKey;
+}

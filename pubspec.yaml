@@ -1,0 +1,69 @@
+name: first_guess
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.12.2 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.5.5
+  auto_size_text: ^3.0.0
+  cloud_firestore: ^6.8.0
+  firebase_core: ^4.13.0
+  firebase_auth: ^6.2.0
+  firebase_storage: ^13.4.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/images/flags/
+    - assets/images/authors/
+    - assets/images/categories/
+    - assets/images/categories/countries/capitals/
+    - assets/images/categories/countries/major_cities/
+    - assets/images/categories/countries/country_silhouettes/
+    - assets/images/categories/subcategories/countries/
+    - assets/images/stats/
+    - assets/images/daily_flash5/
+    - assets/images/daily_flash5/challenges/planets/
+    - assets/images/case_files/topics/
+    - assets/images/case_paths/animal_kingdom/
+    - assets/images/stats/tiers/
+    - assets/images/stats/my_stats/
+    - assets/images/leaderboard/
+    - assets/images/leaderboard/league_badges/
+    - assets/images/avatars/
+    - assets/images/case_files/
+    - assets/images/categories/countries/currencies_languages/
+    - assets/images/categories/animals/birds/
+    - assets/images/ui/popups/
+    - assets/images/categories/food_drink/icons/
+    - assets/images/categories/subcategories/animals/
+    - assets/images/categories/subcategories/books_authors/
+
+  fonts:
+    - family: Oswald
+      fonts:
+        - asset: assets/fonts/Oswald-Medium.ttf
+          weight: 500
+
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter_24pt-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter_24pt-Medium.ttf
+          weight: 500
