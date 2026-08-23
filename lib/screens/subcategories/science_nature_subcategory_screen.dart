@@ -24,7 +24,7 @@ class _ScienceNatureSubcategoryScreenState
   static const List<_ScienceNatureSubcategory> _items =
       <_ScienceNatureSubcategory>[
     _ScienceNatureSubcategory(
-      'Planets, Moons, Stars & Constellations',
+      'Space & Astronomy',
       Icons.public_rounded,
       firebaseKey: 'planets_moons_stars_constellations',
     ),
@@ -36,7 +36,7 @@ class _ScienceNatureSubcategoryScreenState
     _ScienceNatureSubcategory(
       'Periodic Table',
       Icons.science_rounded,
-      firebaseKey: 'chemical_elements_periodic_table',
+      firebaseKey: 'periodic_table',
     ),
     _ScienceNatureSubcategory(
       'Chemistry, Physics & Biology',
@@ -227,9 +227,9 @@ class _ScienceNatureSubcategoryScreenState
 
       for (int i = 0; i < _items.length; i++) {
         final String firebaseKey = _items[i].firebaseKey;
-        final Set<String> ids = results[i].docs
-            .map((doc) => doc.id)
-            .toSet();
+
+        final Set<String> ids =
+            results[i].docs.map((doc) => doc.id).toSet();
 
         liveQuestionIds[firebaseKey] = ids;
         liveQuestionCounts[firebaseKey] = ids.length;
@@ -244,7 +244,14 @@ class _ScienceNatureSubcategoryScreenState
         _liveQuestionCounts = liveQuestionCounts;
         _liveQuestionIds = liveQuestionIds;
       });
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint(
+        'SCIENCE & NATURE FIREBASE ERROR: $error',
+      );
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
       if (!mounted) {
         return;
       }
@@ -297,7 +304,8 @@ class _ScienceNatureSubcategoryScreenState
 
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (context) => GameScreen.firebaseDynamic(
+          builder: (context) =>
+              GameScreen.firebaseDynamic(
             items: items,
             launchedFromSurpriseMe: false,
             showSurpriseToast: false,
@@ -308,7 +316,14 @@ class _ScienceNatureSubcategoryScreenState
       if (mounted) {
         await _refreshSubcategoryProgress();
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint(
+        'SCIENCE & NATURE OPEN ERROR: $error',
+      );
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
       if (!mounted) {
         return;
       }
@@ -341,21 +356,39 @@ class _ScienceNatureSubcategoryScreenState
           children: [
             const _Header(),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+              padding: const EdgeInsets.fromLTRB(
+                16,
+                0,
+                16,
+                14,
+              ),
               child: StatsPanel(
                 totalScore:
-                    _statsLoaded ? _playerStats.totalScore : 0,
+                    _statsLoaded
+                        ? _playerStats.totalScore
+                        : 0,
                 currentStreak:
-                    _statsLoaded ? _playerStats.currentStreak : 0,
+                    _statsLoaded
+                        ? _playerStats.currentStreak
+                        : 0,
                 firstGuesses:
-                    _statsLoaded ? _playerStats.firstGuesses : 0,
+                    _statsLoaded
+                        ? _playerStats.firstGuesses
+                        : 0,
                 gamesPlayed:
-                    _statsLoaded ? _playerStats.gamesPlayed : 0,
+                    _statsLoaded
+                        ? _playerStats.gamesPlayed
+                        : 0,
               ),
             ),
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  4,
+                  16,
+                  28,
+                ),
                 itemCount: _items.length,
                 separatorBuilder: (_, _) =>
                     const SizedBox(height: 10),
@@ -368,13 +401,22 @@ class _ScienceNatureSubcategoryScreenState
                           .contains(item.firebaseKey);
 
                   final int totalQuestions =
-                      _liveQuestionCounts[item.firebaseKey] ?? 0;
+                      _liveQuestionCounts[
+                            item.firebaseKey
+                          ] ??
+                          0;
 
                   final int playedQuestions =
-                      _playedQuestionCounts[item.firebaseKey] ?? 0;
+                      _playedQuestionCounts[
+                            item.firebaseKey
+                          ] ??
+                          0;
 
                   final int completedTotal =
-                      _completedQuestionTotals[item.firebaseKey] ?? 0;
+                      _completedQuestionTotals[
+                            item.firebaseKey
+                          ] ??
+                          0;
 
                   final bool hadPreviouslyCompleted =
                       SubcategoryCompletionHistoryService
@@ -409,7 +451,12 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+      padding: const EdgeInsets.fromLTRB(
+        16,
+        14,
+        16,
+        18,
+      ),
       child: Column(
         children: [
           SizedBox(
@@ -422,7 +469,8 @@ class _Header extends StatelessWidget {
                   child: Text(
                     'SCIENCE & NATURE',
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.category.copyWith(
+                    style:
+                        AppTextStyles.category.copyWith(
                       color: AppColors.white,
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
@@ -478,13 +526,19 @@ class _ScienceNatureCard extends StatelessWidget {
         onTap: isAvailable ? onTap : null,
         borderRadius: BorderRadius.circular(18),
         child: Ink(
-          padding: const EdgeInsets.fromLTRB(12, 13, 12, 13),
+          padding: const EdgeInsets.fromLTRB(
+            12,
+            13,
+            12,
+            13,
+          ),
           decoration: BoxDecoration(
             color: AppColors.panel,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color:
-                  isAvailable ? AppColors.orange : AppColors.darkGrey,
+              color: isAvailable
+                  ? AppColors.orange
+                  : AppColors.darkGrey,
               width: isAvailable ? 1.4 : 1,
             ),
           ),
@@ -496,7 +550,8 @@ class _ScienceNatureCard extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: AppColors.background,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius:
+                      BorderRadius.circular(16),
                   border: Border.all(
                     color: AppColors.orange,
                     width: 1.2,
@@ -511,16 +566,20 @@ class _ScienceNatureCard extends StatelessWidget {
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
                     Text(
                       item.title,
                       maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.category.copyWith(
+                      overflow:
+                          TextOverflow.ellipsis,
+                      style:
+                          AppTextStyles.category.copyWith(
                         color: AppColors.white,
                         fontSize: 18.5,
-                        fontWeight: FontWeight.w600,
+                        fontWeight:
+                            FontWeight.w600,
                         height: 1.08,
                         letterSpacing: 0.1,
                       ),
@@ -528,10 +587,12 @@ class _ScienceNatureCard extends StatelessWidget {
                     const SizedBox(height: 7),
                     Text(
                       '${playedQuestions > totalQuestions ? totalQuestions : playedQuestions} of $totalQuestions played',
-                      style: AppTextStyles.body.copyWith(
+                      style:
+                          AppTextStyles.body.copyWith(
                         color: AppColors.white,
                         fontSize: 14.5,
-                        fontWeight: FontWeight.w600,
+                        fontWeight:
+                            FontWeight.w600,
                       ),
                     ),
                   ],
@@ -539,18 +600,19 @@ class _ScienceNatureCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               SubcategoryStatusBadge(
-                text: SubcategoryProgressStatus.resolve(
-                    isAvailable: isAvailable,
-                    playedQuestions: playedQuestions,
-                    totalQuestions: totalQuestions,
-                    hadPreviouslyCompleted:
-                        hadPreviouslyCompleted,
-                  ).ctaLabel,
+                text:
+                    SubcategoryProgressStatus.resolve(
+                  isAvailable: isAvailable,
+                  playedQuestions: playedQuestions,
+                  totalQuestions: totalQuestions,
+                  hadPreviouslyCompleted:
+                      hadPreviouslyCompleted,
+                ).ctaLabel,
                 color: isAvailable
                     ? AppColors.orange
                     : AppColors.white,
                 filled: isAvailable,
-              )
+              ),
             ],
           ),
         ),

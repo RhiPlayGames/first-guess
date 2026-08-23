@@ -61,9 +61,10 @@ class _CountriesSubcategoryScreenState
       title: 'Natural Wonders & Landscapes',
       imagePath:
           'assets/images/categories/subcategories/countries/islands_mountains_rivers.webp',
-      played: 40,
-      total: 40,
-      status: _SubcategoryStatus.allCaughtUp,
+      played: 0,
+      total: 10,
+      status: _SubcategoryStatus.notStarted,
+      idPrefix: 'countries_natural_wonders_landscapes_',
     ),
     _CountriesSubcategoryData(
       title: 'Landmarks & Wonders',
@@ -95,17 +96,18 @@ class _CountriesSubcategoryScreenState
       imagePath:
           'assets/images/categories/subcategories/countries/national_foods.webp',
       played: 0,
-      total: 40,
+      total: 10,
       status: _SubcategoryStatus.notStarted,
+      idPrefix: 'countries_national_foods_',
     ),
     _CountriesSubcategoryData(
       title: 'National Symbols',
       imagePath:
           'assets/images/categories/subcategories/countries/national_symbols.webp',
-      played: 40,
-      total: 52,
-      status: _SubcategoryStatus.newQuestions,
-      newQuestions: 12,
+      played: 0,
+      total: 10,
+      status: _SubcategoryStatus.notStarted,
+      idPrefix: 'countries_national_symbols_',
     ),
     _CountriesSubcategoryData(
       title: 'States & Regions',
@@ -520,6 +522,240 @@ class _CountriesSubcategoryScreenState
               behavior: SnackBarBehavior.floating,
               content: Text(
                 'Major Cities could not be loaded from Firebase.',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+      }
+
+      return;
+    }
+
+    if (item.title == 'Natural Wonders & Landscapes') {
+      try {
+        final items =
+            await FirebaseChallengeService.loadLiveSubcategory(
+          category: 'countries',
+          subcategory: 'natural_wonders_landscapes',
+        );
+
+        if (!context.mounted) {
+          return;
+        }
+
+        if (items.isEmpty) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.panel,
+                behavior: SnackBarBehavior.floating,
+                content: Text(
+                  'No live Natural Wonders & Landscapes questions were found.',
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+          return;
+        }
+
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) => GameScreen.firebaseDynamic(
+              items: items,
+              launchedFromSurpriseMe: false,
+              showSurpriseToast: false,
+            ),
+          ),
+        );
+
+        if (mounted) {
+          await _refreshScreenData();
+        }
+      } catch (error, stackTrace) {
+        debugPrint(
+          'NATURAL WONDERS FIREBASE ERROR: $error',
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+        );
+
+        if (!context.mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior: SnackBarBehavior.floating,
+              content: Text(
+                'Natural Wonders & Landscapes could not be loaded from Firebase.',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+      }
+
+      return;
+    }
+
+    if (item.title == 'National Foods') {
+      try {
+        final items =
+            await FirebaseChallengeService.loadLiveSubcategory(
+          category: 'countries',
+          subcategory: 'national_foods',
+        );
+
+        if (!context.mounted) {
+          return;
+        }
+
+        if (items.isEmpty) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.panel,
+                behavior: SnackBarBehavior.floating,
+                content: Text(
+                  'No live National Foods questions were found.',
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+          return;
+        }
+
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) => GameScreen.firebaseDynamic(
+              items: items,
+              launchedFromSurpriseMe: false,
+              showSurpriseToast: false,
+            ),
+          ),
+        );
+
+        if (mounted) {
+          await _refreshScreenData();
+        }
+      } catch (error, stackTrace) {
+        debugPrint(
+          'NATIONAL FOODS FIREBASE ERROR: $error',
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+        );
+
+        if (!context.mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior: SnackBarBehavior.floating,
+              content: Text(
+                'National Foods could not be loaded from Firebase.',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+      }
+
+      return;
+    }
+
+    if (item.title == 'National Symbols') {
+      try {
+        final items =
+            await FirebaseChallengeService.loadLiveSubcategory(
+          category: 'countries',
+          subcategory: 'national_symbols',
+        );
+
+        if (!context.mounted) {
+          return;
+        }
+
+        if (items.isEmpty) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.panel,
+                behavior: SnackBarBehavior.floating,
+                content: Text(
+                  'No live National Symbols questions were found.',
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+          return;
+        }
+
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) => GameScreen.firebaseDynamic(
+              items: items,
+              launchedFromSurpriseMe: false,
+              showSurpriseToast: false,
+            ),
+          ),
+        );
+
+        if (mounted) {
+          await _refreshScreenData();
+        }
+      } catch (error, stackTrace) {
+        debugPrint(
+          'NATIONAL SYMBOLS FIREBASE ERROR: $error',
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+        );
+
+        if (!context.mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior: SnackBarBehavior.floating,
+              content: Text(
+                'National Symbols could not be loaded from Firebase.',
                 style: AppTextStyles.body.copyWith(
                   color: AppColors.white,
                   fontSize: 13,

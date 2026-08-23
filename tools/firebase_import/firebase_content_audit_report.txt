@@ -1,0 +1,59 @@
+FIRST GUESS FIREBASE CONTENT AUDIT
+==============================================================================
+READ-ONLY AUDIT — this script does not change Firebase or local files.
+
+Firestore challenge documents: 113
+
+FIRESTORE COUNTS BY CATEGORY
+------------------------------------------------------------------------------
+animals                         20
+books_authors                   23
+countries                       50
+food_drink                      20
+
+FIRESTORE COUNTS BY STATUS
+------------------------------------------------------------------------------
+live                           113
+
+FIREBASE STORAGE
+------------------------------------------------------------------------------
+Files under challenge_images/:          113
+Unique imagePaths referenced by Firestore: 113
+Orphan Storage files (not referenced):  0
+Referenced paths missing in Storage:     0
+
+LOCAL SOURCE IMAGE COPIES
+------------------------------------------------------------------------------
+Probable local gameplay/source WebPs:    155
+Firestore images with no local source copy: 0
+Note: local source copies are okay; Firebase Storage remains the live source.
+
+DART SOURCE AUDIT
+------------------------------------------------------------------------------
+lib\daily_flash\data\planets_daily_flash.dart
+  DAILY FLASH (separate/special system)
+  - DailyFlashQuestion constructor: 5
+lib\services\firebase_challenge_service.dart
+  REVIEW: possible hard-coded/legacy gameplay content
+  - QuizItem constructor: 1
+
+SUBCATEGORY COUNTS
+------------------------------------------------------------------------------
+animals/birds                                               10
+animals/dinosaurs                                           10
+books_authors/fictional_literary_locations                  23
+countries/capitals                                          10
+countries/country_silhouettes                               10
+countries/currencies                                        10
+countries/flags                                             10
+countries/major_cities                                      10
+food_drink/breakfast                                        10
+food_drink/desserts                                         10
+
+VALIDATION SUMMARY
+------------------------------------------------------------------------------
+Errors:   0
+Warnings: 0
+
+RESULT: CORE FIREBASE INTEGRITY PASSED.
+There are still cleanup/review items listed above.

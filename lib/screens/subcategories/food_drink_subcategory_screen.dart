@@ -27,7 +27,6 @@ class _FoodDrinkSubcategoryScreenState
       'assets/images/categories/food_drink/icons/breakfast_icon.webp',
       firebaseKey: 'breakfast',
     ),
-    
     _FoodDrinkSubcategory(
       'Desserts, Cakes & Sweets',
       'assets/images/categories/food_drink/icons/deserts_cakes_sweets.webp',
@@ -36,10 +35,10 @@ class _FoodDrinkSubcategoryScreenState
     _FoodDrinkSubcategory(
       'Dishes & World Cuisines',
       'assets/images/categories/food_drink/icons/dishes_world_cuisines.webp',
-      firebaseKey: 'dishes',
+      firebaseKey: 'dishes_world_cuisine',
     ),
     _FoodDrinkSubcategory(
-      'Drinks, Cocktails, Tea & Coffee',
+      'World Drinks',
       'assets/images/categories/food_drink/icons/drinks.webp',
       firebaseKey: 'drinks',
     ),
@@ -196,12 +195,15 @@ class _FoodDrinkSubcategoryScreenState
       }
 
       final Set<String> liveSubcategories = <String>{};
-      final Map<String, int> liveQuestionCounts = <String, int>{};
+      final Map<String, int> liveQuestionCounts =
+          <String, int>{};
       final Map<String, Set<String>> liveQuestionIds =
           <String, Set<String>>{};
 
       for (int i = 0; i < _items.length; i++) {
-        final String firebaseKey = _items[i].firebaseKey;
+        final String firebaseKey =
+            _items[i].firebaseKey;
+
         final Set<String> ids = results[i].docs
             .map((doc) => doc.id)
             .toSet();
@@ -215,9 +217,12 @@ class _FoodDrinkSubcategoryScreenState
       }
 
       setState(() {
-        _liveFirebaseSubcategories = liveSubcategories;
-        _liveQuestionCounts = liveQuestionCounts;
-        _liveQuestionIds = liveQuestionIds;
+        _liveFirebaseSubcategories =
+            liveSubcategories;
+        _liveQuestionCounts =
+            liveQuestionCounts;
+        _liveQuestionIds =
+            liveQuestionIds;
       });
     } catch (_) {
       if (!mounted) {
@@ -225,9 +230,12 @@ class _FoodDrinkSubcategoryScreenState
       }
 
       setState(() {
-        _liveFirebaseSubcategories = <String>{};
-        _liveQuestionCounts = <String, int>{};
-        _liveQuestionIds = <String, Set<String>>{};
+        _liveFirebaseSubcategories =
+            <String>{};
+        _liveQuestionCounts =
+            <String, int>{};
+        _liveQuestionIds =
+            <String, Set<String>>{};
       });
     }
   }
@@ -235,14 +243,17 @@ class _FoodDrinkSubcategoryScreenState
   Future<void> _openSubcategory(
     _FoodDrinkSubcategory item,
   ) async {
-    if (!_liveFirebaseSubcategories.contains(item.firebaseKey)) {
+    if (!_liveFirebaseSubcategories.contains(
+      item.firebaseKey,
+    )) {
       return;
     }
 
     if (item.firebaseKey == 'breakfast') {
       try {
         final items =
-            await FirebaseChallengeService.loadLiveSubcategory(
+            await FirebaseChallengeService
+                .loadLiveSubcategory(
           category: 'food_drink',
           subcategory: 'breakfast',
         );
@@ -257,10 +268,12 @@ class _FoodDrinkSubcategoryScreenState
             ..showSnackBar(
               SnackBar(
                 backgroundColor: AppColors.panel,
-                behavior: SnackBarBehavior.floating,
+                behavior:
+                    SnackBarBehavior.floating,
                 content: Text(
                   'No live Breakfast Foods questions were found.',
-                  style: AppTextStyles.body.copyWith(
+                  style:
+                      AppTextStyles.body.copyWith(
                     color: AppColors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -268,12 +281,14 @@ class _FoodDrinkSubcategoryScreenState
                 ),
               ),
             );
+
           return;
         }
 
         await Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (context) => GameScreen.breakfastFoods(
+            builder: (context) =>
+                GameScreen.breakfastFoods(
               items: items,
             ),
           ),
@@ -292,10 +307,12 @@ class _FoodDrinkSubcategoryScreenState
           ..showSnackBar(
             SnackBar(
               backgroundColor: AppColors.panel,
-              behavior: SnackBarBehavior.floating,
+              behavior:
+                  SnackBarBehavior.floating,
               content: Text(
                 'Breakfast Foods could not be loaded from Firebase.',
-                style: AppTextStyles.body.copyWith(
+                style:
+                    AppTextStyles.body.copyWith(
                   color: AppColors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -311,7 +328,8 @@ class _FoodDrinkSubcategoryScreenState
     if (item.firebaseKey == 'desserts') {
       try {
         final items =
-            await FirebaseChallengeService.loadLiveSubcategory(
+            await FirebaseChallengeService
+                .loadLiveSubcategory(
           category: 'food_drink',
           subcategory: 'desserts',
         );
@@ -326,10 +344,12 @@ class _FoodDrinkSubcategoryScreenState
             ..showSnackBar(
               SnackBar(
                 backgroundColor: AppColors.panel,
-                behavior: SnackBarBehavior.floating,
+                behavior:
+                    SnackBarBehavior.floating,
                 content: Text(
                   'No live Desserts, Cakes & Sweets questions were found.',
-                  style: AppTextStyles.body.copyWith(
+                  style:
+                      AppTextStyles.body.copyWith(
                     color: AppColors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -337,12 +357,14 @@ class _FoodDrinkSubcategoryScreenState
                 ),
               ),
             );
+
           return;
         }
 
         await Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (context) => GameScreen.dessertsCakesSweets(
+            builder: (context) =>
+                GameScreen.dessertsCakesSweets(
               items: items,
             ),
           ),
@@ -361,10 +383,269 @@ class _FoodDrinkSubcategoryScreenState
           ..showSnackBar(
             SnackBar(
               backgroundColor: AppColors.panel,
-              behavior: SnackBarBehavior.floating,
+              behavior:
+                  SnackBarBehavior.floating,
               content: Text(
                 'Desserts, Cakes & Sweets could not be loaded from Firebase.',
-                style: AppTextStyles.body.copyWith(
+                style:
+                    AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+      }
+
+      return;
+    }
+
+    if (item.firebaseKey ==
+        'dishes_world_cuisine') {
+      try {
+        final items =
+            await FirebaseChallengeService
+                .loadLiveSubcategory(
+          category: 'food_drink',
+          subcategory: 'dishes_world_cuisine',
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        if (items.isEmpty) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.panel,
+                behavior:
+                    SnackBarBehavior.floating,
+                content: Text(
+                  'No live Dishes & World Cuisines questions were found.',
+                  style:
+                      AppTextStyles.body.copyWith(
+                    color: AppColors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+
+          return;
+        }
+
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) =>
+                GameScreen.firebaseDynamic(
+              items: items,
+              launchedFromSurpriseMe: false,
+              showSurpriseToast: false,
+            ),
+          ),
+        );
+
+        if (mounted) {
+          await _refreshSubcategoryProgress();
+        }
+      } catch (error, stackTrace) {
+        debugPrint(
+          'DISHES & WORLD CUISINES FIREBASE ERROR: $error',
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior:
+                  SnackBarBehavior.floating,
+              content: Text(
+                'Dishes & World Cuisines could not be loaded from Firebase.',
+                style:
+                    AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+      }
+
+      return;
+    }
+
+
+    if (item.firebaseKey == 'drinks') {
+      try {
+        final items =
+            await FirebaseChallengeService
+                .loadLiveSubcategory(
+          category: 'food_drink',
+          subcategory: 'drinks',
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        if (items.isEmpty) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.panel,
+                behavior:
+                    SnackBarBehavior.floating,
+                content: Text(
+                  'No live World Drinks questions were found.',
+                  style:
+                      AppTextStyles.body.copyWith(
+                    color: AppColors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+
+          return;
+        }
+
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) =>
+                GameScreen.firebaseDynamic(
+              items: items,
+              launchedFromSurpriseMe: false,
+              showSurpriseToast: false,
+            ),
+          ),
+        );
+
+        if (mounted) {
+          await _refreshSubcategoryProgress();
+        }
+      } catch (error, stackTrace) {
+        debugPrint(
+          'DRINKS FIREBASE ERROR: $error',
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior:
+                  SnackBarBehavior.floating,
+              content: Text(
+                'World Drinks could not be loaded from Firebase.',
+                style:
+                    AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+      }
+
+      return;
+    }
+
+    if (item.firebaseKey == 'snacks_street_food') {
+      try {
+        final items =
+            await FirebaseChallengeService
+                .loadLiveSubcategory(
+          category: 'food_drink',
+          subcategory: 'snacks_street_food',
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        if (items.isEmpty) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.panel,
+                behavior:
+                    SnackBarBehavior.floating,
+                content: Text(
+                  'No live Snacks & Street Food questions were found.',
+                  style:
+                      AppTextStyles.body.copyWith(
+                    color: AppColors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+
+          return;
+        }
+
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) =>
+                GameScreen.firebaseDynamic(
+              items: items,
+              launchedFromSurpriseMe: false,
+              showSurpriseToast: false,
+            ),
+          ),
+        );
+
+        if (mounted) {
+          await _refreshSubcategoryProgress();
+        }
+      } catch (error, stackTrace) {
+        debugPrint(
+          'SNACKS & STREET FOOD FIREBASE ERROR: $error',
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior:
+                  SnackBarBehavior.floating,
+              content: Text(
+                'Snacks & Street Food could not be loaded from Firebase.',
+                style:
+                    AppTextStyles.body.copyWith(
                   color: AppColors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -404,50 +685,91 @@ class _FoodDrinkSubcategoryScreenState
           children: [
             const _Header(),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+              padding:
+                  const EdgeInsets.fromLTRB(
+                16,
+                0,
+                16,
+                14,
+              ),
               child: StatsPanel(
-                totalScore:
-                    _statsLoaded ? _playerStats.totalScore : 0,
-                currentStreak:
-                    _statsLoaded ? _playerStats.currentStreak : 0,
-                firstGuesses:
-                    _statsLoaded ? _playerStats.firstGuesses : 0,
-                gamesPlayed:
-                    _statsLoaded ? _playerStats.gamesPlayed : 0,
+                totalScore: _statsLoaded
+                    ? _playerStats.totalScore
+                    : 0,
+                currentStreak: _statsLoaded
+                    ? _playerStats.currentStreak
+                    : 0,
+                firstGuesses: _statsLoaded
+                    ? _playerStats.firstGuesses
+                    : 0,
+                gamesPlayed: _statsLoaded
+                    ? _playerStats.gamesPlayed
+                    : 0,
               ),
             ),
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+                padding:
+                    const EdgeInsets.fromLTRB(
+                  16,
+                  4,
+                  16,
+                  28,
+                ),
                 itemCount: _items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final _FoodDrinkSubcategory item = _items[index];
-                  final bool isAvailable =
-                      _liveFirebaseSubcategories.contains(item.firebaseKey);
-                  final int totalQuestions =
-                      _liveQuestionCounts[item.firebaseKey] ?? 0;
-                  final int playedQuestions =
-                      _playedQuestionCounts[item.firebaseKey] ?? 0;
-                  final int completedTotal =
-                      _completedQuestionTotals[item.firebaseKey] ?? 0;
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: 10),
+                itemBuilder: (
+                  context,
+                  index,
+                ) {
+                  final _FoodDrinkSubcategory item =
+                      _items[index];
 
-                  final bool hadPreviouslyCompleted =
+                  final bool isAvailable =
+                      _liveFirebaseSubcategories
+                          .contains(
+                    item.firebaseKey,
+                  );
+
+                  final int totalQuestions =
+                      _liveQuestionCounts[
+                              item.firebaseKey] ??
+                          0;
+
+                  final int playedQuestions =
+                      _playedQuestionCounts[
+                              item.firebaseKey] ??
+                          0;
+
+                  final int completedTotal =
+                      _completedQuestionTotals[
+                              item.firebaseKey] ??
+                          0;
+
+                  final bool
+                      hadPreviouslyCompleted =
                       SubcategoryCompletionHistoryService
                           .hasNewQuestionsSinceCompletion(
-                    completedTotal: completedTotal,
-                    playedQuestions: playedQuestions,
-                    totalQuestions: totalQuestions,
+                    completedTotal:
+                        completedTotal,
+                    playedQuestions:
+                        playedQuestions,
+                    totalQuestions:
+                        totalQuestions,
                   );
 
                   return _FoodDrinkCard(
                     item: item,
                     isAvailable: isAvailable,
-                    totalQuestions: totalQuestions,
-                    playedQuestions: playedQuestions,
+                    totalQuestions:
+                        totalQuestions,
+                    playedQuestions:
+                        playedQuestions,
                     hadPreviouslyCompleted:
                         hadPreviouslyCompleted,
-                    onTap: () => _openSubcategory(item),
+                    onTap: () =>
+                        _openSubcategory(item),
                   );
                 },
               ),
@@ -465,7 +787,13 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+      padding:
+          const EdgeInsets.fromLTRB(
+        16,
+        14,
+        16,
+        18,
+      ),
       child: Column(
         children: [
           SizedBox(
@@ -478,17 +806,21 @@ class _Header extends StatelessWidget {
                   child: Text(
                     'FOOD & DRINK',
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.category.copyWith(
+                    style:
+                        AppTextStyles.category.copyWith(
                       color: AppColors.white,
                       fontSize: 28,
-                      fontWeight: FontWeight.w700,
+                      fontWeight:
+                          FontWeight.w700,
                       letterSpacing: 0.45,
                     ),
                   ),
                 ),
                 const Align(
-                  alignment: Alignment.centerRight,
-                  child: FirstGuessHomeButton(),
+                  alignment:
+                      Alignment.centerRight,
+                  child:
+                      FirstGuessHomeButton(),
                 ),
               ],
             ),
@@ -496,10 +828,12 @@ class _Header extends StatelessWidget {
           Text(
             'Choose a subcategory to start playing',
             textAlign: TextAlign.center,
-            style: AppTextStyles.body.copyWith(
+            style:
+                AppTextStyles.body.copyWith(
               color: AppColors.white,
               fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontWeight:
+                  FontWeight.w600,
             ),
           ),
         ],
@@ -527,20 +861,47 @@ class _FoodDrinkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final int displayPlayed =
+        playedQuestions > totalQuestions
+            ? totalQuestions
+            : playedQuestions;
+
+    final resolvedStatus =
+        SubcategoryProgressStatus.resolve(
+      isAvailable: isAvailable,
+      playedQuestions: playedQuestions,
+      totalQuestions: totalQuestions,
+      hadPreviouslyCompleted:
+          hadPreviouslyCompleted,
+    );
+
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius:
+          BorderRadius.circular(18),
       child: InkWell(
-        onTap: isAvailable ? onTap : null,
-        borderRadius: BorderRadius.circular(18),
+        onTap:
+            isAvailable ? onTap : null,
+        borderRadius:
+            BorderRadius.circular(18),
         child: Ink(
-          padding: const EdgeInsets.fromLTRB(12, 13, 12, 13),
+          padding:
+              const EdgeInsets.fromLTRB(
+            12,
+            13,
+            12,
+            13,
+          ),
           decoration: BoxDecoration(
             color: AppColors.panel,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius:
+                BorderRadius.circular(18),
             border: Border.all(
-              color: isAvailable ? AppColors.orange : AppColors.darkGrey,
-              width: isAvailable ? 1.4 : 1,
+              color: isAvailable
+                  ? AppColors.orange
+                  : AppColors.darkGrey,
+              width:
+                  isAvailable ? 1.4 : 1,
             ),
           ),
           child: Row(
@@ -548,48 +909,70 @@ class _FoodDrinkCard extends StatelessWidget {
               Container(
                 width: 64,
                 height: 64,
-                alignment: Alignment.center,
+                alignment:
+                    Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(16),
+                  color:
+                      AppColors.background,
+                  borderRadius:
+                      BorderRadius.circular(
+                    16,
+                  ),
                   border: Border.all(
-                    color: AppColors.orange,
+                    color:
+                        AppColors.orange,
                     width: 1.2,
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(4),
+                  padding:
+                      const EdgeInsets.all(
+                    4,
+                  ),
                   child: Image.asset(
                     item.imagePath,
                     fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
+                    filterQuality:
+                        FilterQuality.high,
                   ),
                 ),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
                     Text(
                       item.title,
                       maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.category.copyWith(
-                        color: AppColors.white,
+                      overflow:
+                          TextOverflow.ellipsis,
+                      style: AppTextStyles
+                          .category
+                          .copyWith(
+                        color:
+                            AppColors.white,
                         fontSize: 18.5,
-                        fontWeight: FontWeight.w600,
+                        fontWeight:
+                            FontWeight.w600,
                         height: 1.08,
                         letterSpacing: 0.1,
                       ),
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(
+                      height: 7,
+                    ),
                     Text(
-                      '${playedQuestions > totalQuestions ? totalQuestions : playedQuestions} of $totalQuestions played',
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.white,
+                      '$displayPlayed of $totalQuestions played',
+                      style: AppTextStyles
+                          .body
+                          .copyWith(
+                        color:
+                            AppColors.white,
                         fontSize: 14.5,
-                        fontWeight: FontWeight.w600,
+                        fontWeight:
+                            FontWeight.w600,
                       ),
                     ),
                   ],
@@ -597,18 +980,13 @@ class _FoodDrinkCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               SubcategoryStatusBadge(
-                text: SubcategoryProgressStatus.resolve(
-                    isAvailable: isAvailable,
-                    playedQuestions: playedQuestions,
-                    totalQuestions: totalQuestions,
-                    hadPreviouslyCompleted:
-                        hadPreviouslyCompleted,
-                  ).ctaLabel,
+                text:
+                    resolvedStatus.ctaLabel,
                 color: isAvailable
                     ? AppColors.orange
                     : AppColors.white,
                 filled: isAvailable,
-              )
+              ),
             ],
           ),
         ),

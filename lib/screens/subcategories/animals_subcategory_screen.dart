@@ -158,6 +158,7 @@ class _AnimalsSubcategoryScreenState
     for (final _AnimalSubcategory item in _items) {
       final int totalQuestions =
           _liveQuestionCounts[item.firebaseKey] ?? 0;
+
       final int playedQuestions =
           _playedQuestionCounts[item.firebaseKey] ?? 0;
 
@@ -187,33 +188,53 @@ class _AnimalsSubcategoryScreenState
 
   Future<void> _loadFirebaseSubcategoryAvailability() async {
     try {
-      final List<Future<QuerySnapshot<Map<String, dynamic>>>> checks =
+      final List<
+              Future<QuerySnapshot<Map<String, dynamic>>>>
+          checks =
           _items.map((_AnimalSubcategory item) {
         return FirebaseFirestore.instance
             .collection('challenges')
-            .where('category', isEqualTo: 'animals')
-            .where('subcategory', isEqualTo: item.firebaseKey)
-            .where('status', isEqualTo: 'live')
+            .where(
+              'category',
+              isEqualTo: 'animals',
+            )
+            .where(
+              'subcategory',
+              isEqualTo: item.firebaseKey,
+            )
+            .where(
+              'status',
+              isEqualTo: 'live',
+            )
             .get();
       }).toList();
 
-      final List<QuerySnapshot<Map<String, dynamic>>> results =
+      final List<QuerySnapshot<Map<String, dynamic>>>
+          results =
           await Future.wait(checks);
 
       if (!mounted) {
         return;
       }
 
-      final Set<String> liveSubcategories = <String>{};
-      final Map<String, int> liveQuestionCounts = <String, int>{};
+      final Set<String> liveSubcategories =
+          <String>{};
+
+      final Map<String, int> liveQuestionCounts =
+          <String, int>{};
+
       final Map<String, Set<String>> liveQuestionIds =
           <String, Set<String>>{};
 
       for (int i = 0; i < _items.length; i++) {
-        final String firebaseKey = _items[i].firebaseKey;
-        final Set<String> ids = results[i].docs
-            .map((doc) => doc.id)
-            .toSet();
+        final String firebaseKey =
+            _items[i].firebaseKey;
+
+        final Set<String> ids =
+            results[i]
+                .docs
+                .map((doc) => doc.id)
+                .toSet();
 
         liveQuestionIds[firebaseKey] = ids;
         liveQuestionCounts[firebaseKey] = ids.length;
@@ -224,11 +245,24 @@ class _AnimalsSubcategoryScreenState
       }
 
       setState(() {
-        _liveFirebaseSubcategories = liveSubcategories;
-        _liveQuestionCounts = liveQuestionCounts;
-        _liveQuestionIds = liveQuestionIds;
+        _liveFirebaseSubcategories =
+            liveSubcategories;
+
+        _liveQuestionCounts =
+            liveQuestionCounts;
+
+        _liveQuestionIds =
+            liveQuestionIds;
       });
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint(
+        'ANIMALS FIREBASE AVAILABILITY ERROR: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
       if (!mounted) {
         return;
       }
@@ -236,7 +270,8 @@ class _AnimalsSubcategoryScreenState
       setState(() {
         _liveFirebaseSubcategories = <String>{};
         _liveQuestionCounts = <String, int>{};
-        _liveQuestionIds = <String, Set<String>>{};
+        _liveQuestionIds =
+            <String, Set<String>>{};
       });
     }
   }
@@ -244,145 +279,173 @@ class _AnimalsSubcategoryScreenState
   Future<void> _openSubcategory(
     _AnimalSubcategory item,
   ) async {
-    if (!_liveFirebaseSubcategories.contains(item.firebaseKey)) {
+    if (!_liveFirebaseSubcategories.contains(
+      item.firebaseKey,
+    )) {
       return;
     }
 
     if (item.firebaseKey == 'birds') {
-      try {
-        final items =
-            await FirebaseChallengeService.loadLiveSubcategory(
-          category: 'animals',
-          subcategory: 'birds',
-        );
-
-        if (!mounted) {
-          return;
-        }
-
-        if (items.isEmpty) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                backgroundColor: AppColors.panel,
-                behavior: SnackBarBehavior.floating,
-                content: Text(
-                  'No live Bird questions were found.',
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            );
-          return;
-        }
-
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (context) => GameScreen.birds(
-              items: items,
-            ),
-          ),
-        );
-
-        if (mounted) {
-          await _refreshSubcategoryProgress();
-        }
-      } catch (_) {
-        if (!mounted) {
-          return;
-        }
-
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.panel,
-              behavior: SnackBarBehavior.floating,
-              content: Text(
-                'Birds could not be loaded from Firebase.',
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          );
-      }
-
+      await _openBirds();
       return;
     }
 
     if (item.firebaseKey == 'dinosaurs') {
-      try {
-        final items =
-            await FirebaseChallengeService.loadLiveSubcategory(
-          category: 'animals',
-          subcategory: 'dinosaurs',
-        );
+      await _openDinosaurs();
+      return;
+    }
 
-        if (!mounted) {
-          return;
-        }
+    await _openDynamicFirebaseSubcategory(item);
+  }
 
-        if (items.isEmpty) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                backgroundColor: AppColors.panel,
-                behavior: SnackBarBehavior.floating,
-                content: Text(
-                  'No live Dinosaur questions were found.',
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            );
-          return;
-        }
+  Future<void> _openBirds() async {
+    try {
+      final items =
+          await FirebaseChallengeService
+              .loadLiveSubcategory(
+        category: 'animals',
+        subcategory: 'birds',
+      );
 
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (context) => GameScreen.dinosaurs(
-              items: items,
-            ),
-          ),
-        );
-
-        if (mounted) {
-          await _refreshSubcategoryProgress();
-        }
-      } catch (_) {
-        if (!mounted) {
-          return;
-        }
-
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.panel,
-              behavior: SnackBarBehavior.floating,
-              content: Text(
-                'Dinosaurs could not be loaded from Firebase.',
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          );
+      if (!mounted) {
+        return;
       }
 
+      if (items.isEmpty) {
+        _showNoQuestionsMessage('Birds');
+        return;
+      }
+
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => GameScreen.birds(
+            items: items,
+          ),
+        ),
+      );
+
+      if (mounted) {
+        await _refreshSubcategoryProgress();
+      }
+    } catch (error, stackTrace) {
+      debugPrint(
+        'ANIMALS BIRDS OPEN ERROR: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _showLoadErrorMessage('Birds');
+    }
+  }
+
+  Future<void> _openDinosaurs() async {
+    try {
+      final items =
+          await FirebaseChallengeService
+              .loadLiveSubcategory(
+        category: 'animals',
+        subcategory: 'dinosaurs',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (items.isEmpty) {
+        _showNoQuestionsMessage('Dinosaurs');
+        return;
+      }
+
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) =>
+              GameScreen.dinosaurs(
+            items: items,
+          ),
+        ),
+      );
+
+      if (mounted) {
+        await _refreshSubcategoryProgress();
+      }
+    } catch (error, stackTrace) {
+      debugPrint(
+        'ANIMALS DINOSAURS OPEN ERROR: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _showLoadErrorMessage('Dinosaurs');
+    }
+  }
+
+  Future<void> _openDynamicFirebaseSubcategory(
+    _AnimalSubcategory item,
+  ) async {
+    try {
+      final items =
+          await FirebaseChallengeService
+              .loadLiveSubcategory(
+        category: 'animals',
+        subcategory: item.firebaseKey,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (items.isEmpty) {
+        _showNoQuestionsMessage(item.title);
+        return;
+      }
+
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) =>
+              GameScreen.firebaseDynamic(
+            items: items,
+            launchedFromSurpriseMe: false,
+            showSurpriseToast: false,
+          ),
+        ),
+      );
+
+      if (mounted) {
+        await _refreshSubcategoryProgress();
+      }
+    } catch (error, stackTrace) {
+      debugPrint(
+        'ANIMALS ${item.firebaseKey} OPEN ERROR: $error',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _showLoadErrorMessage(item.title);
+    }
+  }
+
+  void _showNoQuestionsMessage(
+    String title,
+  ) {
+    if (!mounted) {
       return;
     }
 
@@ -393,7 +456,32 @@ class _AnimalsSubcategoryScreenState
           backgroundColor: AppColors.panel,
           behavior: SnackBarBehavior.floating,
           content: Text(
-            '${item.title} is live in Firebase but its game screen is not wired yet.',
+            'No live $title questions were found.',
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+  }
+
+  void _showLoadErrorMessage(
+    String title,
+  ) {
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.panel,
+          behavior: SnackBarBehavior.floating,
+          content: Text(
+            '$title could not be loaded from Firebase.',
             style: AppTextStyles.body.copyWith(
               color: AppColors.white,
               fontSize: 13,
@@ -413,50 +501,102 @@ class _AnimalsSubcategoryScreenState
           children: [
             const _Header(),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+              padding:
+                  const EdgeInsets.fromLTRB(
+                16,
+                0,
+                16,
+                14,
+              ),
               child: StatsPanel(
                 totalScore:
-                    _statsLoaded ? _playerStats.totalScore : 0,
+                    _statsLoaded
+                        ? _playerStats.totalScore
+                        : 0,
                 currentStreak:
-                    _statsLoaded ? _playerStats.currentStreak : 0,
+                    _statsLoaded
+                        ? _playerStats.currentStreak
+                        : 0,
                 firstGuesses:
-                    _statsLoaded ? _playerStats.firstGuesses : 0,
+                    _statsLoaded
+                        ? _playerStats.firstGuesses
+                        : 0,
                 gamesPlayed:
-                    _statsLoaded ? _playerStats.gamesPlayed : 0,
+                    _statsLoaded
+                        ? _playerStats.gamesPlayed
+                        : 0,
               ),
             ),
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+                padding:
+                    const EdgeInsets.fromLTRB(
+                  16,
+                  4,
+                  16,
+                  28,
+                ),
                 itemCount: _items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final _AnimalSubcategory item = _items[index];
-                  final bool isAvailable =
-                      _liveFirebaseSubcategories.contains(item.firebaseKey);
-                  final int totalQuestions =
-                      _liveQuestionCounts[item.firebaseKey] ?? 0;
-                  final int playedQuestions =
-                      _playedQuestionCounts[item.firebaseKey] ?? 0;
-                  final int completedTotal =
-                      _completedQuestionTotals[item.firebaseKey] ?? 0;
+                separatorBuilder: (_, _) =>
+                    const SizedBox(
+                  height: 10,
+                ),
+                itemBuilder:
+                    (context, index) {
+                  final _AnimalSubcategory
+                      item =
+                      _items[index];
 
-                  final bool hadPreviouslyCompleted =
+                  final bool isAvailable =
+                      _liveFirebaseSubcategories
+                          .contains(
+                    item.firebaseKey,
+                  );
+
+                  final int totalQuestions =
+                      _liveQuestionCounts[
+                            item.firebaseKey
+                          ] ??
+                          0;
+
+                  final int playedQuestions =
+                      _playedQuestionCounts[
+                            item.firebaseKey
+                          ] ??
+                          0;
+
+                  final int completedTotal =
+                      _completedQuestionTotals[
+                            item.firebaseKey
+                          ] ??
+                          0;
+
+                  final bool
+                      hadPreviouslyCompleted =
                       SubcategoryCompletionHistoryService
                           .hasNewQuestionsSinceCompletion(
-                    completedTotal: completedTotal,
-                    playedQuestions: playedQuestions,
-                    totalQuestions: totalQuestions,
+                    completedTotal:
+                        completedTotal,
+                    playedQuestions:
+                        playedQuestions,
+                    totalQuestions:
+                        totalQuestions,
                   );
 
                   return _AnimalCard(
                     item: item,
-                    isAvailable: isAvailable,
-                    totalQuestions: totalQuestions,
-                    playedQuestions: playedQuestions,
+                    isAvailable:
+                        isAvailable,
+                    totalQuestions:
+                        totalQuestions,
+                    playedQuestions:
+                        playedQuestions,
                     hadPreviouslyCompleted:
                         hadPreviouslyCompleted,
-                    onTap: () => _openSubcategory(item),
+                    onTap: () =>
+                        _openSubcategory(
+                      item,
+                    ),
                   );
                 },
               ),
@@ -474,41 +614,60 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+      padding:
+          const EdgeInsets.fromLTRB(
+        16,
+        14,
+        16,
+        18,
+      ),
       child: Column(
         children: [
           SizedBox(
             width: double.infinity,
             height: 74,
             child: Stack(
-              alignment: Alignment.center,
+              alignment:
+                  Alignment.center,
               children: [
                 Center(
                   child: Text(
                     'ANIMALS',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.category.copyWith(
-                      color: AppColors.white,
+                    textAlign:
+                        TextAlign.center,
+                    style:
+                        AppTextStyles.category
+                            .copyWith(
+                      color:
+                          AppColors.white,
                       fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.45,
+                      fontWeight:
+                          FontWeight.w700,
+                      letterSpacing:
+                          0.45,
                     ),
                   ),
                 ),
                 const Align(
-                  alignment: Alignment.centerRight,
-                  child: FirstGuessHomeButton(),
+                  alignment:
+                      Alignment.centerRight,
+                  child:
+                      FirstGuessHomeButton(),
                 ),
               ],
             ),
           ),
           Text(
             'Choose a subcategory to start playing',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.body.copyWith(
+            textAlign:
+                TextAlign.center,
+            style:
+                AppTextStyles.body
+                    .copyWith(
               color: AppColors.white,
               fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontWeight:
+                  FontWeight.w600,
             ),
           ),
         ],
@@ -538,18 +697,35 @@ class _AnimalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius:
+          BorderRadius.circular(18),
       child: InkWell(
-        onTap: isAvailable ? onTap : null,
-        borderRadius: BorderRadius.circular(18),
+        onTap:
+            isAvailable ? onTap : null,
+        borderRadius:
+            BorderRadius.circular(18),
         child: Ink(
-          padding: const EdgeInsets.fromLTRB(12, 13, 12, 13),
+          padding:
+              const EdgeInsets.fromLTRB(
+            12,
+            13,
+            12,
+            13,
+          ),
           decoration: BoxDecoration(
             color: AppColors.panel,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius:
+                BorderRadius.circular(
+              18,
+            ),
             border: Border.all(
-              color: isAvailable ? AppColors.orange : AppColors.darkGrey,
-              width: isAvailable ? 1.4 : 1,
+              color: isAvailable
+                  ? AppColors.orange
+                  : AppColors.darkGrey,
+              width:
+                  isAvailable
+                      ? 1.4
+                      : 1,
             ),
           ),
           child: Row(
@@ -557,68 +733,110 @@ class _AnimalCard extends StatelessWidget {
               Container(
                 width: 64,
                 height: 64,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.orange,
+                alignment:
+                    Alignment.center,
+                decoration:
+                    BoxDecoration(
+                  color:
+                      AppColors.background,
+                  borderRadius:
+                      BorderRadius.circular(
+                    16,
+                  ),
+                  border:
+                      Border.all(
+                    color:
+                        AppColors.orange,
                     width: 1.2,
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(6),
+                  padding:
+                      const EdgeInsets.all(
+                    6,
+                  ),
                   child: Image.asset(
                     item.imagePath,
                     width: 52,
                     height: 52,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
+                    fit:
+                        BoxFit.contain,
+                    filterQuality:
+                        FilterQuality.high,
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(
+                width: 14,
+              ),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment
+                          .start,
                   children: [
                     Text(
                       item.title,
                       maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.category.copyWith(
-                        color: AppColors.white,
+                      overflow:
+                          TextOverflow
+                              .ellipsis,
+                      style:
+                          AppTextStyles
+                              .category
+                              .copyWith(
+                        color:
+                            AppColors.white,
                         fontSize: 18.5,
-                        fontWeight: FontWeight.w600,
+                        fontWeight:
+                            FontWeight
+                                .w600,
                         height: 1.08,
-                        letterSpacing: 0.1,
+                        letterSpacing:
+                            0.1,
                       ),
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(
+                      height: 7,
+                    ),
                     Text(
                       '${playedQuestions > totalQuestions ? totalQuestions : playedQuestions} of $totalQuestions played',
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.white,
+                      style:
+                          AppTextStyles
+                              .body
+                              .copyWith(
+                        color:
+                            AppColors.white,
                         fontSize: 14.5,
-                        fontWeight: FontWeight.w600,
+                        fontWeight:
+                            FontWeight
+                                .w600,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(
+                width: 12,
+              ),
               SubcategoryStatusBadge(
-                text: SubcategoryProgressStatus.resolve(
-                  isAvailable: isAvailable,
-                  playedQuestions: playedQuestions,
-                  totalQuestions: totalQuestions,
+                text:
+                    SubcategoryProgressStatus
+                        .resolve(
+                  isAvailable:
+                      isAvailable,
+                  playedQuestions:
+                      playedQuestions,
+                  totalQuestions:
+                      totalQuestions,
                   hadPreviouslyCompleted:
                       hadPreviouslyCompleted,
                 ).ctaLabel,
                 color: isAvailable
                     ? AppColors.orange
                     : AppColors.white,
-                filled: isAvailable,
+                filled:
+                    isAvailable,
               ),
             ],
           ),
