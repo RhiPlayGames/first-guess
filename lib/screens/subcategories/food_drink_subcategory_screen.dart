@@ -45,12 +45,12 @@ class _FoodDrinkSubcategoryScreenState
     _FoodDrinkSubcategory(
       'Fruit & Vegetables',
       'assets/images/categories/food_drink/icons/fruit_veg.webp',
-      firebaseKey: 'fruit_vegetables',
+      firebaseKey: 'fruit_vegs',
     ),
     _FoodDrinkSubcategory(
-      'Ingredients, Herbs & Spices',
+      'Herbs & Spices',
       'assets/images/categories/food_drink/icons/ingredients_herbs_spices.webp',
-      firebaseKey: 'ingredients',
+      firebaseKey: 'herbs_spices',
     ),
     _FoodDrinkSubcategory(
       'Snacks & Street Food',
@@ -559,6 +559,176 @@ class _FoodDrinkSubcategoryScreenState
                   SnackBarBehavior.floating,
               content: Text(
                 'World Drinks could not be loaded from Firebase.',
+                style:
+                    AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+      }
+
+      return;
+    }
+
+    if (item.firebaseKey == 'fruit_vegs') {
+      try {
+        final items =
+            await FirebaseChallengeService
+                .loadLiveSubcategory(
+          category: 'food_drink',
+          subcategory: 'fruit_vegs',
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        if (items.isEmpty) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.panel,
+                behavior:
+                    SnackBarBehavior.floating,
+                content: Text(
+                  'No live Fruit & Vegetables questions were found.',
+                  style:
+                      AppTextStyles.body.copyWith(
+                    color: AppColors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+
+          return;
+        }
+
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) =>
+                GameScreen.firebaseDynamic(
+              items: items,
+              launchedFromSurpriseMe: false,
+              showSurpriseToast: false,
+            ),
+          ),
+        );
+
+        if (mounted) {
+          await _refreshSubcategoryProgress();
+        }
+      } catch (error, stackTrace) {
+        debugPrint(
+          'FRUIT & VEGETABLES FIREBASE ERROR: $error',
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior:
+                  SnackBarBehavior.floating,
+              content: Text(
+                'Fruit & Vegetables could not be loaded from Firebase.',
+                style:
+                    AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+      }
+
+      return;
+    }
+
+    if (item.firebaseKey == 'herbs_spices') {
+      try {
+        final items =
+            await FirebaseChallengeService
+                .loadLiveSubcategory(
+          category: 'food_drink',
+          subcategory: 'herbs_spices',
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        if (items.isEmpty) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.panel,
+                behavior:
+                    SnackBarBehavior.floating,
+                content: Text(
+                  'No live Herbs & Spices questions were found.',
+                  style:
+                      AppTextStyles.body.copyWith(
+                    color: AppColors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+
+          return;
+        }
+
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) =>
+                GameScreen.firebaseDynamic(
+              items: items,
+              launchedFromSurpriseMe: false,
+              showSurpriseToast: false,
+            ),
+          ),
+        );
+
+        if (mounted) {
+          await _refreshSubcategoryProgress();
+        }
+      } catch (error, stackTrace) {
+        debugPrint(
+          'HERBS & SPICES FIREBASE ERROR: $error',
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior:
+                  SnackBarBehavior.floating,
+              content: Text(
+                'Herbs & Spices could not be loaded from Firebase.',
                 style:
                     AppTextStyles.body.copyWith(
                   color: AppColors.white,

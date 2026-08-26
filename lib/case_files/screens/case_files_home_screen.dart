@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -32,7 +32,8 @@ class CaseFilesHomeScreen extends StatelessWidget {
                       title: 'ANIMAL KINGDOM',
                       imagePath:
                           'assets/images/case_files/topics/animal_world.webp',
-                      status: 'CASE 2 OF 20',
+                      status: '10 BIRDS QUESTIONS',
+                      buttonLabel: 'VIEW CASE',
                       imageScale: 1.22,
                       onTap: () {
                         Navigator.of(context).push(
@@ -45,39 +46,51 @@ class CaseFilesHomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: _CaseFileCard(
-                      title: 'AMAZING WORLD',
+                      title: 'AROUND THE WORLD',
                       imagePath:
                           'assets/images/case_files/topics/amazing_world.webp',
-                      status: 'COMING SOON',
+                      status: '',
+                      buttonLabel: 'VIEW CASE',
                       imageScale: 1.14,
-                      isComingSoon: true,
+                      onTap: () => _showCaseNotBuiltYet(
+                        context,
+                        'Around the World',
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 6),
-              const Row(
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: _CaseFileCard(
-                      title: 'MYSTERIES & LEGENDS',
+                      title: 'SECRETS OF THE PAST',
                       imagePath:
                           'assets/images/case_files/topics/mysteries_legends.webp',
-                      status: 'COMING SOON',
-                      isComingSoon: true,
+                      status: '',
+                      buttonLabel: 'VIEW CASE',
+                      onTap: () => _showCaseNotBuiltYet(
+                        context,
+                        'Secrets of the Past',
+                      ),
                     ),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: _CaseFileCard(
-                      title: 'TASTES & TREATS',
+                      title: 'A TASTE OF MYSTERY',
                       imagePath:
                           'assets/images/case_files/topics/tastes_and_treats.webp',
-                      status: 'COMING SOON',
-                      isComingSoon: true,
+                      status: '',
+                      buttonLabel: 'VIEW CASE',
+                      onTap: () => _showCaseNotBuiltYet(
+                        context,
+                        'A Taste of Mystery',
+                      ),
                     ),
                   ),
                 ],
@@ -87,6 +100,27 @@ class CaseFilesHomeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+  static void _showCaseNotBuiltYet(
+    BuildContext context,
+    String caseName,
+  ) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.panel,
+          behavior: SnackBarBehavior.floating,
+          content: Text(
+            '$caseName is available, but its Case Path screen has not been built yet.',
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
   }
 }
 
@@ -161,7 +195,7 @@ class _CaseFilesHero extends StatelessWidget {
           Expanded(
             flex: 5,
             child: Image.asset(
-              'assets/images/detective_dog.png',
+              'assets/images/case_files/case_file_main_image.webp',
               fit: BoxFit.contain,
               filterQuality: FilterQuality.high,
             ),
@@ -190,47 +224,23 @@ class _CaseFilesHero extends StatelessWidget {
                   maxLines: 1,
                   style: AppTextStyles.label.copyWith(
                     color: const Color(0xFFFE5E02),
-                    fontSize: 13.5,
+                    fontSize: 16,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.25,
                     height: 1,
                   ),
                 ),
                 const SizedBox(height: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Crack 20 cases, unlock rewards',
-                        maxLines: 1,
-                        softWrap: false,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.white,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          height: 1.28,
-                        ),
-                      ),
-                    ),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'and master each Case File.',
-                        maxLines: 1,
-                        softWrap: false,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.white,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          height: 1.28,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  'Complete missions. Solve each Case File. Earn exclusive Case File Badges.',
+                  maxLines: 2,
+                  softWrap: true,
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.white,
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w600,
+                    height: 1.22,
+                  ),
                 ),
               ],
             ),
@@ -245,17 +255,17 @@ class _CaseFileCard extends StatelessWidget {
   final String title;
   final String imagePath;
   final String status;
+  final String buttonLabel;
   final double imageScale;
   final VoidCallback? onTap;
-  final bool isComingSoon;
 
   const _CaseFileCard({
     required this.title,
     required this.imagePath,
     required this.status,
+    this.buttonLabel = 'VIEW CASE',
     this.imageScale = 1.0,
     this.onTap,
-    this.isComingSoon = false,
   });
 
   @override
@@ -263,7 +273,7 @@ class _CaseFileCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: isComingSoon ? null : onTap,
+        onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: SizedBox(
           height: 294,
@@ -271,7 +281,7 @@ class _CaseFileCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               Opacity(
-                opacity: isComingSoon ? 0.38 : 1.0,
+                opacity: 1.0,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -476,7 +486,7 @@ class _CaseFileCard extends StatelessWidget {
                                     fit: BoxFit
                                         .scaleDown,
                                     child: Text(
-                                      isComingSoon ? '' : status,
+                                      status,
                                       maxLines: 1,
                                       textAlign:
                                           TextAlign
@@ -543,17 +553,13 @@ class _CaseFileCard extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 9),
-                          if (!isComingSoon)
-                            FractionallySizedBox(
-                              widthFactor: 0.84,
-                              child: _CasePlayButton(
-                                onTap: onTap,
-                              ),
-                            )
-                          else
-                            const SizedBox(
-                              height: 34,
+                          FractionallySizedBox(
+                            widthFactor: 0.84,
+                            child: _CasePlayButton(
+                              label: buttonLabel,
+                              onTap: onTap,
                             ),
+                          ),
                           const SizedBox(height: 6),
                           const Spacer(),
                         ],
@@ -563,20 +569,6 @@ class _CaseFileCard extends StatelessWidget {
                 ),
               ),
            
-              // Large centred padlock for locked Case Files.
-              if (isComingSoon)
-                Center(
-                  child: IgnorePointer(
-                    child: Image.asset(
-                      'assets/images/case_files/locked_case_padlock.webp',
-                      width: 82,
-                      height: 82,
-                      fit: BoxFit.contain,
-                      filterQuality: FilterQuality.high,
-                    ),
-                  ),
-                ),
-
             ],
           ),
         ),
@@ -586,9 +578,11 @@ class _CaseFileCard extends StatelessWidget {
 }
 
 class _CasePlayButton extends StatelessWidget {
+  final String label;
   final VoidCallback? onTap;
 
   const _CasePlayButton({
+    required this.label,
     this.onTap,
   });
 
@@ -631,7 +625,7 @@ class _CasePlayButton extends StatelessWidget {
                 BorderRadius.circular(9),
             child: Center(
               child: Text(
-                'PLAY',
+                label,
                 style:
                     AppTextStyles.label.copyWith(
                   color: AppColors.white,

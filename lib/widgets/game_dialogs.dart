@@ -333,9 +333,9 @@ Future<bool?> showPracticeModeDialog({
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: Text(
-                      'BACK TO ${categoryLabel.toUpperCase()}',
-                      style: const TextStyle(
+                    child: const Text(
+                      'BACK TO HOME',
+                      style: TextStyle(
                         fontSize: 15,
                         fontFamily: 'Oswald',
                         fontWeight: FontWeight.w500,

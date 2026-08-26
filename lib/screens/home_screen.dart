@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -465,7 +465,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: _openCreativeWorldSubcategories,
       ),
       _CategoryData(
-        title: 'Famous People',
+        title: 'Who Am I?',
         subtitle: 'Recognise notable people from around the world',
         imagePath: 'assets/images/categories/famous_people.webp',
         isAvailable: true,
@@ -693,7 +693,7 @@ class _QuickPlayRow extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // DAILY FLASH 5 — LEFT
+              // DAILY FLASH 5 â€” LEFT
               Expanded(
                 flex: 5,
                 child: _DailyFlashCard(
@@ -705,7 +705,7 @@ class _QuickPlayRow extends StatelessWidget {
 
               SizedBox(width: gap),
 
-              // MY CASE FILES — RIGHT
+              // MY CASE FILES â€” RIGHT
               Expanded(
                 flex: 4,
                 child: _CaseFilesCard(
@@ -760,7 +760,7 @@ class _CaseFilesCard extends StatelessWidget {
               Expanded(
                 flex: 5,
                 child: Image.asset(
-                  'assets/images/detective_dog.png',
+                  'assets/images/case_files/case_file_main_image.webp',
                   fit: BoxFit.contain,
                   filterQuality: FilterQuality.high,
                 ),
@@ -893,7 +893,7 @@ class _DailyFlashCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: Text(
-                      '2× XP',
+                      '2Ã— XP',
                       style: AppTextStyles.label.copyWith(
                         color: Colors.black,
                         fontSize: isNarrow ? 12.5 : 14,

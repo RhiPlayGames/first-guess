@@ -286,6 +286,14 @@ def main():
         action="store_true",
         help="Actually upload missing images and create/update Firestore documents.",
     )
+    parser.add_argument(
+        "--replace-images",
+        action="store_true",
+        help=(
+            "Overwrite existing Storage images from the workbook's local image paths. "
+            "Firestore is left untouched unless --write is also used without this mode."
+        ),
+    )
     args = parser.parse_args()
 
     base_dir = Path(__file__).resolve().parent
@@ -294,7 +302,11 @@ def main():
 
     print("FIRST GUESS FIREBASE BULK IMPORTER")
     print("=" * 72)
-    print(f"Mode: {'WRITE' if args.write else 'DRY RUN (NO CHANGES)'}")
+    if args.replace_images:
+        mode = "REPLACE IMAGES" if args.write else "REPLACE IMAGES DRY RUN (NO CHANGES)"
+    else:
+        mode = "WRITE" if args.write else "DRY RUN (NO CHANGES)"
+    print(f"Mode: {mode}")
     print(f"Workbook: {workbook_path.name}")
     print(f"Firestore collection: {COLLECTION_NAME}")
     print(f"Storage bucket: {STORAGE_BUCKET}")
@@ -326,8 +338,12 @@ def main():
         snapshot = doc_ref.get()
         document_exists = snapshot.exists
 
-        image_action = "KEEP existing" if remote_image_exists else "UPLOAD"
-        doc_action = "UPDATE" if document_exists else "CREATE"
+        if args.replace_images:
+            image_action = "REPLACE" if remote_image_exists else "UPLOAD"
+            doc_action = "KEEP"
+        else:
+            image_action = "KEEP existing" if remote_image_exists else "UPLOAD"
+            doc_action = "UPDATE" if document_exists else "CREATE"
 
         print(
             f"{qid}: image={image_action:<13} firestore={doc_action:<6} "
@@ -348,41 +364,73 @@ def main():
     print("-" * 72)
 
     upload_count = sum(not item["remote_image_exists"] for item in plan)
-    create_count = sum(not item["document_exists"] for item in plan)
-    update_count = sum(item["document_exists"] for item in plan)
+    replace_count = sum(item["remote_image_exists"] for item in plan) if args.replace_images else 0
+    create_count = 0 if args.replace_images else sum(not item["document_exists"] for item in plan)
+    update_count = 0 if args.replace_images else sum(item["document_exists"] for item in plan)
 
     print("\nIMPORT PLAN")
     print(f"Questions: {len(plan)}")
-    print(f"Images already in Storage: {len(plan) - upload_count}")
-    print(f"Images to upload: {upload_count}")
-    print(f"Firestore documents to create: {create_count}")
-    print(f"Firestore documents to update: {update_count}")
+    if args.replace_images:
+        print(f"Existing Storage images to replace: {replace_count}")
+        print(f"Missing Storage images to upload: {upload_count}")
+        print("Firestore documents to create: 0")
+        print("Firestore documents to update: 0")
+    else:
+        print(f"Images already in Storage: {len(plan) - upload_count}")
+        print(f"Images to upload: {upload_count}")
+        print(f"Firestore documents to create: {create_count}")
+        print(f"Firestore documents to update: {update_count}")
 
     if not args.write:
         print("\nDRY RUN COMPLETE — NO FIREBASE DATA WAS CHANGED.")
         print("If the plan above is correct, run:")
-        print("    python import_to_firebase.py --write")
+        if args.replace_images:
+            print(
+                f'    python import_to_firebase.py "{workbook_path.name}" '
+                "--replace-images --write"
+            )
+        else:
+            print(f'    python import_to_firebase.py "{workbook_path.name}" --write')
         return
 
     print("\nWRITE MODE STARTING")
     print("=" * 72)
 
     uploaded = 0
+    replaced = 0
     for item in plan:
-        if item["remote_image_exists"]:
+        if item["remote_image_exists"] and not args.replace_images:
             continue
 
         local_path = item["local_image"]
         blob = item["blob"]
+        was_existing = item["remote_image_exists"]
         blob.upload_from_filename(
             str(local_path),
             content_type="image/webp",
         )
-        uploaded += 1
-        print(
-            f"UPLOADED IMAGE: {item['record']['questionId']} -> "
-            f"{item['record']['imagePath']}"
-        )
+
+        if was_existing:
+            replaced += 1
+            print(
+                f"REPLACED IMAGE: {item['record']['questionId']} -> "
+                f"{item['record']['imagePath']}"
+            )
+        else:
+            uploaded += 1
+            print(
+                f"UPLOADED IMAGE: {item['record']['questionId']} -> "
+                f"{item['record']['imagePath']}"
+            )
+
+    if args.replace_images:
+        print("\nIMAGE REPLACEMENT COMPLETE")
+        print("=" * 72)
+        print(f"Images replaced: {replaced}")
+        print(f"Missing images uploaded: {uploaded}")
+        print("Firestore documents written: 0")
+        print("Permanent question IDs and Firestore data were left untouched.")
+        return
 
     batch = db.batch()
     write_ops = 0

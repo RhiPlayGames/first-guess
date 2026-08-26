@@ -589,8 +589,11 @@ extension _GameScreenView on _GameScreenState {
     }
 
     if (widget.isFlagGame) {
-      return FlagImagePanel(
+      return RevealImagePanel(
         imagePath: currentItem.imagePath,
+        clueIndex: currentClueIndex,
+        effect: RevealEffect.none,
+        fit: BoxFit.contain,
       );
     }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_text_styles.dart';
 import '../../widgets/app_home_button.dart';
+import 'animal_kingdom_mission_screen.dart';
 
 class AnimalKingdomCasePathScreen extends StatelessWidget {
   const AnimalKingdomCasePathScreen({super.key});
@@ -9,10 +10,10 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
   static const String _assetBase =
       'assets/images/case_paths/animal_kingdom';
 
-  // Temporary values until we connect these to saved user progress.
-  static const int _currentCase = 12;
-  static const int _currentXp = 320;
-  static const int _targetXp = 500;
+  // Temporary values until we connect these to saved Case File progress.
+  static const int _currentStage = 1;
+  static const int _completedStages = 0;
+  static const int _totalStages = 20;
 
   @override
   Widget build(BuildContext context) {
@@ -57,14 +58,6 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                           ),
 
                           const Positioned(
-                            left: 116,
-                            right: 116,
-                            top: 8,
-                            height: 55,
-                            child: _FirstGuessLogo(),
-                          ),
-
-                          const Positioned(
                             right: 26,
                             top: 14,
                             child: FirstGuessHomeButton(),
@@ -74,7 +67,7 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                           const Positioned(
                             left: 54,
                             right: 54,
-                            top: 70,
+                            top: 22,
                             child: _MapTitle(),
                           ),
 
@@ -82,19 +75,19 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                           const Positioned(
                             left: 83,
                             right: 83,
-                            top: 154,
+                            top: 100,
                             height: 72,
                             child: _CaseProgressPanel(
-                              currentCase: _currentCase,
-                              currentXp: _currentXp,
-                              targetXp: _targetXp,
+                              currentStage: _currentStage,
+                              completedStages: _completedStages,
+                              totalStages: _totalStages,
                             ),
                           ),
 
                           // Case Start
                           const Positioned(
                             left: 12,
-                            top: 230,
+                            top: 190,
                             width: 78,
                             child: _DecorativeImage(
                               path: '$_assetBase/case_start.webp',
@@ -119,14 +112,14 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                           const _CaseNode(
                             number: 1,
                             left: 108,
-                            top: 255,
-                            currentCase: _currentCase,
+                            top: 205,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 2,
                             left: 260,
                             top: 305,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
 
                           const Positioned(
@@ -145,13 +138,13 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             number: 3,
                             left: 158,
                             top: 360,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 4,
                             left: 282,
                             top: 415,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
 
                           const Positioned(
@@ -168,25 +161,25 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             number: 5,
                             left: 118,
                             top: 470,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 6,
                             left: 260,
                             top: 525,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 7,
                             left: 135,
                             top: 580,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 8,
                             left: 275,
                             top: 635,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
 
                           // Detective dog moved to the right-hand side.
@@ -203,7 +196,7 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             number: 9,
                             left: 110,
                             top: 690,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
 
                           const Positioned(
@@ -221,7 +214,7 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             number: 10,
                             left: 270,
                             top: 745,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
 
                           const Positioned(
@@ -239,61 +232,61 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             number: 11,
                             left: 125,
                             top: 800,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 12,
                             left: 280,
                             top: 855,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 13,
                             left: 115,
                             top: 910,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 14,
                             left: 270,
                             top: 965,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 15,
                             left: 125,
                             top: 1020,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 16,
                             left: 280,
                             top: 1075,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 17,
                             left: 120,
                             top: 1130,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 18,
                             left: 260,
                             top: 1175,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 19,
                             left: 115,
                             top: 1220,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
                           const _CaseNode(
                             number: 20,
                             left: 235,
                             top: 1270,
-                            currentCase: _currentCase,
+                            currentStage: _currentStage,
                           ),
 
                           // Tiger Polaroid positioned beside Case 13.
@@ -382,19 +375,6 @@ class _BackButton extends StatelessWidget {
   }
 }
 
-class _FirstGuessLogo extends StatelessWidget {
-  const _FirstGuessLogo();
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.asset(
-      'assets/images/first_guess_header.png',
-      fit: BoxFit.contain,
-      filterQuality: FilterQuality.high,
-    );
-  }
-}
-
 class _MapTitle extends StatelessWidget {
   const _MapTitle();
 
@@ -426,7 +406,7 @@ class _MapTitle extends StatelessWidget {
           children: [
             Flexible(
               child: Text(
-                'Solve games. Earn XP. Crack the next case',
+                'Complete missions. Follow the trail. Solve the case.',
                 maxLines: 1,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.body.copyWith(
@@ -458,20 +438,21 @@ class _MapTitle extends StatelessWidget {
 }
 
 class _CaseProgressPanel extends StatelessWidget {
-  final int currentCase;
-  final int currentXp;
-  final int targetXp;
+  final int currentStage;
+  final int completedStages;
+  final int totalStages;
 
   const _CaseProgressPanel({
-    required this.currentCase,
-    required this.currentXp,
-    required this.targetXp,
+    required this.currentStage,
+    required this.completedStages,
+    required this.totalStages,
   });
 
   @override
   Widget build(BuildContext context) {
-    final progress =
-        targetXp <= 0 ? 0.0 : (currentXp / targetXp).clamp(0.0, 1.0);
+    final progress = totalStages <= 0
+        ? 0.0
+        : (completedStages / totalStages).clamp(0.0, 1.0);
 
     return Stack(
       fit: StackFit.expand,
@@ -482,34 +463,40 @@ class _CaseProgressPanel extends StatelessWidget {
           filterQuality: FilterQuality.high,
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(29, 14, 23, 12),
+          padding: const EdgeInsets.fromLTRB(29, 12, 23, 10),
           child: Row(
             children: [
               SizedBox(
-                width: 77,
+                width: 100,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'CASE $currentCase',
+                      'CASE PROGRESS',
                       maxLines: 1,
                       style: AppTextStyles.category.copyWith(
-                        color: const Color(0xFF342719),
-                        fontSize: 17,
+                        color: Colors.white,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w900,
                         height: 1,
                       ),
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '$currentXp / $targetXp XP',
+                      '$completedStages / $totalStages',
                       maxLines: 1,
                       style: AppTextStyles.label.copyWith(
-                        color: const Color(0xFF7D4D24),
-                        fontSize: 9.5,
+                        color: Colors.white,
+                        fontSize: 11,
                         fontWeight: FontWeight.w900,
                         height: 1,
+                        shadows: const [
+                          Shadow(
+                            color: Colors.black,
+                            blurRadius: 2,
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -556,7 +543,7 @@ class _CaseProgressPanel extends StatelessWidget {
                 height: 40,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF191711),
+                    color: const Color(0xFFFE5E02),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: const Color(0xFFD96519),
@@ -589,7 +576,7 @@ class _CasePathPainter extends CustomPainter {
   const _CasePathPainter();
 
   static const List<Offset> _points = [
-    Offset(137, 284),
+    Offset(137, 234),
     Offset(289, 334),
     Offset(187, 389),
     Offset(311, 444),
@@ -685,93 +672,182 @@ class _CaseNode extends StatelessWidget {
   final int number;
   final double left;
   final double top;
-  final int currentCase;
+  final int currentStage;
 
   const _CaseNode({
     required this.number,
     required this.left,
     required this.top,
-    required this.currentCase,
+    required this.currentStage,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isCurrent = number == currentCase;
-    final isComplete = number < currentCase;
-    final isLocked = number > currentCase;
+    final isCurrent = number == currentStage;
+    final isComplete = number < currentStage;
+    final isLocked = number > currentStage;
+    final isFinal = number == 20;
+
+    final nodeSize = isFinal
+        ? 72.0
+        : isCurrent
+            ? 68.0
+            : 58.0;
+
+    const labelWidth = 110.0;
 
     return Positioned(
-      left: left,
+      left: left - ((labelWidth - nodeSize) / 2),
       top: top,
-      width: isCurrent ? 68 : 58,
-      height: isCurrent ? 68 : 58,
-      child: GestureDetector(
-        onTap: isLocked
-            ? null
-            : () {
-                // Individual case gameplay will be connected later.
-              },
-        child: Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isCurrent
-                  ? const [
-                      Color(0xFFFFC45C),
-                      Color(0xFFD96519),
-                      Color(0xFF7A3514),
-                    ]
-                  : isComplete
+      width: labelWidth,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: GestureDetector(
+            onTap: isLocked
+                ? null
+                : () {
+                    if (number == 1) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (context) =>
+                              const AnimalKingdomMissionScreen(),
+                        ),
+                      );
+                    }
+                  },
+            child: Container(
+              width: nodeSize,
+              height: nodeSize,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isFinal
                       ? const [
-                          Color(0xFFA9683C),
-                          Color(0xFF6D3F27),
+                          Color(0xFFFFC45C),
+                          Color(0xFFD96519),
+                          Color(0xFF6A2B10),
                         ]
-                      : const [
-                          Color(0xFF6B5B48),
-                          Color(0xFF3E352B),
-                        ],
-            ),
-            border: Border.all(
-              color: isCurrent
-                  ? const Color(0xFFFFE6A5)
-                  : const Color(0xFFD9B98A),
-              width: isCurrent ? 3.5 : 2.5,
-            ),
-            boxShadow: [
-              const BoxShadow(
-                color: Color(0x99000000),
-                blurRadius: 4,
-                offset: Offset(0, 2),
+                      : isCurrent
+                          ? const [
+                              Color(0xFFFE5E02),
+                              Color(0xFFFE5E02),
+                              Color(0xFFFE5E02),
+                            ]
+                          : isComplete
+                              ? const [
+                                  Color(0xFFA9683C),
+                                  Color(0xFF6D3F27),
+                                ]
+                              : const [
+                                  Color(0xFF6B5B48),
+                                  Color(0xFF3E352B),
+                                ],
+                ),
+                border: Border.all(
+                  color: isCurrent || isFinal
+                      ? const Color(0xFFFFE6A5)
+                      : const Color(0xFFD9B98A),
+                  width: isCurrent || isFinal ? 3.5 : 2.5,
+                ),
+                boxShadow: [
+                  const BoxShadow(
+                    color: Color(0x99000000),
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                  if (isCurrent)
+                    const BoxShadow(
+                      color: Color(0xAAFFB229),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                    ),
+                ],
               ),
-              if (isCurrent)
-                const BoxShadow(
-                  color: Color(0xAAFFB229),
-                  blurRadius: 12,
-                  spreadRadius: 2,
-                ),
-            ],
-          ),
-          child: Text(
-            '$number',
-            style: AppTextStyles.label.copyWith(
-              color: isLocked
-                  ? const Color(0xFFD4C5AE)
-                  : Colors.white,
-              fontSize: isCurrent ? 27 : 23,
-              fontWeight: FontWeight.w900,
-              height: 1,
-              shadows: const [
-                Shadow(
-                  color: Colors.black,
-                  blurRadius: 2,
-                ),
-              ],
+              child: isComplete
+                  ? const Icon(
+                      Icons.check_rounded,
+                      color: Colors.white,
+                      size: 30,
+                    )
+                  : isLocked && !isFinal
+                      ? const Icon(
+                          Icons.lock_rounded,
+                          color: Color(0xFFD4C5AE),
+                          size: 24,
+                        )
+                      : isFinal && isLocked
+                          ? const Icon(
+                              Icons.workspace_premium_rounded,
+                              color: Color(0xFFD4C5AE),
+                              size: 32,
+                            )
+                          : Text(
+                              '$number',
+                              style: AppTextStyles.label.copyWith(
+                                color: Colors.white,
+                                fontSize: isFinal ? 25 : isCurrent ? 27 : 23,
+                                fontWeight: FontWeight.w900,
+                                height: 1,
+                                shadows: const [
+                                  Shadow(
+                                    color: Colors.black,
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
             ),
           ),
-        ),
+          ),
+          if (isCurrent) ...[
+            const SizedBox(height: 4),
+            Text(
+              'TAP TO START',
+              maxLines: 1,
+              style: AppTextStyles.category.copyWith(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.3,
+                shadows: const [
+                  Shadow(
+                    color: Colors.black,
+                    blurRadius: 2,
+                    offset: Offset(-1, 0),
+                  ),
+                  Shadow(
+                    color: Colors.black,
+                    blurRadius: 2,
+                    offset: Offset(1, 0),
+                  ),
+                  Shadow(
+                    color: Colors.black,
+                    blurRadius: 2,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (isFinal) ...[
+            const SizedBox(height: 3),
+            Text(
+              'FINAL CASE',
+              maxLines: 1,
+              style: AppTextStyles.label.copyWith(
+                color: const Color(0xFF342719),
+                fontSize: 8.5,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

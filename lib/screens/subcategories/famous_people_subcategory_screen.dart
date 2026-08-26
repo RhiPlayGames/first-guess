@@ -24,14 +24,24 @@ class _FamousPeopleSubcategoryScreenState
   static const List<_FamousPeopleSubcategory> _items =
       <_FamousPeopleSubcategory>[
     _FamousPeopleSubcategory(
-      'Royalty & Political Leaders',
-      Icons.account_balance_rounded,
-      firebaseKey: 'royalty_political_leaders',
+      'Actors & Directors',
+      Icons.movie_creation_outlined,
+      firebaseKey: 'actors_directors',
     ),
     _FamousPeopleSubcategory(
-      'Explorers & Campaigners',
-      Icons.explore_rounded,
-      firebaseKey: 'explorers_campaigners',
+      'Musicians & Singers',
+      Icons.music_note_rounded,
+      firebaseKey: 'musicians_singers',
+    ),
+    _FamousPeopleSubcategory(
+      'Authors, Poets & Playwrights',
+      Icons.menu_book_rounded,
+      firebaseKey: 'authors_writers',
+    ),
+    _FamousPeopleSubcategory(
+      'Royalty & Political Leaders',
+      Icons.account_balance_rounded,
+      firebaseKey: 'royalty_leaders',
     ),
     _FamousPeopleSubcategory(
       'Scientists & Inventors',
@@ -39,29 +49,39 @@ class _FamousPeopleSubcategoryScreenState
       firebaseKey: 'scientists_inventors',
     ),
     _FamousPeopleSubcategory(
+      'Explorers & Adventurers',
+      Icons.explore_rounded,
+      firebaseKey: 'explorers_adventurers',
+    ),
+    _FamousPeopleSubcategory(
       'Entrepreneurs & Business Leaders',
       Icons.business_center_rounded,
-      firebaseKey: 'entrepreneurs_business_leaders',
+      firebaseKey: 'entrepreneurs_business',
     ),
     _FamousPeopleSubcategory(
-      'Philosophers & Religious Figures',
-      Icons.psychology_alt_rounded,
-      firebaseKey: 'philosophers_religious_figures',
-    ),
-    _FamousPeopleSubcategory(
-      'Public & Internet Personalities',
-      Icons.public_rounded,
-      firebaseKey: 'public_internet_personalities',
+      'Campaigners & Humanitarians',
+      Icons.volunteer_activism_rounded,
+      firebaseKey: 'campaigners_humanitarians',
     ),
     _FamousPeopleSubcategory(
       'Pioneers & Record Breakers',
       Icons.workspace_premium_rounded,
-      firebaseKey: 'pioneers_record_breakers',
+      firebaseKey: 'pioneers_records',
     ),
     _FamousPeopleSubcategory(
-      'Other Notable Individuals',
-      Icons.person_search_rounded,
-      firebaseKey: 'other_notable_individuals',
+      'Public & Internet Personalities',
+      Icons.public_rounded,
+      firebaseKey: 'public_internet',
+    ),
+    _FamousPeopleSubcategory(
+      'Footballers',
+      Icons.sports_soccer_rounded,
+      firebaseKey: 'footballers',
+    ),
+    _FamousPeopleSubcategory(
+      'Athletes & Sports Stars',
+      Icons.emoji_events_rounded,
+      firebaseKey: 'athletes_sports',
     ),
   ];
 
@@ -400,7 +420,7 @@ class _Header extends StatelessWidget {
               children: [
                 Center(
                   child: Text(
-                    'FAMOUS PEOPLE',
+                    'WHO AM I?',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.category.copyWith(
                       color: AppColors.white,

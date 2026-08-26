@@ -64,11 +64,6 @@ class _PastPresentSubcategoryScreenState
       firebaseKey: 'monarchies_dynasties',
     ),
     _PastPresentSubcategory(
-      'Revolutions & Political Movements',
-      Icons.campaign_rounded,
-      firebaseKey: 'revolutions_political_movements',
-    ),
-    _PastPresentSubcategory(
       'Historical Mysteries',
       Icons.help_center_rounded,
       firebaseKey: 'historical_mysteries',
@@ -79,24 +74,14 @@ class _PastPresentSubcategoryScreenState
       firebaseKey: 'myths_legends',
     ),
     _PastPresentSubcategory(
-      'Traditions & Cultural Customs',
-      Icons.diversity_3_rounded,
-      firebaseKey: 'traditions_cultural_customs',
-    ),
-    _PastPresentSubcategory(
-      'Ancient Religions & Beliefs',
-      Icons.temple_buddhist_rounded,
-      firebaseKey: 'ancient_religions_beliefs',
-    ),
-    _PastPresentSubcategory(
-      'Then-and-Now Challenges',
+      'Then-and-Now',
       Icons.compare_rounded,
-      firebaseKey: 'then_and_now_challenges',
+      firebaseKey: 'then_now',
     ),
     _PastPresentSubcategory(
-      'Important Dates & Lost Cities',
+      'Important Dates',
       Icons.event_note_rounded,
-      firebaseKey: 'important_dates_lost_cities',
+      firebaseKey: 'important_dates',
     ),
   ];
 

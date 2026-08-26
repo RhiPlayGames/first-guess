@@ -52,10 +52,10 @@ class _CountriesSubcategoryScreenState
       title: 'Flags',
       imagePath:
           'assets/images/categories/subcategories/countries/flags.webp',
-      played: 60,
-      total: 70,
-      status: _SubcategoryStatus.newQuestions,
-      newQuestions: 10,
+      played: 0,
+      total: 30,
+      status: _SubcategoryStatus.notStarted,
+      idPrefix: 'countries_flags_',
     ),
     _CountriesSubcategoryData(
       title: 'Natural Wonders & Landscapes',
@@ -67,14 +67,6 @@ class _CountriesSubcategoryScreenState
       idPrefix: 'countries_natural_wonders_landscapes_',
     ),
     _CountriesSubcategoryData(
-      title: 'Landmarks & Wonders',
-      imagePath:
-          'assets/images/categories/subcategories/countries/landmarks_wonders.webp',
-      played: 50,
-      total: 50,
-      status: _SubcategoryStatus.allCaughtUp,
-    ),
-    _CountriesSubcategoryData(
       title: 'Major Cities',
       imagePath:
           'assets/images/categories/subcategories/countries/major_cities.webp',
@@ -82,14 +74,6 @@ class _CountriesSubcategoryScreenState
       total: 10,
       status: _SubcategoryStatus.notStarted,
       idPrefix: 'countries_major_cities_',
-    ),
-    _CountriesSubcategoryData(
-      title: 'Maps & Borders',
-      imagePath:
-          'assets/images/categories/subcategories/countries/maps_borders.webp',
-      played: 8,
-      total: 60,
-      status: _SubcategoryStatus.inProgress,
     ),
     _CountriesSubcategoryData(
       title: 'National Foods',
@@ -113,9 +97,10 @@ class _CountriesSubcategoryScreenState
       title: 'States & Regions',
       imagePath:
           'assets/images/categories/subcategories/countries/states_regions.webp',
-      played: 60,
-      total: 60,
-      status: _SubcategoryStatus.allCaughtUp,
+      played: 0,
+      total: 20,
+      status: _SubcategoryStatus.notStarted,
+      idPrefix: 'countries_states_regions_',
     ),
   ];
 
@@ -466,6 +451,84 @@ class _CountriesSubcategoryScreenState
       return;
     }
 
+    if (item.title == 'Flags') {
+      try {
+        final items =
+            await FirebaseChallengeService.loadLiveSubcategory(
+          category: 'countries',
+          subcategory: 'flags',
+        );
+
+        if (!context.mounted) {
+          return;
+        }
+
+        if (items.isEmpty) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.panel,
+                behavior: SnackBarBehavior.floating,
+                content: Text(
+                  'No live Flags questions were found.',
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+          return;
+        }
+
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) => GameScreen.firebaseDynamic(
+              items: items,
+              launchedFromSurpriseMe: false,
+              showSurpriseToast: false,
+            ),
+          ),
+        );
+
+        if (mounted) {
+          await _refreshScreenData();
+        }
+      } catch (error, stackTrace) {
+        debugPrint(
+          'FLAGS FIREBASE ERROR: $error',
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+        );
+
+        if (!context.mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior: SnackBarBehavior.floating,
+              content: Text(
+                'Flags could not be loaded from Firebase.',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+      }
+
+      return;
+    }
+
     if (item.title == 'Major Cities') {
       try {
         final items =
@@ -769,6 +832,84 @@ class _CountriesSubcategoryScreenState
       return;
     }
 
+    if (item.title == 'States & Regions') {
+      try {
+        final items =
+            await FirebaseChallengeService.loadLiveSubcategory(
+          category: 'countries',
+          subcategory: 'states_and_regions',
+        );
+
+        if (!context.mounted) {
+          return;
+        }
+
+        if (items.isEmpty) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.panel,
+                behavior: SnackBarBehavior.floating,
+                content: Text(
+                  'No live States & Regions questions were found.',
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+          return;
+        }
+
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) => GameScreen.firebaseDynamic(
+              items: items,
+              launchedFromSurpriseMe: false,
+              showSurpriseToast: false,
+            ),
+          ),
+        );
+
+        if (mounted) {
+          await _refreshScreenData();
+        }
+      } catch (error, stackTrace) {
+        debugPrint(
+          'STATES & REGIONS FIREBASE ERROR: $error',
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+        );
+
+        if (!context.mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior: SnackBarBehavior.floating,
+              content: Text(
+                'States & Regions could not be loaded from Firebase.',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+      }
+
+      return;
+    }
+
     final String message;
 
     switch (item.status) {
@@ -785,7 +926,7 @@ class _CountriesSubcategoryScreenState
         break;
       case _SubcategoryStatus.newQuestions:
         message =
-            '${item.newQuestions} new questions are waiting in ${item.title}.';
+            'New questions are waiting in ${item.title}.';
         break;
       case _SubcategoryStatus.playAgain:
         message =
@@ -1048,7 +1189,6 @@ class _CountriesSubcategoryData {
     required this.played,
     required this.total,
     required this.status,
-    this.newQuestions = 0,
     this.idPrefix,
   });
 
@@ -1057,6 +1197,5 @@ class _CountriesSubcategoryData {
   final int played;
   final int total;
   final _SubcategoryStatus status;
-  final int newQuestions;
   final String? idPrefix;
 }

@@ -30,7 +30,6 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/images/flags/
     - assets/images/authors/
     - assets/images/categories/
     - assets/images/categories/countries/capitals/

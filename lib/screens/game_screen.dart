@@ -9,7 +9,6 @@ import '../services/firebase_challenge_service.dart';
 import '../services/player_stats_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/clue_panel.dart';
-import '../widgets/flag_image_panel.dart';
 import '../widgets/game_dialogs.dart';
 import '../widgets/app_home_button.dart';
 import '../widgets/guess_panel.dart';
@@ -164,7 +163,7 @@ class GameScreen extends StatefulWidget {
       case QuizGameType.dessertsCakesSweets:
         return 'GUESS THE DESSERT';
       case QuizGameType.firebaseDynamic:
-        return 'FIRST GUESS';
+        return categoryName;
     }
   }
 
@@ -193,7 +192,87 @@ class GameScreen extends StatefulWidget {
       case QuizGameType.dessertsCakesSweets:
         return 'DESSERTS, CAKES & SWEETS';
       case QuizGameType.firebaseDynamic:
-        return 'SURPRISE ME';
+        if (launchedFromSurpriseMe) {
+          return 'SURPRISE ME';
+        }
+
+        final String id = _representativeQuestionId;
+
+        if (id.startsWith('who_am_i_actors_directors_')) {
+          return 'ACTORS & DIRECTORS';
+        }
+        if (id.startsWith('who_am_i_musicians_singers_')) {
+          return 'MUSICIANS & SINGERS';
+        }
+        if (id.startsWith('who_am_i_authors_writers_')) {
+          return 'AUTHORS, POETS & PLAYWRIGHTS';
+        }
+        if (id.startsWith('who_am_i_royalty_leaders_')) {
+          return 'ROYALTY & POLITICAL LEADERS';
+        }
+        if (id.startsWith('who_am_i_scientists_inventors_')) {
+          return 'SCIENTISTS & INVENTORS';
+        }
+        if (id.startsWith('who_am_i_explorers_adventurers_')) {
+          return 'EXPLORERS & ADVENTURERS';
+        }
+        if (id.startsWith('who_am_i_entrepreneurs_business_')) {
+          return 'ENTREPRENEURS & BUSINESS LEADERS';
+        }
+        if (id.startsWith('who_am_i_campaigners_humanitarians_')) {
+          return 'CAMPAIGNERS & HUMANITARIANS';
+        }
+        if (id.startsWith('who_am_i_pioneers_records_')) {
+          return 'PIONEERS & RECORD BREAKERS';
+        }
+        if (id.startsWith('who_am_i_public_internet_')) {
+          return 'PUBLIC & INTERNET PERSONALITIES';
+        }
+        if (id.startsWith('who_am_i_footballers_')) {
+          return 'FOOTBALLERS';
+        }
+        if (id.startsWith('who_am_i_athletes_sports_')) {
+          return 'ATHLETES & SPORTS STARS';
+        }
+
+        if (id.startsWith('past_present_then_now_')) {
+          return 'THEN-AND-NOW';
+        }
+        if (id.startsWith('past_present_important_dates_')) {
+          return 'IMPORTANT DATES';
+        }
+        if (id.startsWith('past_present_historical_events_')) {
+          return 'HISTORICAL EVENTS';
+        }
+        if (id.startsWith('past_present_battles_wars_')) {
+          return 'BATTLES & WARS';
+        }
+        if (id.startsWith('past_present_ancient_civilisations_empires_')) {
+          return 'ANCIENT CIVILISATIONS & EMPIRES';
+        }
+        if (id.startsWith('past_present_historical_eras_')) {
+          return 'HISTORICAL ERAS';
+        }
+        if (id.startsWith('past_present_archaeology_')) {
+          return 'ARCHAEOLOGY';
+        }
+        if (id.startsWith('past_present_historic_objects_')) {
+          return 'HISTORIC OBJECTS';
+        }
+        if (id.startsWith('past_present_castles_ruins_')) {
+          return 'CASTLES & RUINS';
+        }
+        if (id.startsWith('past_present_monarchies_dynasties_')) {
+          return 'MONARCHIES & DYNASTIES';
+        }
+        if (id.startsWith('past_present_historical_mysteries_')) {
+          return 'HISTORICAL MYSTERIES';
+        }
+        if (id.startsWith('past_present_myths_legends_')) {
+          return 'MYTHS & LEGENDS';
+        }
+
+        return 'FIRST GUESS';
     }
   }
 
