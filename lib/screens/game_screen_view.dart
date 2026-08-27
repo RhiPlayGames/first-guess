@@ -549,6 +549,11 @@ extension _GameScreenView on _GameScreenState {
   }
 
   Widget buildVisualPanel() {
+    final String visualImagePath =
+        (currentItem.id?.startsWith('who_am_i_') ?? false)
+            ? 'assets/images/categories/who_am_i/whoiam.webp'
+            : currentItem.imagePath;
+
     if (!imageReady) {
       return Container(
         height: 282,
@@ -590,7 +595,7 @@ extension _GameScreenView on _GameScreenState {
 
     if (widget.isFlagGame) {
       return RevealImagePanel(
-        imagePath: currentItem.imagePath,
+        imagePath: visualImagePath,
         clueIndex: currentClueIndex,
         effect: RevealEffect.none,
         fit: BoxFit.contain,
@@ -599,7 +604,7 @@ extension _GameScreenView on _GameScreenState {
 
     if (widget.isCapitalCitiesGame) {
       return RevealImagePanel(
-        imagePath: currentItem.imagePath,
+        imagePath: visualImagePath,
         clueIndex: currentClueIndex,
         effect: RevealEffect.none,
         fit: BoxFit.cover,
@@ -608,7 +613,7 @@ extension _GameScreenView on _GameScreenState {
 
     if (widget.isMajorCitiesGame) {
       return RevealImagePanel(
-        imagePath: currentItem.imagePath,
+        imagePath: visualImagePath,
         clueIndex: currentClueIndex,
         effect: RevealEffect.none,
         fit: BoxFit.cover,
@@ -617,14 +622,14 @@ extension _GameScreenView on _GameScreenState {
 
     if (widget.isCountrySilhouettesGame) {
       return SilhouettePanel(
-        imagePath: currentItem.imagePath,
+        imagePath: visualImagePath,
         clueIndex: currentClueIndex,
       );
     }
 
     if (widget.isAuthorGame) {
       return RevealImagePanel(
-        imagePath: currentItem.imagePath,
+        imagePath: visualImagePath,
         clueIndex: currentClueIndex,
         effect: RevealEffect.blur,
         fit: BoxFit.cover,
@@ -632,7 +637,7 @@ extension _GameScreenView on _GameScreenState {
     }
 
     return RevealImagePanel(
-      imagePath: currentItem.imagePath,
+      imagePath: visualImagePath,
       clueIndex: currentClueIndex,
       effect: RevealEffect.none,
       fit: BoxFit.cover,

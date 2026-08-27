@@ -427,16 +427,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final List<_CategoryData> categories = <_CategoryData>[
       _CategoryData(
-        title: 'Surprise Me',
-        subtitle: _surpriseMeLoading
-            ? 'Picking your surprise...'
-            : 'Let First Guess choose your challenge',
-        imagePath: 'assets/images/categories/surprise_me.webp',
-        isAvailable: true,
-        onPressed:
-            _surpriseMeLoading ? null : _openSurpriseGame,
-      ),
-      _CategoryData(
         title: 'Animals',
         subtitle: 'Explore mammals, birds, wildlife and more',
         imagePath: 'assets/images/categories/animals.webp',
@@ -463,13 +453,6 @@ class _HomeScreenState extends State<HomeScreen> {
         imagePath: 'assets/images/categories/creative_world.webp',
         isAvailable: true,
         onPressed: _openCreativeWorldSubcategories,
-      ),
-      _CategoryData(
-        title: 'Who Am I?',
-        subtitle: 'Recognise notable people from around the world',
-        imagePath: 'assets/images/categories/famous_people.webp',
-        isAvailable: true,
-        onPressed: _openFamousPeopleSubcategories,
       ),
       _CategoryData(
         title: 'Food & Drink',
@@ -507,11 +490,28 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: _openSportsSubcategories,
       ),
       _CategoryData(
+        title: 'Surprise Me',
+        subtitle: _surpriseMeLoading
+            ? 'Picking your surprise...'
+            : 'Let First Guess choose your challenge',
+        imagePath: 'assets/images/categories/surprise_me.webp',
+        isAvailable: true,
+        onPressed:
+            _surpriseMeLoading ? null : _openSurpriseGame,
+      ),
+      _CategoryData(
         title: 'Watch & Play',
         subtitle: 'Test your knowledge of film, television and games',
         imagePath: 'assets/images/categories/watch_and_play.webp',
         isAvailable: true,
         onPressed: _openWatchPlaySubcategories,
+      ),
+      _CategoryData(
+        title: 'Who Am I?',
+        subtitle: 'Recognise notable people from around the world',
+        imagePath: 'assets/images/categories/famous_people.webp',
+        isAvailable: true,
+        onPressed: _openFamousPeopleSubcategories,
       ),
     ];
 

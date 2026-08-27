@@ -1,0 +1,144 @@
+Tomorrow's plan:
+
+🥇 Build the category system
+Permanent categories
+Subcategories
+Future "Coming Soon" placeholders
+Build it so adding new categories later is easy
+
+⚡ Flash Five
+Create the once-daily challenge system
+One themed challenge per day
+Five questions
+Bonus XP
+Flash streak
+Foundation for future daily content
+
+🖼 Lock image dimensions
+Standardise every silhouette/image
+No stretching or jumping
+Makes adding new content much easier
+
+🎨 Polish pass
+Smooth clue transitions
+Button press animations
+Confetti on a First Guess
+Animated score/XP counting
+Achievement unlocked banner
+
+📚 Next permanent category
+Start building Books after the framework is in place.
+
+------------------------------------------
+
+flutter analyze
+flutter run -d chrome --web-port=5000
+
+Push live: https://rhiplaygames.github.io/first-guess/
+cd C:\RhiPlay\first_guess
+
+flutter analyze
+
+flutter build web
+
+cd build\web
+
+git add .
+
+git commit -m "Describe what changed"
+
+git push
+
+
+_______________________________________________
+
+Plan:
+After we confirm the latest phone build is showing correctly and finish those last two layout fixes, I’d move into this plan:
+
+1. Lock the gameplay screen
+
+Treat the current game screen as Version 1 complete.
+
+That means:
+
+no more major layout changes,
+only bug fixes,
+test Countries, Flags, Authors, and Surprise Me on phone,
+confirm no blank images,
+confirm no unwanted scrolling,
+confirm all feedback states work.
+2. Improve the results screen
+
+This should be the next visible upgrade.
+
+I’d add:
+
+clearer score summary,
+clue number used,
+lives remaining,
+First Guess result,
+category played,
+Play Again,
+Home,
+Share Result.
+
+This will make each round feel more rewarding and complete.
+
+3. Player profile and progression
+
+Then build the longer-term reasons to keep playing:
+
+XP
+rank levels
+achievements
+best streak
+accuracy
+First Guess rate
+category stats
+games played
+total score
+
+This is where your Explorer-style reward system can come in.
+
+4. Add more content
+
+Before monetisation, increase replay value:
+
+more countries,
+more flags,
+more authors,
+then a fourth full category, probably Books or Animals.
+
+Surprise Me becomes much better once it has more categories to choose from.
+
+5. Daily play system
+
+After enough content exists:
+
+daily challenge,
+two free plays per day,
+optional rewarded third play,
+daily spin,
+extra life reward.
+6. Monetisation
+
+Then wire in:
+
+AdMob banner where appropriate,
+interstitials at sensible breaks,
+rewarded ads for extra play or life,
+ability to disable these features until launch.
+7. Launch preparation
+
+Finally:
+
+privacy policy,
+terms,
+support page,
+app icons and splash screens,
+Android build,
+iOS build,
+private testing,
+store listings,
+screenshots,
+final bug testing.

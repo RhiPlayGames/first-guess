@@ -447,6 +447,12 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   ImageProvider<Object> imageProviderForPath(String imagePath) {
+    if (currentItem.id?.startsWith('who_am_i_') ?? false) {
+      return const AssetImage(
+        'assets/images/categories/who_am_i/whoiam.webp',
+      );
+    }
+
     final Uri? uri = Uri.tryParse(imagePath);
     final bool isNetworkImage =
         uri != null &&

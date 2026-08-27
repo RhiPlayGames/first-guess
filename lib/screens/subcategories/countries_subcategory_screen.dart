@@ -22,86 +22,86 @@ class _CountriesSubcategoryScreenState
   static const List<_CountriesSubcategoryData>
       _subcategories = <_CountriesSubcategoryData>[
     _CountriesSubcategoryData(
-      title: 'Capital Cities',
-      imagePath:
-          'assets/images/categories/subcategories/countries/capitals_cities.webp',
-      played: 0,
-      total: 10,
-      status: _SubcategoryStatus.notStarted,
-      idPrefix: 'countries_capitals_',
-    ),
+          title: 'Capital Cities',
+          imagePath:
+              'assets/images/categories/subcategories/countries/capitals_cities.webp',
+          played: 0,
+          total: 10,
+          status: _SubcategoryStatus.notStarted,
+          idPrefix: 'countries_capitals_',
+        ),
     _CountriesSubcategoryData(
-      title: 'Country Silhouettes',
-      imagePath:
-          'assets/images/categories/subcategories/countries/countries_silhouettes.webp',
-      played: 0,
-      total: 10,
-      status: _SubcategoryStatus.notStarted,
-      idPrefix: 'countries_country_silhouettes_',
-    ),
+          title: 'Country Silhouettes',
+          imagePath:
+              'assets/images/categories/subcategories/countries/countries_silhouettes.webp',
+          played: 0,
+          total: 10,
+          status: _SubcategoryStatus.notStarted,
+          idPrefix: 'countries_country_silhouettes_',
+        ),
     _CountriesSubcategoryData(
-      title: 'Currencies',
-      imagePath:
-          'assets/images/categories/subcategories/countries/currencies_languages.webp',
-      played: 0,
-      total: 10,
-      status: _SubcategoryStatus.notStarted,
-      idPrefix: 'countries_currencies_',
-    ),
+          title: 'Currencies',
+          imagePath:
+              'assets/images/categories/subcategories/countries/currencies_languages.webp',
+          played: 0,
+          total: 10,
+          status: _SubcategoryStatus.notStarted,
+          idPrefix: 'countries_currencies_',
+        ),
     _CountriesSubcategoryData(
-      title: 'Flags',
-      imagePath:
-          'assets/images/categories/subcategories/countries/flags.webp',
-      played: 0,
-      total: 30,
-      status: _SubcategoryStatus.notStarted,
-      idPrefix: 'countries_flags_',
-    ),
+          title: 'Flags',
+          imagePath:
+              'assets/images/categories/subcategories/countries/flags.webp',
+          played: 0,
+          total: 30,
+          status: _SubcategoryStatus.notStarted,
+          idPrefix: 'countries_flags_',
+        ),
     _CountriesSubcategoryData(
-      title: 'Natural Wonders & Landscapes',
-      imagePath:
-          'assets/images/categories/subcategories/countries/islands_mountains_rivers.webp',
-      played: 0,
-      total: 10,
-      status: _SubcategoryStatus.notStarted,
-      idPrefix: 'countries_natural_wonders_landscapes_',
-    ),
+          title: 'Major Cities',
+          imagePath:
+              'assets/images/categories/subcategories/countries/major_cities.webp',
+          played: 0,
+          total: 10,
+          status: _SubcategoryStatus.notStarted,
+          idPrefix: 'countries_major_cities_',
+        ),
     _CountriesSubcategoryData(
-      title: 'Major Cities',
-      imagePath:
-          'assets/images/categories/subcategories/countries/major_cities.webp',
-      played: 0,
-      total: 10,
-      status: _SubcategoryStatus.notStarted,
-      idPrefix: 'countries_major_cities_',
-    ),
+          title: 'National Foods',
+          imagePath:
+              'assets/images/categories/subcategories/countries/national_foods.webp',
+          played: 0,
+          total: 10,
+          status: _SubcategoryStatus.notStarted,
+          idPrefix: 'countries_national_foods_',
+        ),
     _CountriesSubcategoryData(
-      title: 'National Foods',
-      imagePath:
-          'assets/images/categories/subcategories/countries/national_foods.webp',
-      played: 0,
-      total: 10,
-      status: _SubcategoryStatus.notStarted,
-      idPrefix: 'countries_national_foods_',
-    ),
+          title: 'National Symbols',
+          imagePath:
+              'assets/images/categories/subcategories/countries/national_symbols.webp',
+          played: 0,
+          total: 10,
+          status: _SubcategoryStatus.notStarted,
+          idPrefix: 'countries_national_symbols_',
+        ),
     _CountriesSubcategoryData(
-      title: 'National Symbols',
-      imagePath:
-          'assets/images/categories/subcategories/countries/national_symbols.webp',
-      played: 0,
-      total: 10,
-      status: _SubcategoryStatus.notStarted,
-      idPrefix: 'countries_national_symbols_',
-    ),
+          title: 'Natural Wonders & Landscapes',
+          imagePath:
+              'assets/images/categories/subcategories/countries/islands_mountains_rivers.webp',
+          played: 0,
+          total: 10,
+          status: _SubcategoryStatus.notStarted,
+          idPrefix: 'countries_natural_wonders_landscapes_',
+        ),
     _CountriesSubcategoryData(
-      title: 'States & Regions',
-      imagePath:
-          'assets/images/categories/subcategories/countries/states_regions.webp',
-      played: 0,
-      total: 20,
-      status: _SubcategoryStatus.notStarted,
-      idPrefix: 'countries_states_regions_',
-    ),
+          title: 'States & Regions',
+          imagePath:
+              'assets/images/categories/subcategories/countries/states_regions.webp',
+          played: 0,
+          total: 20,
+          status: _SubcategoryStatus.notStarted,
+          idPrefix: 'countries_states_regions_',
+        ),
   ];
 
   Map<String, int> _playedCounts = <String, int>{};

@@ -24,59 +24,49 @@ class _CreativeWorldSubcategoryScreenState
   static const List<_CreativeWorldSubcategory> _items =
       <_CreativeWorldSubcategory>[
     _CreativeWorldSubcategory(
-      'Paintings & Sculptures',
-      Icons.palette_rounded,
-      firebaseKey: 'paintings_sculptures',
-    ),
-    _CreativeWorldSubcategory(
-      'Artists',
-      Icons.brush_rounded,
-      firebaseKey: 'artists',
-    ),
-    _CreativeWorldSubcategory(
       'Architecture & Architects',
-      Icons.architecture_rounded,
+      'assets/images/categories/subcategories/creative/architecture_architects.webp',
       firebaseKey: 'architecture_architects',
     ),
     _CreativeWorldSubcategory(
-      'Photography & Photographers',
-      Icons.camera_alt_rounded,
-      firebaseKey: 'photography_photographers',
-    ),
-    _CreativeWorldSubcategory(
-      'Fashion & Fashion Designers',
-      Icons.checkroom_rounded,
-      firebaseKey: 'fashion_fashion_designers',
-    ),
-    _CreativeWorldSubcategory(
-      'Theatre, Dance & Ballet',
-      Icons.theater_comedy_rounded,
-      firebaseKey: 'theatre_dance_ballet',
-    ),
-    _CreativeWorldSubcategory(
-      'Crafts, Pottery & Ceramics',
-      Icons.handyman_rounded,
-      firebaseKey: 'crafts_pottery_ceramics',
-    ),
-    _CreativeWorldSubcategory(
-      'Furniture & Jewellery',
-      Icons.diamond_rounded,
-      firebaseKey: 'furniture_jewellery',
-    ),
-    _CreativeWorldSubcategory(
-      'Famous Logos & Iconic Product Designs',
-      Icons.design_services_rounded,
-      firebaseKey: 'famous_logos_iconic_product_designs',
-    ),
-    _CreativeWorldSubcategory(
       'Art Movements & Design Styles',
-      Icons.auto_awesome_mosaic_rounded,
+      'assets/images/categories/subcategories/creative/art_movements_design_styles.webp',
       firebaseKey: 'art_movements_design_styles',
     ),
     _CreativeWorldSubcategory(
-      'Museums, Galleries & Creative Awards',
-      Icons.museum_rounded,
+      'Artists',
+      'assets/images/categories/subcategories/creative/artists.webp',
+      firebaseKey: 'artists',
+    ),
+    _CreativeWorldSubcategory(
+      'Crafts, Pottery & Ceramics',
+      'assets/images/categories/subcategories/creative/crafts_pottery_ceramics.webp',
+      firebaseKey: 'crafts_pottery_ceramics',
+    ),
+    _CreativeWorldSubcategory(
+      'Fashion',
+      'assets/images/categories/subcategories/creative/fashion.webp',
+      firebaseKey: 'fashion_fashion_designers',
+    ),
+    _CreativeWorldSubcategory(
+      'Museums & Galleries',
+      'assets/images/categories/subcategories/creative/museums_galleries.webp',
       firebaseKey: 'museums_galleries_creative_awards',
+    ),
+    _CreativeWorldSubcategory(
+      'Paintings & Sculptures',
+      'assets/images/categories/subcategories/creative/paintings_sculptures.webp',
+      firebaseKey: 'paintings_sculptures',
+    ),
+    _CreativeWorldSubcategory(
+      'Photography & Photographers',
+      'assets/images/categories/subcategories/creative/photography_photographers.webp',
+      firebaseKey: 'photography_photographers',
+    ),
+    _CreativeWorldSubcategory(
+      'Theatre, Dance & Ballet',
+      'assets/images/categories/subcategories/creative/theatre_dance_ballet.webp',
+      firebaseKey: 'theatre_dance_ballet',
     ),
   ];
 
@@ -497,10 +487,15 @@ class _CreativeWorldCard extends StatelessWidget {
                     width: 1.2,
                   ),
                 ),
-                child: Icon(
-                  item.icon,
-                  color: AppColors.orange,
-                  size: 36,
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Image.asset(
+                    item.imagePath,
+                    width: 52,
+                    height: 52,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -557,11 +552,11 @@ class _CreativeWorldCard extends StatelessWidget {
 class _CreativeWorldSubcategory {
   const _CreativeWorldSubcategory(
     this.title,
-    this.icon, {
+    this.imagePath, {
     required this.firebaseKey,
   });
 
   final String title;
-  final IconData icon;
+  final String imagePath;
   final String firebaseKey;
 }

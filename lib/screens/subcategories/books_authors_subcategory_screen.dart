@@ -24,75 +24,75 @@ class _BooksAuthorsSubcategoryScreenState
   static const List<_BooksAuthorsSubcategory> _items =
       <_BooksAuthorsSubcategory>[
     _BooksAuthorsSubcategory(
-      'Books & Novels',
-      Icons.menu_book_rounded,
-      firebaseKey: 'books_novels',
-      imagePath:
-          'assets/images/categories/subcategories/books_authors/books_novels.webp',
-    ),
+          'Authors, Poets & Playwrights',
+          Icons.edit_rounded,
+          firebaseKey: 'authors_poets_playwrights',
+          imagePath:
+              'assets/images/categories/subcategories/books_authors/authors.webp',
+        ),
     _BooksAuthorsSubcategory(
-      'Authors, Poets & Playwrights',
-      Icons.edit_rounded,
-      firebaseKey: 'authors_poets_playwrights',
-      imagePath:
-          'assets/images/categories/subcategories/books_authors/authors.webp',
-    ),
+          'Book Series',
+          Icons.library_books_rounded,
+          firebaseKey: 'book_series',
+          imagePath:
+              'assets/images/categories/subcategories/books_authors/book_series.webp',
+        ),
     _BooksAuthorsSubcategory(
-      'Poems & Plays',
-      Icons.theater_comedy_rounded,
-      firebaseKey: 'poems_plays',
-      imagePath:
-          'assets/images/categories/subcategories/books_authors/poems.webp',
-    ),
+          'Books & Novels',
+          Icons.menu_book_rounded,
+          firebaseKey: 'books_novels',
+          imagePath:
+              'assets/images/categories/subcategories/books_authors/books_novels.webp',
+        ),
     _BooksAuthorsSubcategory(
-      'Book Series',
-      Icons.library_books_rounded,
-      firebaseKey: 'book_series',
-      imagePath:
-          'assets/images/categories/subcategories/books_authors/book_series.webp',
-    ),
+          'Children’s Books',
+          Icons.child_care_rounded,
+          firebaseKey: 'childrens_books',
+          imagePath:
+              'assets/images/categories/subcategories/books_authors/childrens_books.webp',
+        ),
     _BooksAuthorsSubcategory(
-      'Children’s Books',
-      Icons.child_care_rounded,
-      firebaseKey: 'childrens_books',
-      imagePath:
-          'assets/images/categories/subcategories/books_authors/childrens_books.webp',
-    ),
+          'Fictional Literary Locations',
+          Icons.castle_rounded,
+          firebaseKey: 'fictional_literary_locations',
+          imagePath:
+              'assets/images/categories/subcategories/books_authors/fictional_literary_locations.webp',
+        ),
     _BooksAuthorsSubcategory(
-      'Fictional Literary Locations',
-      Icons.castle_rounded,
-      firebaseKey: 'fictional_literary_locations',
-      imagePath:
-          'assets/images/categories/subcategories/books_authors/fictional_literary_locations.webp',
-    ),
+          'Folk Tales & Fairy Tales',
+          Icons.auto_awesome_rounded,
+          firebaseKey: 'folk_tales_fairy_tales',
+          imagePath:
+              'assets/images/categories/subcategories/books_authors/folk_tales_fairy_tales.webp',
+        ),
     _BooksAuthorsSubcategory(
-      'Opening Lines & Quotations',
-      Icons.format_quote_rounded,
-      firebaseKey: 'opening_lines_quotations',
-      imagePath:
-          'assets/images/categories/subcategories/books_authors/opening_lines.webp',
-    ),
+          'Literary Awards',
+          Icons.emoji_events_rounded,
+          firebaseKey: 'literary_awards',
+          imagePath:
+              'assets/images/categories/subcategories/books_authors/literary_awards.webp',
+        ),
     _BooksAuthorsSubcategory(
-      'Literary Genres',
-      Icons.category_rounded,
-      firebaseKey: 'literary_genres',
-      imagePath:
-          'assets/images/categories/subcategories/books_authors/literary_genres.webp',
-    ),
+          'Literary Genres',
+          Icons.category_rounded,
+          firebaseKey: 'literary_genres',
+          imagePath:
+              'assets/images/categories/subcategories/books_authors/literary_genres.webp',
+        ),
     _BooksAuthorsSubcategory(
-      'Folk Tales & Fairy Tales',
-      Icons.auto_awesome_rounded,
-      firebaseKey: 'folk_tales_fairy_tales',
-      imagePath:
-          'assets/images/categories/subcategories/books_authors/folk_tales_fairy_tales.webp',
-    ),
+          'Opening Lines & Quotations',
+          Icons.format_quote_rounded,
+          firebaseKey: 'opening_lines_quotations',
+          imagePath:
+              'assets/images/categories/subcategories/books_authors/opening_lines.webp',
+        ),
     _BooksAuthorsSubcategory(
-      'Literary Awards',
-      Icons.emoji_events_rounded,
-      firebaseKey: 'literary_awards',
-      imagePath:
-          'assets/images/categories/subcategories/books_authors/literary_awards.webp',
-    ),
+          'Poems & Plays',
+          Icons.theater_comedy_rounded,
+          firebaseKey: 'poems_plays',
+          imagePath:
+              'assets/images/categories/subcategories/books_authors/poems.webp',
+        ),
   ];
 
   Set<String> _liveFirebaseSubcategories = <String>{};

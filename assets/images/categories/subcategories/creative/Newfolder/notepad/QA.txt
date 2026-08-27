@@ -1,0 +1,54 @@
+PULL ALL ANSWERS AND CHECK FOR LOOSE ANSWERS
+QA ALL IMAGES TO MAKE SURE THEY MATCH ANSWERS
+
+
+------------------------------------------------------------
+put cats in aplaphetical oder ad all sub cats
+
+fotballers, jist just have last name - maybe for all other cats, just first name
+
+need mission complete back to case or xxxx 
+
+mount everest - everest should be allowed
+
+some images came with image rights files, look at that and see if we need to list it
+
+New questions - will it change once you have stated playing. Message will be user specific
+
+Make sure dinosaur - diplidocus fits on screen - it’s long so good bench mark
+
+	
+----------------------------------------
+
+The good news is you don’t need to manually resize them one by one. We can batch-compress an entire subcategory folder with one PowerShell/Python command while keeping them as 512×512 WebP, preserving transparency where present, and keeping the filenames unchanged.
+
+For example, we can target WebP quality around 80–85, which will often cut those 300–400 KB files substantially without an obvious visual difference in the game.
+
+
+------------------------
+
+watch a video to skip
+9 questions and then have to watch video
+
+------------------------------------------------------------------------------------
+cd C:\RhiPlay\first_guess
+cd C:\RhiPlay\first_guess\tools\firebase_import
+flutter analyze
+flutter run -d chrome --web-port 5000
+flutter analyze; flutter run -d chrome --web-port 5000
+
+ADD QUESTIONS AND IMAGES:
+es. For the Archaeology subcategory, the import process we used is:
+
+Put the completed Archaeology question spreadsheet and all matching WebP images into your Firebase import folder on your PC.
+Open PowerShell in:
+C:\RhiPlay\first_guess\tools\firebase_import
+Run the importer as a dry run first:
+python import_to_firebase.py "YOUR_ARCHAEOLOGY_FILE.xlsx"
+Check the summary carefully. You want it to show the expected number of questions, images to upload, and Firestore documents to create/update.
+If the dry run looks correct, run:
+python import_to_firebase.py "YOUR_ARCHAEOLOGY_FILE.xlsx" --write
+Wait for the IMPORT COMPLETE summary and confirm the expected totals.
+Then launch/refresh First Guess and check Past & Present → Archaeology. The app screen is already looking for Firebase category past_present with subcategory key archaeology.
+
+The permanent question IDs should be used as the Firestore document IDs, and existing Storage images should be left untouched if they already exist, just like the previous successful imports.

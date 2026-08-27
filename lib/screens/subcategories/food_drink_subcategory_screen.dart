@@ -23,40 +23,40 @@ class _FoodDrinkSubcategoryScreenState
     extends State<FoodDrinkSubcategoryScreen> {
   static const List<_FoodDrinkSubcategory> _items = [
     _FoodDrinkSubcategory(
-      'Breakfast Foods',
-      'assets/images/categories/food_drink/icons/breakfast_icon.webp',
-      firebaseKey: 'breakfast',
-    ),
+          'Breakfast Foods',
+          'assets/images/categories/food_drink/icons/breakfast_icon.webp',
+          firebaseKey: 'breakfast',
+        ),
     _FoodDrinkSubcategory(
-      'Desserts, Cakes & Sweets',
-      'assets/images/categories/food_drink/icons/deserts_cakes_sweets.webp',
-      firebaseKey: 'desserts',
-    ),
+          'Desserts, Cakes & Sweets',
+          'assets/images/categories/food_drink/icons/deserts_cakes_sweets.webp',
+          firebaseKey: 'desserts',
+        ),
     _FoodDrinkSubcategory(
-      'Dishes & World Cuisines',
-      'assets/images/categories/food_drink/icons/dishes_world_cuisines.webp',
-      firebaseKey: 'dishes_world_cuisine',
-    ),
+          'Dishes & World Cuisines',
+          'assets/images/categories/food_drink/icons/dishes_world_cuisines.webp',
+          firebaseKey: 'dishes_world_cuisine',
+        ),
     _FoodDrinkSubcategory(
-      'World Drinks',
-      'assets/images/categories/food_drink/icons/drinks.webp',
-      firebaseKey: 'drinks',
-    ),
+          'Fruit & Vegetables',
+          'assets/images/categories/food_drink/icons/fruit_veg.webp',
+          firebaseKey: 'fruit_vegs',
+        ),
     _FoodDrinkSubcategory(
-      'Fruit & Vegetables',
-      'assets/images/categories/food_drink/icons/fruit_veg.webp',
-      firebaseKey: 'fruit_vegs',
-    ),
+          'Herbs & Spices',
+          'assets/images/categories/food_drink/icons/ingredients_herbs_spices.webp',
+          firebaseKey: 'herbs_spices',
+        ),
     _FoodDrinkSubcategory(
-      'Herbs & Spices',
-      'assets/images/categories/food_drink/icons/ingredients_herbs_spices.webp',
-      firebaseKey: 'herbs_spices',
-    ),
+          'Snacks & Street Food',
+          'assets/images/categories/food_drink/icons/snacks_street_food.webp',
+          firebaseKey: 'snacks_street_food',
+        ),
     _FoodDrinkSubcategory(
-      'Snacks & Street Food',
-      'assets/images/categories/food_drink/icons/snacks_street_food.webp',
-      firebaseKey: 'snacks_street_food',
-    ),
+          'World Drinks',
+          'assets/images/categories/food_drink/icons/drinks.webp',
+          firebaseKey: 'drinks',
+        ),
   ];
 
   Set<String> _liveFirebaseSubcategories = <String>{};

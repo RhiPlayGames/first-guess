@@ -32,6 +32,8 @@ flutter:
     - assets/images/
     - assets/images/authors/
     - assets/images/categories/
+    - assets/images/categories/who_am_i/
+    - assets/images/categories/subcategories/creative/
     - assets/images/categories/countries/capitals/
     - assets/images/categories/countries/major_cities/
     - assets/images/categories/countries/country_silhouettes/
