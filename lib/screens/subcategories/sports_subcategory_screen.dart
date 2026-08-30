@@ -24,70 +24,50 @@ class _SportsSubcategoryScreenState
   static const List<_SportsSubcategory> _items =
       <_SportsSubcategory>[
     _SportsSubcategory(
-          'Athletes & Players',
-          Icons.sports_rounded,
-          firebaseKey: 'athletes_players',
-        ),
+      'Equipment',
+      'assets/images/categories/sports/equipment.webp',
+      firebaseKey: 'equipment',
+    ),
     _SportsSubcategory(
-          'Equipment',
-          Icons.sports_tennis_rounded,
-          firebaseKey: 'equipment',
-        ),
+      'Olympic Sports',
+      'assets/images/categories/sports/olympic_sports.webp',
+      firebaseKey: 'olympic_sports',
+    ),
     _SportsSubcategory(
-          'Famous Matches',
-          Icons.sports_score_rounded,
-          firebaseKey: 'famous_matches',
-        ),
+      'Records & Achievements',
+      'assets/images/categories/sports/records_achievements.webp',
+      firebaseKey: 'records_achievements',
+    ),
     _SportsSubcategory(
-          'Motorsports & Extreme Sports',
-          Icons.speed_rounded,
-          firebaseKey: 'motorsports_extreme_sports',
-        ),
+      'Rules & Terminology',
+      'assets/images/categories/sports/rules_terminology.webp',
+      firebaseKey: 'rules_terminology',
+    ),
     _SportsSubcategory(
-          'Olympic Sports',
-          Icons.emoji_events_rounded,
-          firebaseKey: 'olympic_sports',
-        ),
+      'Sporting Events',
+      'assets/images/categories/sports/sporting_events.webp',
+      firebaseKey: 'sporting_events',
+    ),
     _SportsSubcategory(
-          'Records & Achievements',
-          Icons.military_tech_rounded,
-          firebaseKey: 'records_achievements',
-        ),
+      'Stadiums & Venues',
+      'assets/images/categories/sports/stadiums_venues.webp',
+      firebaseKey: 'stadiums_venues',
+    ),
     _SportsSubcategory(
-          'Rules & Terminology',
-          Icons.rule_rounded,
-          firebaseKey: 'rules_terminology',
-        ),
+      'Teams, Clubs & National Teams',
+      'assets/images/categories/sports/teams_clubs_national_teams.webp',
+      firebaseKey: 'teams_clubs_national_teams',
+    ),
     _SportsSubcategory(
-          'Sporting Events',
-          Icons.event_rounded,
-          firebaseKey: 'sporting_events',
-        ),
+      'Trophies',
+      'assets/images/categories/sports/trophies.webp',
+      firebaseKey: 'trophies',
+    ),
     _SportsSubcategory(
-          'Stadiums & Venues',
-          Icons.stadium_rounded,
-          firebaseKey: 'stadiums_venues',
-        ),
-    _SportsSubcategory(
-          'Team Badges',
-          Icons.shield_rounded,
-          firebaseKey: 'team_badges',
-        ),
-    _SportsSubcategory(
-          'Teams, Clubs & National Teams',
-          Icons.groups_rounded,
-          firebaseKey: 'teams_clubs_national_teams',
-        ),
-    _SportsSubcategory(
-          'Trophies',
-          Icons.workspace_premium_rounded,
-          firebaseKey: 'trophies',
-        ),
-    _SportsSubcategory(
-          'World Cups, Leagues & Tournaments',
-          Icons.public_rounded,
-          firebaseKey: 'world_cups_leagues_tournaments',
-        ),
+      'World Cups, Leagues & Tournaments',
+      'assets/images/categories/sports/world_cups_leagues_tournaments.webp',
+      firebaseKey: 'world_cups_leagues_tournaments',
+    ),
   ];
 
   Set<String> _liveFirebaseSubcategories = <String>{};
@@ -507,10 +487,15 @@ class _SportsCard extends StatelessWidget {
                     width: 1.2,
                   ),
                 ),
-                child: Icon(
-                  item.icon,
-                  color: AppColors.orange,
-                  size: 36,
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Image.asset(
+                    item.imagePath,
+                    width: 52,
+                    height: 52,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -567,11 +552,11 @@ class _SportsCard extends StatelessWidget {
 class _SportsSubcategory {
   const _SportsSubcategory(
     this.title,
-    this.icon, {
+    this.imagePath, {
     required this.firebaseKey,
   });
 
   final String title;
-  final IconData icon;
+  final String imagePath;
   final String firebaseKey;
 }

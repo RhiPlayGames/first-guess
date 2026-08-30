@@ -1,5 +1,4 @@
 ﻿import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../case_files/screens/case_files_home_screen.dart';
@@ -21,6 +20,7 @@ import 'subcategories/science_nature_subcategory_screen.dart';
 import 'subcategories/books_authors_subcategory_screen.dart';
 import 'subcategories/creative_world_subcategory_screen.dart';
 import 'subcategories/famous_people_subcategory_screen.dart';
+import 'subcategories/famous_words_subcategory_screen.dart';
 import 'subcategories/music_subcategory_screen.dart';
 import 'subcategories/sports_subcategory_screen.dart';
 import 'subcategories/past_present_subcategory_screen.dart';
@@ -42,15 +42,12 @@ class _HomeScreenState extends State<HomeScreen> {
   PlayerStats _playerStats = const PlayerStats();
   bool _statsLoaded = false;
 
-  Set<String> _liveFirebaseCategories = <String>{};
-
   @override
   void initState() {
     super.initState();
     _loadSelectedAvatar();
     _loadPlayerStats();
     _loadDailyFlashStatus();
-    _loadFirebaseCategoryAvailability();
   }
 
   Future<void> _loadPlayerStats() async {
@@ -67,60 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _loadFirebaseCategoryAvailability() async {
-    const List<String> categoryKeys = <String>[
-      'animals',
-      'books_authors',
-      'countries',
-      'creative_world',
-      'famous_people',
-      'food_drink',
-      'music',
-      'past_present',
-      'science_nature',
-      'sports',
-      'watch_play',
-    ];
-
-    try {
-      final List<Future<QuerySnapshot<Map<String, dynamic>>>> checks =
-          categoryKeys.map((String categoryKey) {
-        return FirebaseFirestore.instance
-            .collection('challenges')
-            .where('category', isEqualTo: categoryKey)
-            .where('status', isEqualTo: 'live')
-            .limit(1)
-            .get();
-      }).toList();
-
-      final List<QuerySnapshot<Map<String, dynamic>>> results =
-          await Future.wait(checks);
-
-      if (!mounted) {
-        return;
-      }
-
-      final Set<String> liveCategories = <String>{};
-
-      for (int i = 0; i < categoryKeys.length; i++) {
-        if (results[i].docs.isNotEmpty) {
-          liveCategories.add(categoryKeys[i]);
-        }
-      }
-
-      setState(() {
-        _liveFirebaseCategories = liveCategories;
-      });
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _liveFirebaseCategories = <String>{};
-      });
-    }
-  }
 
   Future<void> _loadSelectedAvatar() async {
     final String? selectedAvatarPath =
@@ -222,6 +165,18 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => const CreativeWorldSubcategoryScreen(),
+      ),
+    );
+
+    if (mounted) {
+      await _loadPlayerStats();
+    }
+  }
+
+  Future<void> _openFamousWordsSubcategories() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const FamousWordsSubcategoryScreen(),
       ),
     );
 
@@ -427,10 +382,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final List<_CategoryData> categories = <_CategoryData>[
       _CategoryData(
+        title: 'Surprise Me',
+        subtitle: _surpriseMeLoading
+            ? 'Picking your surprise...'
+            : 'Let First Guess choose your challenge',
+        imagePath: 'assets/images/categories/surprise_me.webp',
+        isAvailable: true,
+        onPressed:
+            _surpriseMeLoading ? null : _openSurpriseGame,
+      ),
+      _CategoryData(
         title: 'Animals',
         subtitle: 'Explore mammals, birds, wildlife and more',
         imagePath: 'assets/images/categories/animals.webp',
-        isAvailable: _liveFirebaseCategories.contains('animals'),
+        isAvailable: true,
         onPressed: _openAnimalsSubcategories,
       ),
       _CategoryData(
@@ -444,7 +409,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: 'Countries',
         subtitle: 'Guess countries from their outlines and clues',
         imagePath: 'assets/images/categories/countries.webp',
-        isAvailable: _liveFirebaseCategories.contains('countries'),
+        isAvailable: true,
         onPressed: _openCountriesSubcategories,
       ),
       _CategoryData(
@@ -455,10 +420,17 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: _openCreativeWorldSubcategories,
       ),
       _CategoryData(
+        title: 'Famous Words',
+        subtitle: 'Identify famous words, quotations and speeches',
+        imagePath: 'assets/images/categories/famous_words/famous_words.webp',
+        isAvailable: true,
+        onPressed: _openFamousWordsSubcategories,
+      ),
+      _CategoryData(
         title: 'Food & Drink',
         subtitle: 'Explore dishes, ingredients, drinks and cuisines',
         imagePath: 'assets/images/categories/food_and_drink.webp',
-        isAvailable: _liveFirebaseCategories.contains('food_drink'),
+        isAvailable: true,
         onPressed: _openFoodDrinkSubcategories,
       ),
       _CategoryData(
@@ -488,16 +460,6 @@ class _HomeScreenState extends State<HomeScreen> {
         imagePath: 'assets/images/categories/sports.webp',
         isAvailable: true,
         onPressed: _openSportsSubcategories,
-      ),
-      _CategoryData(
-        title: 'Surprise Me',
-        subtitle: _surpriseMeLoading
-            ? 'Picking your surprise...'
-            : 'Let First Guess choose your challenge',
-        imagePath: 'assets/images/categories/surprise_me.webp',
-        isAvailable: true,
-        onPressed:
-            _surpriseMeLoading ? null : _openSurpriseGame,
       ),
       _CategoryData(
         title: 'Watch & Play',

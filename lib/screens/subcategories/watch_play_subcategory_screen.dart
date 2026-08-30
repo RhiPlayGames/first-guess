@@ -24,70 +24,70 @@ class _WatchPlaySubcategoryScreenState
   static const List<_WatchPlaySubcategory> _items =
       <_WatchPlaySubcategory>[
     _WatchPlaySubcategory(
-          'Actors & Directors',
-          Icons.movie_creation_rounded,
-          firebaseKey: 'actors_directors',
-        ),
+      'Actors & Directors',
+      'assets/images/categories/watch_play/actors_directors.webp',
+      firebaseKey: 'actors_directors',
+    ),
     _WatchPlaySubcategory(
-          'Animation, Cartoons & Anime',
-          Icons.animation_rounded,
-          firebaseKey: 'animation_cartoons_anime',
-        ),
+      'Animation, Cartoons & Anime',
+      'assets/images/categories/watch_play/animation_cartoons_anime.webp',
+      firebaseKey: 'animation_cartoons_anime',
+    ),
     _WatchPlaySubcategory(
-          'Board Games',
-          Icons.casino_rounded,
-          firebaseKey: 'board_games',
-        ),
+      'Board Games',
+      'assets/images/categories/watch_play/board_games.webp',
+      firebaseKey: 'board_games',
+    ),
     _WatchPlaySubcategory(
-          'Consoles & Gaming Franchises',
-          Icons.videogame_asset_rounded,
-          firebaseKey: 'consoles_gaming_franchises',
-        ),
+      'Consoles & Gaming Franchises',
+      'assets/images/categories/watch_play/consoles_gaming_franchises.webp',
+      firebaseKey: 'consoles_gaming_franchises',
+    ),
     _WatchPlaySubcategory(
-          'Famous Screen Quotes',
-          Icons.format_quote_rounded,
-          firebaseKey: 'famous_screen_quotes',
-        ),
+      'Famous Screen Quotes',
+      'assets/images/categories/watch_play/famous_screen_quotes.webp',
+      firebaseKey: 'famous_screen_quotes',
+    ),
     _WatchPlaySubcategory(
-          'Fictional Screen Locations',
-          Icons.castle_rounded,
-          firebaseKey: 'fictional_screen_locations',
-        ),
+      'Fictional Screen Locations',
+      'assets/images/categories/watch_play/fictional_screen_locations.webp',
+      firebaseKey: 'fictional_screen_locations',
+    ),
     _WatchPlaySubcategory(
-          'Film, Television & Gaming Awards',
-          Icons.emoji_events_rounded,
-          firebaseKey: 'film_television_gaming_awards',
-        ),
+      'Film, Television & Gaming Awards',
+      'assets/images/categories/watch_play/film_television_gaming_awards.webp',
+      firebaseKey: 'film_television_gaming_awards',
+    ),
     _WatchPlaySubcategory(
-          'Movie Monsters & Villains',
-          Icons.theater_comedy_rounded,
-          firebaseKey: 'movie_monsters_villains',
-        ),
+      'Movie Monsters & Villains',
+      'assets/images/categories/watch_play/movie_monsters_villains.webp',
+      firebaseKey: 'movie_monsters_villains',
+    ),
     _WatchPlaySubcategory(
-          'Movies & Film Franchises',
-          Icons.movie_rounded,
-          firebaseKey: 'movies_film_franchises',
-        ),
+      'Movies & Film Franchises',
+      'assets/images/categories/watch_play/movies_film_franchises.webp',
+      firebaseKey: 'movies_film_franchises',
+    ),
     _WatchPlaySubcategory(
-          'Screen Characters',
-          Icons.person_rounded,
-          firebaseKey: 'screen_characters',
-        ),
+      'Screen Characters',
+      'assets/images/categories/watch_play/screen_characters.webp',
+      firebaseKey: 'screen_characters',
+    ),
     _WatchPlaySubcategory(
-          'Television & Streaming Programmes',
-          Icons.tv_rounded,
-          firebaseKey: 'television_streaming_programmes',
-        ),
+      'Television & Streaming Programmes',
+      'assets/images/categories/watch_play/television_streaming_programmes.webp',
+      firebaseKey: 'television_streaming_programmes',
+    ),
     _WatchPlaySubcategory(
-          'Toys & Traditional Games',
-          Icons.toys_rounded,
-          firebaseKey: 'toys_traditional_games',
-        ),
+      'Toys & Traditional Games',
+      'assets/images/categories/watch_play/toys_traditional_games.webp',
+      firebaseKey: 'toys_traditional_games',
+    ),
     _WatchPlaySubcategory(
-          'Video Games & Gaming Characters',
-          Icons.sports_esports_rounded,
-          firebaseKey: 'video_games_gaming_characters',
-        ),
+      'Video Games & Gaming Characters',
+      'assets/images/categories/watch_play/video_games_gaming_characters.webp',
+      firebaseKey: 'video_games_gaming_characters',
+    ),
   ];
 
   Set<String> _liveFirebaseSubcategories = <String>{};
@@ -507,10 +507,15 @@ class _WatchPlayCard extends StatelessWidget {
                     width: 1.2,
                   ),
                 ),
-                child: Icon(
-                  item.icon,
-                  color: AppColors.orange,
-                  size: 36,
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Image.asset(
+                    item.imagePath,
+                    width: 52,
+                    height: 52,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -567,11 +572,11 @@ class _WatchPlayCard extends StatelessWidget {
 class _WatchPlaySubcategory {
   const _WatchPlaySubcategory(
     this.title,
-    this.icon, {
+    this.imagePath, {
     required this.firebaseKey,
   });
 
   final String title;
-  final IconData icon;
+  final String imagePath;
   final String firebaseKey;
 }

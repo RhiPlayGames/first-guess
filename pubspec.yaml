@@ -55,6 +55,14 @@ flutter:
     - assets/images/categories/food_drink/icons/
     - assets/images/categories/subcategories/animals/
     - assets/images/categories/subcategories/books_authors/
+    - assets/images/categories/famous_words/
+    - assets/images/categories/past_present/
+    - assets/images/categories/who_am_i/
+    - assets/images/categories/music/
+    - assets/images/categories/sports/
+    - assets/images/categories/watch_play/
+    - assets/images/categories/creative_world/
+    - assets/images/categories/science_nature/
 
   fonts:
     - family: Oswald

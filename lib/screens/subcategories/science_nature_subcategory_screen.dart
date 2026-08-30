@@ -25,62 +25,62 @@ class _ScienceNatureSubcategoryScreenState
       <_ScienceNatureSubcategory>[
     _ScienceNatureSubcategory(
           'Chemistry, Physics & Biology',
-          Icons.functions_rounded,
+          imagePath: 'assets/images/categories/science_nature/chemistry_physics_biology.webp',
           firebaseKey: 'chemistry_physics_biology_maths',
         ),
     _ScienceNatureSubcategory(
           'Computers & the Internet',
-          Icons.computer_rounded,
+          imagePath: 'assets/images/categories/science_nature/computers_internet.webp',
           firebaseKey: 'computers_internet',
         ),
     _ScienceNatureSubcategory(
           'Inventions & Technology',
-          Icons.lightbulb_rounded,
+          imagePath: 'assets/images/categories/science_nature/inventions_technology.webp',
           firebaseKey: 'inventions_technology',
         ),
     _ScienceNatureSubcategory(
           'Medicine & Health',
-          Icons.medical_services_rounded,
+          imagePath: 'assets/images/categories/science_nature/medicine_health.webp',
           firebaseKey: 'medicine_health',
         ),
     _ScienceNatureSubcategory(
           'Periodic Table',
-          Icons.science_rounded,
+          imagePath: 'assets/images/categories/science_nature/periodic_table.webp',
           firebaseKey: 'periodic_table',
         ),
     _ScienceNatureSubcategory(
           'Plants & Trees',
-          Icons.park_rounded,
+          imagePath: 'assets/images/categories/science_nature/plants_trees.webp',
           firebaseKey: 'plants_trees',
         ),
     _ScienceNatureSubcategory(
           'Rocks, Minerals & Volcanoes',
-          Icons.terrain_rounded,
+          imagePath: 'assets/images/categories/science_nature/rocks_minerals_volcanoes.webp',
           firebaseKey: 'rocks_minerals_volcanoes',
         ),
     _ScienceNatureSubcategory(
           'Scientific Discoveries, Experiments & Theories',
-          Icons.biotech_rounded,
+          imagePath: 'assets/images/categories/science_nature/scientific_discoveries_experiments_theories.webp',
           firebaseKey: 'scientific_discoveries_experiments_theories',
         ),
     _ScienceNatureSubcategory(
           'Space & Astronomy',
-          Icons.public_rounded,
+          imagePath: 'assets/images/categories/science_nature/space_astronomy.webp',
           firebaseKey: 'planets_moons_stars_constellations',
         ),
     _ScienceNatureSubcategory(
           'Space Missions',
-          Icons.rocket_launch_rounded,
+          imagePath: 'assets/images/categories/science_nature/space_missions.webp',
           firebaseKey: 'space_missions',
         ),
     _ScienceNatureSubcategory(
           'The Human Body',
-          Icons.favorite_rounded,
+          imagePath: 'assets/images/categories/science_nature/the_human_body.webp',
           firebaseKey: 'human_body',
         ),
     _ScienceNatureSubcategory(
           'Weather, Oceans & Ecosystems',
-          Icons.waves_rounded,
+          imagePath: 'assets/images/categories/science_nature/weather_oceans_ecosystems.webp',
           firebaseKey: 'weather_oceans_ecosystems',
         ),
   ];
@@ -557,10 +557,15 @@ class _ScienceNatureCard extends StatelessWidget {
                     width: 1.2,
                   ),
                 ),
-                child: Icon(
-                  item.icon,
-                  color: AppColors.orange,
-                  size: 36,
+                child: Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: Image.asset(
+                    item.imagePath,
+                    width: 54,
+                    height: 54,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -623,12 +628,12 @@ class _ScienceNatureCard extends StatelessWidget {
 
 class _ScienceNatureSubcategory {
   const _ScienceNatureSubcategory(
-    this.title,
-    this.icon, {
+    this.title, {
+    required this.imagePath,
     required this.firebaseKey,
   });
 
   final String title;
-  final IconData icon;
+  final String imagePath;
   final String firebaseKey;
 }

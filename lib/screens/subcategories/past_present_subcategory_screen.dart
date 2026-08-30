@@ -24,65 +24,65 @@ class _PastPresentSubcategoryScreenState
   static const List<_PastPresentSubcategory> _items =
       <_PastPresentSubcategory>[
     _PastPresentSubcategory(
-          'Ancient Civilisations & Empires',
-          Icons.account_balance_rounded,
-          firebaseKey: 'ancient_civilisations_empires',
-        ),
+      'Ancient Civilisations & Empires',
+      'assets/images/categories/past_present/ancient_civilisations_empires.webp',
+      firebaseKey: 'ancient_civilisations_empires',
+    ),
     _PastPresentSubcategory(
-          'Archaeology',
-          Icons.architecture_rounded,
-          firebaseKey: 'archaeology',
-        ),
+      'Archaeology',
+      'assets/images/categories/past_present/archaeology.webp',
+      firebaseKey: 'archaeology',
+    ),
     _PastPresentSubcategory(
-          'Battles & Wars',
-          Icons.security_rounded,
-          firebaseKey: 'battles_wars',
-        ),
+      'Battles & Wars',
+      'assets/images/categories/past_present/battles_wars.webp',
+      firebaseKey: 'battles_wars',
+    ),
     _PastPresentSubcategory(
-          'Castles & Ruins',
-          Icons.castle_rounded,
-          firebaseKey: 'castles_ruins',
-        ),
+      'Castles & Ruins',
+      'assets/images/categories/past_present/castles_ruins.webp',
+      firebaseKey: 'castles_ruins',
+    ),
     _PastPresentSubcategory(
-          'Historic Objects',
-          Icons.inventory_2_rounded,
-          firebaseKey: 'historic_objects',
-        ),
+      'Historic Objects',
+      'assets/images/categories/past_present/historic_objects.webp',
+      firebaseKey: 'historic_objects',
+    ),
     _PastPresentSubcategory(
-          'Historical Eras',
-          Icons.hourglass_bottom_rounded,
-          firebaseKey: 'historical_eras',
-        ),
+      'Historical Eras',
+      'assets/images/categories/past_present/historical_eras.webp',
+      firebaseKey: 'historical_eras',
+    ),
     _PastPresentSubcategory(
-          'Historical Events',
-          Icons.history_edu_rounded,
-          firebaseKey: 'historical_events',
-        ),
+      'Historical Events',
+      'assets/images/categories/past_present/historical_events.webp',
+      firebaseKey: 'historical_events',
+    ),
     _PastPresentSubcategory(
-          'Historical Mysteries',
-          Icons.help_center_rounded,
-          firebaseKey: 'historical_mysteries',
-        ),
+      'Historical Mysteries',
+      'assets/images/categories/past_present/historical_mysteries.webp',
+      firebaseKey: 'historical_mysteries',
+    ),
     _PastPresentSubcategory(
-          'Important Dates',
-          Icons.event_note_rounded,
-          firebaseKey: 'important_dates',
-        ),
+      'Important Dates',
+      'assets/images/categories/past_present/important_dates.webp',
+      firebaseKey: 'important_dates',
+    ),
     _PastPresentSubcategory(
-          'Monarchies & Dynasties',
-          Icons.workspace_premium_rounded,
-          firebaseKey: 'monarchies_dynasties',
-        ),
+      'Monarchies & Dynasties',
+      'assets/images/categories/past_present/monarchies_dynasties.webp',
+      firebaseKey: 'monarchies_dynasties',
+    ),
     _PastPresentSubcategory(
-          'Myths & Legends',
-          Icons.auto_awesome_rounded,
-          firebaseKey: 'myths_legends',
-        ),
+      'Myths & Legends',
+      'assets/images/categories/past_present/myths_legends.webp',
+      firebaseKey: 'myths_legends',
+    ),
     _PastPresentSubcategory(
-          'Then-and-Now',
-          Icons.compare_rounded,
-          firebaseKey: 'then_now',
-        ),
+      'Then-and-Now',
+      'assets/images/categories/past_present/then_and_now.webp',
+      firebaseKey: 'then_now',
+    ),
   ];
 
   Set<String> _liveFirebaseSubcategories = <String>{};
@@ -502,10 +502,15 @@ class _PastPresentCard extends StatelessWidget {
                     width: 1.2,
                   ),
                 ),
-                child: Icon(
-                  item.icon,
-                  color: AppColors.orange,
-                  size: 36,
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Image.asset(
+                    item.imagePath,
+                    width: 52,
+                    height: 52,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -562,11 +567,11 @@ class _PastPresentCard extends StatelessWidget {
 class _PastPresentSubcategory {
   const _PastPresentSubcategory(
     this.title,
-    this.icon, {
+    this.imagePath, {
     required this.firebaseKey,
   });
 
   final String title;
-  final IconData icon;
+  final String imagePath;
   final String firebaseKey;
 }

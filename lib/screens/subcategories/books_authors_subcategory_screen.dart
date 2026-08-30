@@ -66,6 +66,13 @@ class _BooksAuthorsSubcategoryScreenState
               'assets/images/categories/subcategories/books_authors/folk_tales_fairy_tales.webp',
         ),
     _BooksAuthorsSubcategory(
+          'Graphic Novels & Comics',
+          Icons.auto_stories_rounded,
+          firebaseKey: 'graphic_novels_comics',
+          imagePath:
+              'assets/images/categories/subcategories/books_authors/graphic_novels_comics.webp',
+        ),
+    _BooksAuthorsSubcategory(
           'Literary Awards',
           Icons.emoji_events_rounded,
           firebaseKey: 'literary_awards',

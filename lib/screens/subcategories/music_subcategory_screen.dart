@@ -24,60 +24,35 @@ class _MusicSubcategoryScreenState
   static const List<_MusicSubcategory> _items =
       <_MusicSubcategory>[
     _MusicSubcategory(
-          'Album Covers & Music Videos',
-          Icons.video_library_rounded,
-          firebaseKey: 'album_covers_music_videos',
-        ),
+      'Composers',
+      'assets/images/categories/music/composers.webp',
+      firebaseKey: 'composers',
+    ),
     _MusicSubcategory(
-          'Composers',
-          Icons.music_note_rounded,
-          firebaseKey: 'composers',
-        ),
+      'Instruments',
+      'assets/images/categories/music/instruments.webp',
+      firebaseKey: 'instruments',
+    ),
     _MusicSubcategory(
-          'DJs & Producers',
-          Icons.headphones_rounded,
-          firebaseKey: 'djs_producers',
-        ),
+      'Music Awards',
+      'assets/images/categories/music/music_awards.webp',
+      firebaseKey: 'music_awards',
+    ),
     _MusicSubcategory(
-          'Famous Performances',
-          Icons.stadium_rounded,
-          firebaseKey: 'famous_performances',
-        ),
+      'Music Genres',
+      'assets/images/categories/music/music_genres.webp',
+      firebaseKey: 'music_genres',
+    ),
     _MusicSubcategory(
-          'Instruments',
-          Icons.piano_rounded,
-          firebaseKey: 'instruments',
-        ),
+      'Musical Theatre',
+      'assets/images/categories/music/musical_theatre.webp',
+      firebaseKey: 'musical_theatre',
+    ),
     _MusicSubcategory(
-          'Music Awards',
-          Icons.emoji_events_rounded,
-          firebaseKey: 'music_awards',
-        ),
-    _MusicSubcategory(
-          'Music Festivals',
-          Icons.festival_rounded,
-          firebaseKey: 'music_festivals',
-        ),
-    _MusicSubcategory(
-          'Music Genres',
-          Icons.graphic_eq_rounded,
-          firebaseKey: 'music_genres',
-        ),
-    _MusicSubcategory(
-          'Musical Theatre',
-          Icons.theater_comedy_rounded,
-          firebaseKey: 'musical_theatre',
-        ),
-    _MusicSubcategory(
-          'Singers, Bands & Musicians',
-          Icons.mic_rounded,
-          firebaseKey: 'singers_bands_musicians',
-        ),
-    _MusicSubcategory(
-          'Songs, Albums & Lyrics',
-          Icons.album_rounded,
-          firebaseKey: 'songs_albums_lyrics',
-        ),
+      'Songs, Albums & Lyrics',
+      'assets/images/categories/music/songs_albums_lyrics.webp',
+      firebaseKey: 'songs_albums_lyrics',
+    ),
   ];
 
   Set<String> _liveFirebaseSubcategories = <String>{};
@@ -497,10 +472,15 @@ class _MusicCard extends StatelessWidget {
                     width: 1.2,
                   ),
                 ),
-                child: Icon(
-                  item.icon,
-                  color: AppColors.orange,
-                  size: 36,
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Image.asset(
+                    item.imagePath,
+                    width: 52,
+                    height: 52,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -557,11 +537,11 @@ class _MusicCard extends StatelessWidget {
 class _MusicSubcategory {
   const _MusicSubcategory(
     this.title,
-    this.icon, {
+    this.imagePath, {
     required this.firebaseKey,
   });
 
   final String title;
-  final IconData icon;
+  final String imagePath;
   final String firebaseKey;
 }

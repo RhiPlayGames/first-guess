@@ -25,47 +25,47 @@ class _CreativeWorldSubcategoryScreenState
       <_CreativeWorldSubcategory>[
     _CreativeWorldSubcategory(
       'Architecture & Architects',
-      'assets/images/categories/subcategories/creative/architecture_architects.webp',
+      'assets/images/categories/creative_world/architecture_architects.webp',
       firebaseKey: 'architecture_architects',
     ),
     _CreativeWorldSubcategory(
       'Art Movements & Design Styles',
-      'assets/images/categories/subcategories/creative/art_movements_design_styles.webp',
+      'assets/images/categories/creative_world/art_movements_design_styles.webp',
       firebaseKey: 'art_movements_design_styles',
     ),
     _CreativeWorldSubcategory(
       'Artists',
-      'assets/images/categories/subcategories/creative/artists.webp',
+      'assets/images/categories/creative_world/artist.webp',
       firebaseKey: 'artists',
     ),
     _CreativeWorldSubcategory(
       'Crafts, Pottery & Ceramics',
-      'assets/images/categories/subcategories/creative/crafts_pottery_ceramics.webp',
+      'assets/images/categories/creative_world/crafts_pottery_ceramics.webp',
       firebaseKey: 'crafts_pottery_ceramics',
     ),
     _CreativeWorldSubcategory(
       'Fashion',
-      'assets/images/categories/subcategories/creative/fashion.webp',
+      'assets/images/categories/creative_world/fashion_fashion_designers.webp',
       firebaseKey: 'fashion_fashion_designers',
     ),
     _CreativeWorldSubcategory(
       'Museums & Galleries',
-      'assets/images/categories/subcategories/creative/museums_galleries.webp',
+      'assets/images/categories/creative_world/museums_galleries_creative_awards.webp',
       firebaseKey: 'museums_galleries_creative_awards',
     ),
     _CreativeWorldSubcategory(
       'Paintings & Sculptures',
-      'assets/images/categories/subcategories/creative/paintings_sculptures.webp',
+      'assets/images/categories/creative_world/paintings_sculptures.webp',
       firebaseKey: 'paintings_sculptures',
     ),
     _CreativeWorldSubcategory(
       'Photography & Photographers',
-      'assets/images/categories/subcategories/creative/photography_photographers.webp',
+      'assets/images/categories/creative_world/photography_photographers.webp',
       firebaseKey: 'photography_photographers',
     ),
     _CreativeWorldSubcategory(
       'Theatre, Dance & Ballet',
-      'assets/images/categories/subcategories/creative/theatre_dance_ballet.webp',
+      'assets/images/categories/creative_world/theatre_dance_ballet.webp',
       firebaseKey: 'theatre_dance_ballet',
     ),
   ];

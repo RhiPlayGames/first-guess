@@ -24,65 +24,65 @@ class _FamousPeopleSubcategoryScreenState
   static const List<_FamousPeopleSubcategory> _items =
       <_FamousPeopleSubcategory>[
     _FamousPeopleSubcategory(
-          'Actors & Directors',
-          Icons.movie_creation_outlined,
-          firebaseKey: 'actors_directors',
-        ),
+      'Actors & Directors',
+      'assets/images/categories/who_am_i/actors_directors.webp',
+      firebaseKey: 'actors_directors',
+    ),
     _FamousPeopleSubcategory(
-          'Athletes & Sports Stars',
-          Icons.emoji_events_rounded,
-          firebaseKey: 'athletes_sports',
-        ),
+      'Athletes & Sports Stars',
+      'assets/images/categories/who_am_i/athletes_sports_stars.webp',
+      firebaseKey: 'athletes_sports',
+    ),
     _FamousPeopleSubcategory(
-          'Authors, Poets & Playwrights',
-          Icons.menu_book_rounded,
-          firebaseKey: 'authors_writers',
-        ),
+      'Authors, Poets & Playwrights',
+      'assets/images/categories/who_am_i/authors_poets_playwrights.webp',
+      firebaseKey: 'authors_writers',
+    ),
     _FamousPeopleSubcategory(
-          'Campaigners & Humanitarians',
-          Icons.volunteer_activism_rounded,
-          firebaseKey: 'campaigners_humanitarians',
-        ),
+      'Campaigners & Humanitarians',
+      'assets/images/categories/who_am_i/campaigners_humanitarians.webp',
+      firebaseKey: 'campaigners_humanitarians',
+    ),
     _FamousPeopleSubcategory(
-          'Entrepreneurs & Business Leaders',
-          Icons.business_center_rounded,
-          firebaseKey: 'entrepreneurs_business',
-        ),
+      'Entrepreneurs & Business Leaders',
+      'assets/images/categories/who_am_i/entrepreneurs_business_leaders.webp',
+      firebaseKey: 'entrepreneurs_business',
+    ),
     _FamousPeopleSubcategory(
-          'Explorers & Adventurers',
-          Icons.explore_rounded,
-          firebaseKey: 'explorers_adventurers',
-        ),
+      'Explorers & Adventurers',
+      'assets/images/categories/who_am_i/explorers_adventurers.webp',
+      firebaseKey: 'explorers_adventurers',
+    ),
     _FamousPeopleSubcategory(
-          'Footballers',
-          Icons.sports_soccer_rounded,
-          firebaseKey: 'footballers',
-        ),
+      'Footballers',
+      'assets/images/categories/who_am_i/footballers.webp',
+      firebaseKey: 'footballers',
+    ),
     _FamousPeopleSubcategory(
-          'Musicians & Singers',
-          Icons.music_note_rounded,
-          firebaseKey: 'musicians_singers',
-        ),
+      'Musicians & Singers',
+      'assets/images/categories/who_am_i/musicians_singers.webp',
+      firebaseKey: 'musicians_singers',
+    ),
     _FamousPeopleSubcategory(
-          'Pioneers & Record Breakers',
-          Icons.workspace_premium_rounded,
-          firebaseKey: 'pioneers_records',
-        ),
+      'Pioneers & Record Breakers',
+      'assets/images/categories/who_am_i/pioneers_record_breakers.webp',
+      firebaseKey: 'pioneers_records',
+    ),
     _FamousPeopleSubcategory(
-          'Public & Internet Personalities',
-          Icons.public_rounded,
-          firebaseKey: 'public_internet',
-        ),
+      'Public & Internet Personalities',
+      'assets/images/categories/who_am_i/public_internet_personalities.webp',
+      firebaseKey: 'public_internet',
+    ),
     _FamousPeopleSubcategory(
-          'Royalty & Political Leaders',
-          Icons.account_balance_rounded,
-          firebaseKey: 'royalty_leaders',
-        ),
+      'Royalty & Political Leaders',
+      'assets/images/categories/who_am_i/royalty_political_leaders.webp',
+      firebaseKey: 'royalty_leaders',
+    ),
     _FamousPeopleSubcategory(
-          'Scientists & Inventors',
-          Icons.science_rounded,
-          firebaseKey: 'scientists_inventors',
-        ),
+      'Scientists & Inventors',
+      'assets/images/categories/who_am_i/scientists_inventors.webp',
+      firebaseKey: 'scientists_inventors',
+    ),
   ];
 
   Set<String> _liveFirebaseSubcategories = <String>{};
@@ -502,10 +502,15 @@ class _FamousPeopleCard extends StatelessWidget {
                     width: 1.2,
                   ),
                 ),
-                child: Icon(
-                  item.icon,
-                  color: AppColors.orange,
-                  size: 36,
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Image.asset(
+                    item.imagePath,
+                    width: 52,
+                    height: 52,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -562,11 +567,11 @@ class _FamousPeopleCard extends StatelessWidget {
 class _FamousPeopleSubcategory {
   const _FamousPeopleSubcategory(
     this.title,
-    this.icon, {
+    this.imagePath, {
     required this.firebaseKey,
   });
 
   final String title;
-  final IconData icon;
+  final String imagePath;
   final String firebaseKey;
 }
