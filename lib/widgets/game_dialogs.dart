@@ -24,6 +24,8 @@ Future<void> showGameResultDialog({
   final bool isGameOver = title == 'GAME OVER';
   final bool isCorrect = title == 'CORRECT!';
   final bool isFirstGuess = title == 'FIRST GUESS!';
+  final bool isCaseComplete =
+      title.startsWith('CASE ') && title.endsWith(' COMPLETE!');
   final bool useFeatureLayout =
       isGameOver || isCorrect || isFirstGuess;
 
@@ -153,17 +155,78 @@ Future<void> showGameResultDialog({
                 ),
                 textAlign: TextAlign.center,
               )
-            : Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  color: AppColors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  height: 1.8,
-                ),
-              ),
+            : isCaseComplete
+                ? Builder(
+                    builder: (context) {
+                      final List<String> lines =
+                          message.split('\n');
+                      final String identifiedLabel =
+                          lines.isNotEmpty
+                              ? lines.first
+                              : 'You\'ve correctly identified:';
+                      final String answer =
+                          lines.length > 1 ? lines[1] : '';
+                      final String unlocked =
+                          lines.length > 2 ? lines[2] : '';
+
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            identifiedLabel,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontFamily: 'Oswald',
+                              color: AppColors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.5,
+                              height: 1.0,
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            answer,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontFamily: 'Oswald',
+                              color: AppColors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.5,
+                              height: 1.0,
+                            ),
+                          ),
+                          if (unlocked.isNotEmpty) ...[
+                            const SizedBox(height: 14),
+                            Text(
+                              unlocked,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontFamily: 'Oswald',
+                                color: Color(0xFF63D44A),
+                                fontSize: 22,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.5,
+                                height: 1.0,
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
+                  )
+                : Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: 'Oswald',
+                      color: AppColors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      height: 1.35,
+                    ),
+                  ),
         actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 22),
         actions: [
           SizedBox(

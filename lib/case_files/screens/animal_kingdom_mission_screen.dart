@@ -1,52 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../../models/quiz_item.dart';
 import '../../screens/game_screen.dart';
 import '../../services/firebase_challenge_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/app_home_button.dart';
+import '../models/case_mission.dart';
+import '../models/case_progress.dart';
+import '../services/case_path_service.dart';
 
-class AnimalKingdomMissionScreen extends StatelessWidget {
+class AnimalKingdomMissionScreen extends StatefulWidget {
   const AnimalKingdomMissionScreen({super.key});
-
-  Future<void> _startMission(BuildContext context) async {
-    final items = await FirebaseChallengeService.loadLiveSubcategory(
-      category: 'animals',
-      subcategory: 'dinosaurs',
-    );
-
-    if (!context.mounted) {
-      return;
-    }
-
-    if (items.isEmpty) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.panel,
-            behavior: SnackBarBehavior.floating,
-            content: Text(
-              'No live Dinosaurs questions were found.',
-              style: AppTextStyles.body.copyWith(
-                color: AppColors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        );
-      return;
-    }
-
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => GameScreen.dinosaurs(
-          items: items,
-        ),
-      ),
-    );
-  }
 
   static const String _mapAsset =
       'assets/images/case_paths/animal_kingdom/animal_kingdom_map.webp';
@@ -61,31 +26,385 @@ class AnimalKingdomMissionScreen extends StatelessWidget {
       'assets/images/case_paths/animal_kingdom/animal_kingdom_main.webp';
 
   @override
+  State<AnimalKingdomMissionScreen> createState() =>
+      _AnimalKingdomMissionScreenState();
+}
+
+class _AnimalKingdomMissionScreenState
+    extends State<AnimalKingdomMissionScreen> {
+  CaseProgress? _progress;
+  CaseMission? _mission;
+  bool _isLoading = true;
+  bool _loadFailed = false;
+  bool _isStartingMission = false;
+
+  static const List<String> _animalSubcategories = <String>[
+    'birds',
+    'dinosaurs',
+    'habitats_animal_groups',
+    'insects_spiders',
+    'jungle_safari_animals',
+    'mammals',
+    'reptiles_amphibians',
+    'sea_creatures',
+    'tracks_footprints',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMission();
+  }
+
+  Future<void> _loadMission() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _loadFailed = false;
+      });
+    }
+
+    try {
+      final CaseProgress progress =
+          await CasePathService.loadAnimalKingdomProgress();
+
+      final CaseMission? mission =
+          CasePathService.currentAnimalKingdomMission(
+        progress,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _progress = progress;
+        _mission = mission;
+        _isLoading = false;
+        _loadFailed = mission == null && !progress.isCompleted;
+      });
+    } catch (error, stackTrace) {
+      debugPrint(
+        'ANIMAL KINGDOM MISSION LOAD ERROR: $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isLoading = false;
+        _loadFailed = true;
+      });
+    }
+  }
+
+  Future<void> _startMission() async {
+    final CaseMission? mission = _mission;
+
+    if (mission == null || _isStartingMission) {
+      return;
+    }
+
+    setState(() {
+      _isStartingMission = true;
+    });
+
+    try {
+      final items = mission.hasSubcategoryRequirement
+          ? await FirebaseChallengeService.loadLiveSubcategory(
+              category: mission.category,
+              subcategory: mission.subcategory!,
+            )
+          : await _loadAllAnimalQuestions();
+
+      if (!mounted) {
+        return;
+      }
+
+      if (items.isEmpty) {
+        _showNoQuestionsMessage(mission);
+        return;
+      }
+
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) {
+            if (mission.subcategory == 'birds') {
+              return GameScreen.birds(
+                items: items,
+                launchedFromCaseFile: true,
+              );
+            }
+
+            if (mission.subcategory == 'dinosaurs') {
+              return GameScreen.dinosaurs(
+                items: items,
+                launchedFromCaseFile: true,
+              );
+            }
+
+            return GameScreen.firebaseDynamic(
+              items: items,
+              launchedFromSurpriseMe: false,
+              showSurpriseToast: false,
+              launchedFromCaseFile: true,
+            );
+          },
+        ),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      await _loadMission();
+    } catch (error, stackTrace) {
+      debugPrint(
+        'ANIMAL KINGDOM START MISSION ERROR: $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted) {
+        return;
+      }
+
+      _showLoadErrorMessage();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isStartingMission = false;
+        });
+      }
+    }
+  }
+
+  Future<List<QuizItem>> _loadAllAnimalQuestions() async {
+    final results = await Future.wait(
+      _animalSubcategories.map(
+        (String subcategory) =>
+            FirebaseChallengeService.loadLiveSubcategory(
+          category: 'animals',
+          subcategory: subcategory,
+        ),
+      ),
+    );
+
+    return results.expand((items) => items).toList();
+  }
+
+  void _showNoQuestionsMessage(
+    CaseMission mission,
+  ) {
+    final String label = mission.hasSubcategoryRequirement
+        ? _subcategoryLabel(mission.subcategory!)
+        : 'Animals';
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.panel,
+          behavior: SnackBarBehavior.floating,
+          content: Text(
+            'No live $label questions were found.',
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+  }
+
+  void _showLoadErrorMessage() {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.panel,
+          behavior: SnackBarBehavior.floating,
+          content: Text(
+            'Animal Kingdom questions could not be loaded from Firebase.',
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+  }
+
+  String _subcategoryLabel(String key) {
+    switch (key) {
+      case 'birds':
+        return 'Birds';
+      case 'dinosaurs':
+        return 'Dinosaurs';
+      case 'habitats_animal_groups':
+        return 'Habitats & Animal Groups';
+      case 'insects_spiders':
+        return 'Insects & Spiders';
+      case 'jungle_safari_animals':
+        return 'Jungle & Safari Animals';
+      case 'mammals':
+        return 'Mammals';
+      case 'reptiles_amphibians':
+        return 'Reptiles & Amphibians';
+      case 'sea_creatures':
+        return 'Sea Creatures';
+      case 'tracks_footprints':
+        return 'Tracks & Footprints';
+      default:
+        return 'Animals';
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Center(
+            child: CircularProgressIndicator(
+              color: Color(0xFFFE5E02),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_loadFailed || _progress == null) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'CASE FILE COULD NOT BE LOADED',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.category.copyWith(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadMission,
+                    child: const Text('TRY AGAIN'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final CaseProgress progress = _progress!;
+
+    if (progress.isCompleted) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  AnimalKingdomMissionScreen._mapAsset,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                  filterQuality: FilterQuality.high,
+                ),
+              ),
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.35),
+                ),
+              ),
+              Column(
+                children: [
+                  _MissionHeader(
+                    onBackPressed: () =>
+                        Navigator.of(context).pop(),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'ANIMAL KINGDOM',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.category.copyWith(
+                      color: Colors.white,
+                      fontSize: 31,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'CASE SOLVED',
+                    style: AppTextStyles.category.copyWith(
+                      color: const Color(0xFFFE5E02),
+                      fontSize: 25,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const Spacer(),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final CaseMission? mission = _mission;
+
+    if (mission == null) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Center(
+            child: CircularProgressIndicator(
+              color: Color(0xFFFE5E02),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Image.asset(
-                _mapAsset,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                filterQuality: FilterQuality.high,
-              ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              AnimalKingdomMissionScreen._mapAsset,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              filterQuality: FilterQuality.high,
             ),
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.20),
-              ),
+          ),
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.20),
             ),
-            SingleChildScrollView(
+          ),
+          SafeArea(
+            bottom: false,
+            child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(
                 16,
                 8,
                 16,
-                24,
+                0,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -98,7 +417,7 @@ class AnimalKingdomMissionScreen extends StatelessWidget {
                   const _MissionTitle(),
                   const SizedBox(height: 7),
                   Text(
-                    'CASE 2',
+                    'CASE ${mission.stage}',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.category.copyWith(
                       color: Colors.white,
@@ -131,17 +450,23 @@ class AnimalKingdomMissionScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const _MissionProgressPanel(),
+                  _MissionProgressPanel(
+                    mission: mission,
+                    progress: progress.currentStageProgress,
+                  ),
                   const SizedBox(height: 8),
                   _MissionCard(
-                    onStartMission: () => _startMission(context),
+                    mission: mission,
+                    progress: progress.currentStageProgress,
+                    isStarting: _isStartingMission,
+                    onStartMission: _startMission,
                   ),
                 ],
               ),
             ),
+          ),
           ],
         ),
-      ),
     );
   }
 }
@@ -214,12 +539,22 @@ class _MissionTitle extends StatelessWidget {
 }
 
 class _MissionProgressPanel extends StatelessWidget {
-  const _MissionProgressPanel();
+  final CaseMission mission;
+  final CaseStageProgress progress;
+
+  const _MissionProgressPanel({
+    required this.mission,
+    required this.progress,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final double progressValue = mission.correctRequired <= 0
+        ? 0
+        : (progress.correctCount / mission.correctRequired).clamp(0.0, 1.0);
+
     return SizedBox(
-      height: 72,
+      height: 104,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -229,106 +564,77 @@ class _MissionProgressPanel extends StatelessWidget {
             filterQuality: FilterQuality.high,
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              30,
-              12,
-              18,
-              10,
-            ),
+            padding: const EdgeInsets.fromLTRB(30, 12, 18, 12),
             child: Row(
               children: [
                 SizedBox(
-                  width: 104,
+                  width: 142,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'CASE PROGRESS',
-                        style:
-                            AppTextStyles.category.copyWith(
-                          color: Colors.white,
-                          fontSize: 13.5,
+                        'MISSION PROGRESS',
+                        style: AppTextStyles.category.copyWith(
+                          color: Colors.black,
+                          fontSize: 16,
                           fontWeight: FontWeight.w900,
                           height: 1,
                           letterSpacing: -0.2,
-                          shadows: const [
-                            Shadow(
-                              color: Colors.black,
-                              blurRadius: 1.2,
-                              offset: Offset(-0.8, 0),
-                            ),
-                            Shadow(
-                              color: Colors.black,
-                              blurRadius: 1.2,
-                              offset: Offset(0.8, 0),
-                            ),
-                            Shadow(
-                              color: Colors.black,
-                              blurRadius: 1.2,
-                              offset: Offset(0, -0.8),
-                            ),
-                            Shadow(
-                              color: Colors.black,
-                              blurRadius: 1.2,
-                              offset: Offset(0, 0.8),
-                            ),
-                          ],
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 6),
                       Text(
-                        '0 / 20',
-                        style:
-                            AppTextStyles.label.copyWith(
-                          color: Colors.white,
-                          fontSize: 14,
+                        '${progress.correctCount} / ${mission.correctRequired}',
+                        style: AppTextStyles.label.copyWith(
+                          color: Colors.black,
+                          fontSize: 27,
                           fontWeight: FontWeight.w900,
                           height: 1,
-                          shadows: const [
-                            Shadow(
-                              color: Colors.black,
-                              offset: Offset(-1, 0),
-                            ),
-                            Shadow(
-                              color: Colors.black,
-                              offset: Offset(1, 0),
-                            ),
-                            Shadow(
-                              color: Colors.black,
-                              offset: Offset(0, -1),
-                            ),
-                            Shadow(
-                              color: Colors.black,
-                              offset: Offset(0, 1),
-                            ),
-                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Container(
-                    height: 13,
+                    height: 20,
                     decoration: BoxDecoration(
                       color: const Color(0xFF28261D),
-                      borderRadius:
-                          BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: const Color(0xFF4B412C),
                         width: 1.2,
                       ),
                     ),
                     padding: const EdgeInsets.all(2),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: FractionallySizedBox(
+                          widthFactor: progressValue,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Color(0xFFFE5E02),
+                                  Color(0xFFD96519),
+                                  Color(0xFFB85A1A),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
                 Container(
-                  width: 34,
-                  height: 34,
+                  width: 44,
+                  height: 44,
                   margin: const EdgeInsets.only(right: 7),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFE5E02),
@@ -348,7 +654,7 @@ class _MissionProgressPanel extends StatelessWidget {
                   child: const Icon(
                     Icons.pets,
                     color: Colors.white,
-                    size: 20,
+                    size: 25,
                   ),
                 ),
               ],
@@ -361,36 +667,58 @@ class _MissionProgressPanel extends StatelessWidget {
 }
 
 class _MissionCard extends StatelessWidget {
+  final CaseMission mission;
+  final CaseStageProgress progress;
+  final bool isStarting;
   final VoidCallback onStartMission;
 
   const _MissionCard({
+    required this.mission,
+    required this.progress,
+    required this.isStarting,
     required this.onStartMission,
   });
+
+  bool get hasStarted =>
+      progress.correctCount > 0 ||
+      progress.clueThresholdCount > 0 ||
+      progress.firstGuessCount > 0;
 
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 1008 / 1254,
+      aspectRatio: 1008 / 1035,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final height = constraints.maxHeight;
+          final originalHeight = width * (1254 / 1008);
 
           return Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset(
-                AnimalKingdomMissionScreen._missionCardAsset,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.high,
+              ClipRect(
+                child: OverflowBox(
+                  alignment: Alignment.topCenter,
+                  minWidth: width,
+                  maxWidth: width,
+                  minHeight: width * (1254 / 1008),
+                  maxHeight: width * (1254 / 1008),
+                  child: Image.asset(
+                    AnimalKingdomMissionScreen._missionCardAsset,
+                    width: width,
+                    height: width * (1254 / 1008),
+                    fit: BoxFit.fill,
+                    filterQuality: FilterQuality.high,
+                  ),
+                ),
               ),
 
               // Shared high-resolution Animal Kingdom image.
               Positioned(
                 left: width * 0.095,
                 right: width * 0.095,
-                top: height * 0.145,
-                height: height * 0.305,
+                top: originalHeight * 0.145,
+                height: originalHeight * 0.305,
                 child: Image.asset(
                   AnimalKingdomMissionScreen._animalsImage,
                   fit: BoxFit.contain,
@@ -402,8 +730,8 @@ class _MissionCard extends StatelessWidget {
               Positioned(
                 left: width * 0.10,
                 right: width * 0.10,
-                top: height * 0.535,
-                height: height * 0.155,
+                top: originalHeight * 0.535,
+                height: originalHeight * 0.155,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -420,7 +748,7 @@ class _MissionCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'GET 10 DINOSAURS QUESTIONS CORRECT',
+                      mission.missionText,
                       maxLines: 2,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.category.copyWith(
@@ -439,16 +767,20 @@ class _MissionCard extends StatelessWidget {
               Positioned(
                 left: width * 0.17,
                 right: width * 0.17,
-                top: height * 0.718,
-                height: height * 0.092,
+                top: originalHeight * 0.718,
+                height: originalHeight * 0.092,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: onStartMission,
+                    onTap: isStarting ? null : onStartMission,
                     borderRadius: BorderRadius.circular(16),
                     child: Center(
                       child: Text(
-                        'START MISSION',
+                        isStarting
+                            ? 'LOADING...'
+                            : hasStarted
+                                ? 'CONTINUE MISSION'
+                                : 'START MISSION',
                         maxLines: 1,
                         style: AppTextStyles.category.copyWith(
                           color: AppColors.white,
@@ -470,59 +802,6 @@ class _MissionCard extends StatelessWidget {
                 ),
               ),
 
-              // HOW IT WORKS is centred on the same axis as START MISSION.
-              Positioned(
-                left: width * 0.17,
-                right: width * 0.17,
-                top: height * 0.835,
-                height: height * 0.110,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment:
-                      CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'HOW IT WORKS',
-                      maxLines: 1,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.category.copyWith(
-                        color: Colors.white,
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.2,
-                        height: 1,
-                        shadows: const [
-                          Shadow(
-                            color: Colors.black,
-                            blurRadius: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      'Get correct answers in the Animals category\n'
-                      'to complete this mission.',
-                      maxLines: 2,
-                      softWrap: true,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.body.copyWith(
-                        color: Colors.white,
-                        fontSize: 12.2,
-                        fontWeight: FontWeight.w800,
-                        height: 1.08,
-                        letterSpacing: -0.05,
-                        shadows: const [
-                          Shadow(
-                            color: Colors.black,
-                            blurRadius: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           );
         },

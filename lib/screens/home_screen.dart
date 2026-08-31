@@ -64,7 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-
   Future<void> _loadSelectedAvatar() async {
     final String? selectedAvatarPath =
         await AvatarPreferencesService.loadSelectedAvatarPath();
@@ -645,17 +644,18 @@ class _QuickPlayRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
+      builder: (
+        BuildContext context,
+        BoxConstraints constraints,
+      ) {
         final bool isNarrow = constraints.maxWidth < 390;
         final double gap = isNarrow ? 7 : 9;
 
         return SizedBox(
-          // Increased to accommodate the redesigned Daily Flash card.
           height: isNarrow ? 158 : 166,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // DAILY FLASH 5 â€” LEFT
               Expanded(
                 flex: 5,
                 child: _DailyFlashCard(
@@ -664,10 +664,7 @@ class _QuickPlayRow extends StatelessWidget {
                   isComplete: dailyFlashComplete,
                 ),
               ),
-
               SizedBox(width: gap),
-
-              // MY CASE FILES â€” RIGHT
               Expanded(
                 flex: 4,
                 child: _CaseFilesCard(
@@ -702,7 +699,10 @@ class _CaseFilesCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         child: Container(
           height: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 8,
+          ),
           decoration: BoxDecoration(
             color: AppColors.panel,
             borderRadius: BorderRadius.circular(10),
@@ -811,7 +811,6 @@ class _DailyFlashCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
-
                     Expanded(
                       child: Center(
                         child: FittedBox(
@@ -830,18 +829,13 @@ class _DailyFlashCard extends StatelessWidget {
                         ),
                       ),
                     ),
-
-                    // Balances the lightning bolt so the title
-                    // stays visually centred.
                     SizedBox(
                       width: isNarrow ? 44 : 50,
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 3),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -855,7 +849,7 @@ class _DailyFlashCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: Text(
-                      '2Ã— XP',
+                      '2× XP',
                       style: AppTextStyles.label.copyWith(
                         color: Colors.black,
                         fontSize: isNarrow ? 12.5 : 14,
@@ -870,10 +864,7 @@ class _DailyFlashCard extends StatelessWidget {
                   ),
                 ],
               ),
-
-              // Extra breathing room above PLAY NOW.
               const SizedBox(height: 12),
-
               Container(
                 width: double.infinity,
                 height: isNarrow ? 40 : 44,
@@ -933,10 +924,12 @@ class _MidnightCountdown extends StatefulWidget {
   const _MidnightCountdown();
 
   @override
-  State<_MidnightCountdown> createState() => _MidnightCountdownState();
+  State<_MidnightCountdown> createState() =>
+      _MidnightCountdownState();
 }
 
-class _MidnightCountdownState extends State<_MidnightCountdown> {
+class _MidnightCountdownState
+    extends State<_MidnightCountdown> {
   Timer? _timer;
   Duration _remaining = Duration.zero;
 
@@ -976,7 +969,8 @@ class _MidnightCountdownState extends State<_MidnightCountdown> {
   @override
   Widget build(BuildContext context) {
     final int hours = _remaining.inHours;
-    final int minutes = _remaining.inMinutes.remainder(60);
+    final int minutes =
+        _remaining.inMinutes.remainder(60);
 
     return FittedBox(
       fit: BoxFit.scaleDown,
@@ -1030,10 +1024,13 @@ class _ChallengeHeading extends StatelessWidget {
         BuildContext context,
         BoxConstraints constraints,
       ) {
-        final bool isVeryNarrow = constraints.maxWidth < 360;
-        final bool isNarrow = constraints.maxWidth < 430;
+        final bool isVeryNarrow =
+            constraints.maxWidth < 360;
+        final bool isNarrow =
+            constraints.maxWidth < 430;
 
-        final double sideGap = isVeryNarrow ? 8 : 10;
+        final double sideGap =
+            isVeryNarrow ? 8 : 10;
 
         return Row(
           children: [
@@ -1042,12 +1039,17 @@ class _ChallengeHeading extends StatelessWidget {
             ),
             SizedBox(width: sideGap),
             SizedBox(
-              width: isVeryNarrow ? 214 : (isNarrow ? 226 : 238),
+              width: isVeryNarrow
+                  ? 214
+                  : (isNarrow ? 226 : 238),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
                 children: [
                   const _ChallengeShield(),
-                  SizedBox(width: isVeryNarrow ? 5 : 7),
+                  SizedBox(
+                    width: isVeryNarrow ? 5 : 7,
+                  ),
                   Flexible(
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
@@ -1055,11 +1057,14 @@ class _ChallengeHeading extends StatelessWidget {
                         'PICK YOUR CHALLENGE',
                         maxLines: 1,
                         textAlign: TextAlign.center,
-                        style: AppTextStyles.category.copyWith(
+                        style:
+                            AppTextStyles.category.copyWith(
                           color: AppColors.white,
-                          fontSize:
-                              isVeryNarrow ? 16 : (isNarrow ? 17 : 18),
-                          fontWeight: FontWeight.w600,
+                          fontSize: isVeryNarrow
+                              ? 16
+                              : (isNarrow ? 17 : 18),
+                          fontWeight:
+                              FontWeight.w600,
                           letterSpacing: 0.45,
                         ),
                       ),
@@ -1165,12 +1170,15 @@ class _CategoryCard extends StatelessWidget {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(22),
         child: InkWell(
-          onTap: isAvailable ? category.onPressed : null,
-          borderRadius: BorderRadius.circular(22),
+          onTap:
+              isAvailable ? category.onPressed : null,
+          borderRadius:
+              BorderRadius.circular(22),
           child: Ink(
             decoration: BoxDecoration(
               color: AppColors.panel,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius:
+                  BorderRadius.circular(22),
               border: Border.all(
                 color: isAvailable
                     ? AppColors.orange
@@ -1188,7 +1196,8 @@ class _CategoryCard extends StatelessWidget {
                   : null,
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
+              padding:
+                  const EdgeInsets.symmetric(
                 horizontal: 14,
                 vertical: 14,
               ),
@@ -1199,8 +1208,10 @@ class _CategoryCard extends StatelessWidget {
                     height: 60,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(17),
+                      color:
+                          AppColors.background,
+                      borderRadius:
+                          BorderRadius.circular(17),
                       border: Border.all(
                         color: isAvailable
                             ? AppColors.orange
@@ -1211,19 +1222,25 @@ class _CategoryCard extends StatelessWidget {
                     child: Image.asset(
                       category.imagePath,
                       fit: BoxFit.contain,
-                      filterQuality: FilterQuality.high,
+                      filterQuality:
+                          FilterQuality.high,
                     ),
                   ),
                   const SizedBox(width: 15),
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
                       children: [
                         Text(
-                          category.title.toUpperCase(),
+                          category.title
+                              .toUpperCase(),
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.category.copyWith(
+                          overflow:
+                              TextOverflow.ellipsis,
+                          style: AppTextStyles
+                              .category
+                              .copyWith(
                             color: isAvailable
                                 ? AppColors.white
                                 : AppColors.grey,
@@ -1235,8 +1252,10 @@ class _CategoryCard extends StatelessWidget {
                         Text(
                           category.subtitle,
                           maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.body.copyWith(
+                          overflow:
+                              TextOverflow.ellipsis,
+                          style:
+                              AppTextStyles.body.copyWith(
                             color: isAvailable
                                 ? AppColors.white
                                 : AppColors.grey,
@@ -1262,7 +1281,8 @@ class _CategoryCard extends StatelessWidget {
   }
 }
 
-class _AvailableCategoryStatus extends StatelessWidget {
+class _AvailableCategoryStatus
+    extends StatelessWidget {
   const _AvailableCategoryStatus();
 
   @override
@@ -1273,7 +1293,8 @@ class _AvailableCategoryStatus extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: const Color(0xFFFE5E02),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius:
+            BorderRadius.circular(12),
       ),
       child: Text(
         'PLAY',
@@ -1290,7 +1311,8 @@ class _AvailableCategoryStatus extends StatelessWidget {
   }
 }
 
-class _LockedCategoryStatus extends StatelessWidget {
+class _LockedCategoryStatus
+    extends StatelessWidget {
   const _LockedCategoryStatus();
 
   @override
@@ -1314,7 +1336,8 @@ class _LockedCategoryStatus extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: AppColors.background,
-              borderRadius: BorderRadius.circular(15),
+              borderRadius:
+                  BorderRadius.circular(15),
               border: Border.all(
                 color: AppColors.orange,
                 width: 1,
@@ -1324,7 +1347,8 @@ class _LockedCategoryStatus extends StatelessWidget {
               'COMING SOON',
               textAlign: TextAlign.center,
               maxLines: 1,
-              style: AppTextStyles.label.copyWith(
+              style:
+                  AppTextStyles.label.copyWith(
                 color: AppColors.grey,
                 fontSize: 8,
                 letterSpacing: 0.2,
@@ -1347,7 +1371,8 @@ class _AdSpace extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.panel,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius:
+            BorderRadius.circular(18),
         border: Border.all(
           color: AppColors.border,
         ),

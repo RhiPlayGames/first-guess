@@ -377,7 +377,9 @@ extension _GameScreenLogic on _GameScreenState {
     }
 
     final GuessMatch match =
-        currentItem.checkGuess(guess);
+        widget.launchedFromCaseFile
+            ? GuessMatch.correct
+            : currentItem.checkGuess(guess);
 
     switch (match) {
       case GuessMatch.correct:
@@ -434,6 +436,11 @@ extension _GameScreenLogic on _GameScreenState {
             guessController.clear();
           });
 
+          if (lives <= 0 || isLastClue) {
+            await finishFailedRound();
+            return;
+          }
+
           showGameMessage(
             'Too many spelling attempts! One life lost.',
             type: GameMessageType.error,
@@ -447,11 +454,6 @@ extension _GameScreenLogic on _GameScreenState {
           );
 
           if (!mounted) {
-            return;
-          }
-
-          if (lives <= 0 || isLastClue) {
-            await finishFailedRound();
             return;
           }
 
@@ -505,22 +507,6 @@ extension _GameScreenLogic on _GameScreenState {
         });
 
         if (lives <= 0 || isLastClue) {
-          showGameMessage(
-            'Incorrect! One life lost.',
-            type: GameMessageType.error,
-            duration: const Duration(
-              milliseconds: 700,
-            ),
-          );
-
-          await Future<void>.delayed(
-            const Duration(milliseconds: 700),
-          );
-
-          if (!mounted) {
-            return;
-          }
-
           await finishFailedRound();
           return;
         }
@@ -600,6 +586,167 @@ extension _GameScreenLogic on _GameScreenState {
     );
   }
 
+  Future<void> loadAnimalKingdomGameplayProgress() async {
+    if (!widget.launchedFromCaseFile) {
+      return;
+    }
+
+    try {
+      final progress =
+          await CasePathService.loadAnimalKingdomProgress();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        activeCaseStage = progress.currentStage;
+        activeCaseCorrectCount =
+            progress.currentStageProgress.correctCount;
+        activeCaseClueThresholdCount =
+            progress.currentStageProgress.clueThresholdCount;
+        activeCaseFirstGuessCount =
+            progress.currentStageProgress.firstGuessCount;
+        caseProgressLoaded = true;
+      });
+    } catch (error, stackTrace) {
+      debugPrint(
+        'ANIMAL KINGDOM CASE PROGRESS LOAD ERROR: $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  Future<int?> recordAnimalKingdomCaseResult({
+    required int clueNumber,
+    required bool wasFirstGuess,
+    required bool practiceMode,
+  }) async {
+    final String? questionId = currentItem.id;
+
+    if (questionId == null || questionId.isEmpty) {
+      return null;
+    }
+
+    String? subcategory;
+
+    if (widget.gameType == QuizGameType.birds) {
+      subcategory = 'birds';
+    } else if (widget.gameType == QuizGameType.dinosaurs) {
+      subcategory = 'dinosaurs';
+    } else if (questionId.startsWith('animals_')) {
+      final String remainder =
+          questionId.substring('animals_'.length);
+      final int finalUnderscore =
+          remainder.lastIndexOf('_');
+
+      if (finalUnderscore > 0) {
+        subcategory =
+            remainder.substring(0, finalUnderscore);
+      }
+    }
+
+    if (subcategory == null || subcategory.isEmpty) {
+      return null;
+    }
+
+    const Set<String> animalSubcategories = <String>{
+      'birds',
+      'dinosaurs',
+      'habitats_animal_groups',
+      'insects_spiders',
+      'jungle_safari_animals',
+      'mammals',
+      'reptiles_amphibians',
+      'sea_creatures',
+      'tracks_footprints',
+    };
+
+    if (!animalSubcategories.contains(subcategory)) {
+      return null;
+    }
+
+    int? stageBefore = activeCaseStage;
+
+    try {
+      if (widget.launchedFromCaseFile && stageBefore == null) {
+        final progressBefore =
+            await CasePathService.loadAnimalKingdomProgress();
+        stageBefore = progressBefore.currentStage;
+      }
+
+      final String attemptId =
+          '${questionId}_${roundStartedAt.microsecondsSinceEpoch}';
+
+      final GameplayResultEvent event =
+          GameplayResultEvent(
+        attemptId: attemptId,
+        questionId: questionId,
+        category: 'animals',
+        subcategory: subcategory,
+        correct: true,
+        clueNumberSolved: clueNumber,
+        firstGuess: wasFirstGuess,
+        practiceMode: practiceMode,
+        completedAt: DateTime.now(),
+      );
+
+      final updatedProgress =
+          await CasePathService.recordAnimalKingdomResult(
+        event: event,
+      );
+
+      int? completedStage;
+
+      if (widget.launchedFromCaseFile &&
+          stageBefore != null &&
+          CasePathService.isAnimalKingdomStageCompleted(
+            progress: updatedProgress,
+            stage: stageBefore,
+          )) {
+        completedStage = stageBefore;
+      }
+
+      if (widget.launchedFromCaseFile && mounted) {
+        setState(() {
+          if (completedStage != null) {
+            final completedMission =
+                CasePathService.animalKingdomMissionForStage(
+              completedStage,
+            );
+
+            activeCaseStage = completedStage;
+            activeCaseCorrectCount =
+                completedMission?.correctRequired ?? 10;
+            activeCaseClueThresholdCount =
+                completedMission?.clueThresholdRequired ?? 0;
+            activeCaseFirstGuessCount =
+                completedMission?.firstGuessesRequired ?? 0;
+          } else {
+            activeCaseStage = updatedProgress.currentStage;
+            activeCaseCorrectCount =
+                updatedProgress.currentStageProgress.correctCount;
+            activeCaseClueThresholdCount =
+                updatedProgress
+                    .currentStageProgress.clueThresholdCount;
+            activeCaseFirstGuessCount =
+                updatedProgress.currentStageProgress.firstGuessCount;
+          }
+
+          caseProgressLoaded = true;
+        });
+      }
+
+      return completedStage;
+    } catch (error, stackTrace) {
+      debugPrint(
+        'ANIMAL KINGDOM CASE TRACKING ERROR: $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      return null;
+    }
+  }
+
   Future<void> finishCorrectRound({
     required bool wasFirstGuess,
   }) async {
@@ -627,6 +774,13 @@ extension _GameScreenLogic on _GameScreenState {
     });
 
     await recordCurrentQuestionAsPlayed();
+
+    final int? completedCaseStage =
+        await recordAnimalKingdomCaseResult(
+      clueNumber: clueNumber,
+      wasFirstGuess: wasFirstGuess,
+      practiceMode: isReplay,
+    );
 
     final PlayerRankProgress previousRank =
         PlayerRankProgress.fromXp(
@@ -659,19 +813,6 @@ extension _GameScreenLogic on _GameScreenState {
       playerStats = updatedStats;
     });
 
-    if (isReplay) {
-      if (widget.launchedFromSurpriseMe) {
-        startNextSurpriseGame(
-          closeDialog: false,
-        );
-      } else {
-        startNewRound(
-          closeDialog: false,
-        );
-      }
-      return;
-    }
-
     final bool didLevelUp =
         currentRank.isLevelUpFrom(previousRank);
 
@@ -692,6 +833,74 @@ extension _GameScreenLogic on _GameScreenState {
       }
 
       afterLevelUp();
+    }
+
+    if (widget.launchedFromCaseFile &&
+        completedCaseStage != null) {
+      final bool completedEntireCasePath =
+          completedCaseStage >=
+              CasePathService.animalKingdomTotalStages;
+
+      final String completionTitle =
+          completedEntireCasePath
+              ? 'ANIMAL KINGDOM COMPLETE!'
+              : 'CASE $completedCaseStage COMPLETE!';
+
+      final String completionMessage =
+          completedEntireCasePath
+              ? 'You\'ve correctly identified:\n'
+                  '${currentItem.answer.toUpperCase()}\n'
+                  'BADGE EARNED: ANIMAL KINGDOM CASE BADGE'
+              : 'You\'ve correctly identified:\n'
+                  '${currentItem.answer.toUpperCase()}\n'
+                  'Case ${completedCaseStage + 1} is now unlocked.';
+
+      await showResult(
+        title: completionTitle,
+        message: completionMessage,
+        imageAsset: completedEntireCasePath
+            ? 'assets/images/badges/animal_kingdom_case_file_badge.webp'
+            : 'assets/images/ui/popups/challenges_complete.webp',
+        primaryButtonLabel: 'BACK TO CASE MAP',
+        suppressDefaultSecondaryButton: true,
+        onPlayAgainOverride: didLevelUp
+            ? () async {
+                await showLevelUpThen(() {
+                  returnToCase(
+                    closeDialog: false,
+                  );
+                });
+              }
+            : () {
+                returnToCase();
+              },
+        onHomeOverride: didLevelUp
+            ? () async {
+                await showLevelUpThen(() {
+                  returnHome(
+                    closeDialog: false,
+                  );
+                });
+              }
+            : () {
+                returnHome();
+              },
+      );
+
+      return;
+    }
+
+    if (isReplay) {
+      if (widget.launchedFromSurpriseMe) {
+        startNextSurpriseGame(
+          closeDialog: false,
+        );
+      } else {
+        startNewRound(
+          closeDialog: false,
+        );
+      }
+      return;
     }
 
     await showResult(
@@ -829,7 +1038,9 @@ extension _GameScreenLogic on _GameScreenState {
           'The answer was ${currentItem.answer}.',
       imageAsset: 'assets/images/ui/popups/give_up.webp',
       primaryButtonLabel: 'NEXT QUESTION',
-      secondaryButtonLabel: 'BACK TO HOME',
+      secondaryButtonLabel: widget.launchedFromCaseFile
+          ? 'BACK TO CASE MAP'
+          : 'BACK TO HOME',
     );
   }
 
@@ -912,6 +1123,7 @@ extension _GameScreenLogic on _GameScreenState {
     VoidCallback? onHomeOverride,
     String? primaryButtonLabel,
     String? secondaryButtonLabel,
+    bool suppressDefaultSecondaryButton = false,
   }) async {
     clueTimer?.cancel();
     messageTimer?.cancel();
@@ -957,9 +1169,17 @@ extension _GameScreenLogic on _GameScreenState {
           (widget.launchedFromSurpriseMe
               ? startNextSurpriseGame
               : continueToNextRoundFromResult),
-      onHome: onHomeOverride ?? returnHome,
+      onHome: onHomeOverride ??
+          (widget.launchedFromCaseFile
+              ? returnToCase
+              : returnHome),
       primaryButtonLabel: primaryButtonLabel,
-      secondaryButtonLabel: secondaryButtonLabel,
+      secondaryButtonLabel: suppressDefaultSecondaryButton
+          ? null
+          : secondaryButtonLabel ??
+              (widget.launchedFromCaseFile
+                  ? 'BACK TO CASE MAP'
+                  : null),
     );
   }
 
@@ -976,6 +1196,31 @@ extension _GameScreenLogic on _GameScreenState {
     final NavigatorState navigator = Navigator.of(context);
 
     if (closeDialog && navigator.canPop()) {
+      navigator.pop();
+    }
+
+    if (navigator.canPop()) {
+      navigator.pop();
+    }
+  }
+
+  void returnToCase({
+    bool closeDialog = true,
+  }) {
+    _practiceCyclePlayedIds.remove(this);
+
+    clueTimer?.cancel();
+    messageTimer?.cancel();
+    timeUpOverlayTimer?.cancel();
+    surpriseToastTimer?.cancel();
+
+    final NavigatorState navigator = Navigator.of(context);
+
+    if (closeDialog && navigator.canPop()) {
+      navigator.pop();
+    }
+
+    if (navigator.canPop()) {
       navigator.pop();
     }
 

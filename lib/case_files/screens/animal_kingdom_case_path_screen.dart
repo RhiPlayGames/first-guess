@@ -2,21 +2,143 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_text_styles.dart';
 import '../../widgets/app_home_button.dart';
+import '../models/case_progress.dart';
+import '../services/case_path_service.dart';
 import 'animal_kingdom_mission_screen.dart';
 
-class AnimalKingdomCasePathScreen extends StatelessWidget {
+class AnimalKingdomCasePathScreen extends StatefulWidget {
   const AnimalKingdomCasePathScreen({super.key});
 
   static const String _assetBase =
       'assets/images/case_paths/animal_kingdom';
 
-  // Temporary values until we connect these to saved Case File progress.
-  static const int _currentStage = 1;
-  static const int _completedStages = 0;
-  static const int _totalStages = 20;
+  @override
+  State<AnimalKingdomCasePathScreen> createState() =>
+      _AnimalKingdomCasePathScreenState();
+}
+
+class _AnimalKingdomCasePathScreenState
+    extends State<AnimalKingdomCasePathScreen> {
+  CaseProgress? _progress;
+  bool _isLoading = true;
+  bool _loadFailed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProgress();
+  }
+
+  Future<void> _loadProgress() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _loadFailed = false;
+      });
+    }
+
+    try {
+      final CaseProgress progress =
+          await CasePathService.loadAnimalKingdomProgress();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _progress = progress;
+        _isLoading = false;
+        _loadFailed = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isLoading = false;
+        _loadFailed = true;
+      });
+    }
+  }
+
+  Future<void> _openMission(int stage) async {
+    final CaseProgress? progress = _progress;
+
+    if (progress == null ||
+        progress.isCompleted ||
+        stage != progress.currentStage) {
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            const AnimalKingdomMissionScreen(),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadProgress();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Center(
+            child: CircularProgressIndicator(
+              color: Color(0xFFFE5E02),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_loadFailed || _progress == null) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'CASE FILE COULD NOT BE LOADED',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.category.copyWith(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                ElevatedButton(
+                  onPressed: _loadProgress,
+                  child: const Text('TRY AGAIN'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final CaseProgress progress = _progress!;
+    final int currentStage = progress.currentStage;
+    final int completedStages = progress.completedStageCount;
+    final int totalStages = progress.totalStages;
+    final stageProgress = progress.currentStageProgress;
+    final bool currentStageHasProgress =
+        stageProgress.correctCount > 0 ||
+        stageProgress.clueThresholdCount > 0 ||
+        stageProgress.firstGuessCount > 0;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -72,15 +194,15 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                           ),
 
                           // Progress panel
-                          const Positioned(
-                            left: 83,
-                            right: 83,
-                            top: 100,
-                            height: 72,
+                          Positioned(
+                            left: 58,
+                            right: 58,
+                            top: 96,
+                            height: 96,
                             child: _CaseProgressPanel(
-                              currentStage: _currentStage,
-                              completedStages: _completedStages,
-                              totalStages: _totalStages,
+                              currentStage: currentStage,
+                              completedStages: completedStages,
+                              totalStages: totalStages,
                             ),
                           ),
 
@@ -90,7 +212,7 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             top: 190,
                             width: 78,
                             child: _DecorativeImage(
-                              path: '$_assetBase/case_start.webp',
+                              path: '${AnimalKingdomCasePathScreen._assetBase}/case_start.webp',
                               angle: -0.08,
                             ),
                           ),
@@ -109,17 +231,23 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                           ),
 
                           // Consistent winding path from top to bottom.
-                          const _CaseNode(
+                          _CaseNode(
                             number: 1,
                             left: 108,
                             top: 205,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(1),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 2,
                             left: 260,
                             top: 305,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(2),
                           ),
 
                           const Positioned(
@@ -127,24 +255,30 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             top: 330,
                             width: 82,
                             child: _DecorativeImage(
-                              path: '$_assetBase/polaroid_zebra.webp',
+                              path: '${AnimalKingdomCasePathScreen._assetBase}/polaroid_zebra.webp',
                               angle: 0.12,
                               whiteBacking: true,
                               cropBlackCanvas: true,
                             ),
                           ),
 
-                          const _CaseNode(
+                          _CaseNode(
                             number: 3,
                             left: 158,
                             top: 360,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(3),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 4,
                             left: 282,
                             top: 415,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(4),
                           ),
 
                           const Positioned(
@@ -152,34 +286,46 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             top: 430,
                             width: 82,
                             child: _DecorativeImage(
-                              path: '$_assetBase/animal_facts.webp',
+                              path: '${AnimalKingdomCasePathScreen._assetBase}/animal_facts.webp',
                               angle: -0.06,
                             ),
                           ),
 
-                          const _CaseNode(
+                          _CaseNode(
                             number: 5,
                             left: 118,
                             top: 470,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(5),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 6,
                             left: 260,
                             top: 525,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(6),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 7,
                             left: 135,
                             top: 580,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(7),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 8,
                             left: 275,
                             top: 635,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(8),
                           ),
 
                           // Detective dog moved to the right-hand side.
@@ -188,15 +334,18 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             top: 590,
                             width: 92,
                             child: _DecorativeImage(
-                              path: '$_assetBase/detective_dog.webp',
+                              path: '${AnimalKingdomCasePathScreen._assetBase}/detective_dog.webp',
                             ),
                           ),
 
-                          const _CaseNode(
+                          _CaseNode(
                             number: 9,
                             left: 110,
                             top: 690,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(9),
                           ),
 
                           const Positioned(
@@ -204,17 +353,20 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             top: 655,
                             width: 82,
                             child: _DecorativeImage(
-                              path: '$_assetBase/polaroid_lion.webp',
+                              path: '${AnimalKingdomCasePathScreen._assetBase}/polaroid_lion.webp',
                               angle: -0.11,
                               whiteBacking: true,
                               cropBlackCanvas: true,
                             ),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 10,
                             left: 270,
                             top: 745,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(10),
                           ),
 
                           const Positioned(
@@ -222,71 +374,101 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             top: 775,
                             width: 82,
                             child: _DecorativeImage(
-                              path: '$_assetBase/polaroid_elephant.webp',
+                              path: '${AnimalKingdomCasePathScreen._assetBase}/polaroid_elephant.webp',
                               angle: -0.10,
                               whiteBacking: true,
                               cropBlackCanvas: true,
                             ),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 11,
                             left: 125,
                             top: 800,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(11),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 12,
                             left: 280,
                             top: 855,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(12),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 13,
                             left: 115,
                             top: 910,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(13),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 14,
                             left: 270,
                             top: 965,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(14),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 15,
                             left: 125,
                             top: 1020,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(15),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 16,
                             left: 280,
                             top: 1075,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(16),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 17,
                             left: 120,
                             top: 1130,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(17),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 18,
                             left: 260,
                             top: 1175,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(18),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 19,
                             left: 115,
                             top: 1220,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(19),
                           ),
-                          const _CaseNode(
+                          _CaseNode(
                             number: 20,
                             left: 235,
                             top: 1270,
-                            currentStage: _currentStage,
+                            currentStage: currentStage,
+                            currentStageHasProgress:
+                                currentStageHasProgress,
+                            onTap: () => _openMission(20),
                           ),
 
                           // Tiger Polaroid positioned beside Case 13.
@@ -295,7 +477,7 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             top: 875,
                             width: 84,
                             child: _DecorativeImage(
-                              path: '$_assetBase/polaroid_tiger.webp',
+                              path: '${AnimalKingdomCasePathScreen._assetBase}/polaroid_tiger.webp',
                               angle: -0.11,
                               whiteBacking: true,
                               cropBlackCanvas: true,
@@ -307,7 +489,7 @@ class AnimalKingdomCasePathScreen extends StatelessWidget {
                             top: 1110,
                             width: 84,
                             child: _DecorativeImage(
-                              path: '$_assetBase/polaroid_giraffe.webp',
+                              path: '${AnimalKingdomCasePathScreen._assetBase}/polaroid_giraffe.webp',
                               angle: 0.11,
                               whiteBacking: true,
                               cropBlackCanvas: true,
@@ -463,11 +645,11 @@ class _CaseProgressPanel extends StatelessWidget {
           filterQuality: FilterQuality.high,
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(29, 12, 23, 10),
+          padding: const EdgeInsets.fromLTRB(30, 14, 24, 12),
           child: Row(
             children: [
               SizedBox(
-                width: 100,
+                width: 128,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,8 +658,8 @@ class _CaseProgressPanel extends StatelessWidget {
                       'CASE PROGRESS',
                       maxLines: 1,
                       style: AppTextStyles.category.copyWith(
-                        color: Colors.white,
-                        fontSize: 14.5,
+                        color: Colors.black,
+                        fontSize: 17,
                         fontWeight: FontWeight.w900,
                         height: 1,
                       ),
@@ -487,16 +669,10 @@ class _CaseProgressPanel extends StatelessWidget {
                       '$completedStages / $totalStages',
                       maxLines: 1,
                       style: AppTextStyles.label.copyWith(
-                        color: Colors.white,
-                        fontSize: 11,
+                        color: Colors.black,
+                        fontSize: 24,
                         fontWeight: FontWeight.w900,
                         height: 1,
-                        shadows: const [
-                          Shadow(
-                            color: Colors.black,
-                            blurRadius: 2,
-                          ),
-                        ],
                       ),
                     ),
                   ],
@@ -505,7 +681,7 @@ class _CaseProgressPanel extends StatelessWidget {
               const SizedBox(width: 7),
               Expanded(
                 child: Container(
-                  height: 13,
+                  height: 19,
                   decoration: BoxDecoration(
                     color: const Color(0xFF28261D),
                     borderRadius: BorderRadius.circular(20),
@@ -539,8 +715,8 @@ class _CaseProgressPanel extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               SizedBox(
-                width: 40,
-                height: 40,
+                width: 46,
+                height: 46,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: const Color(0xFFFE5E02),
@@ -673,12 +849,16 @@ class _CaseNode extends StatelessWidget {
   final double left;
   final double top;
   final int currentStage;
+  final bool currentStageHasProgress;
+  final VoidCallback onTap;
 
   const _CaseNode({
     required this.number,
     required this.left,
     required this.top,
     required this.currentStage,
+    required this.currentStageHasProgress,
+    required this.onTap,
   });
 
   @override
@@ -705,18 +885,7 @@ class _CaseNode extends StatelessWidget {
         children: [
           Center(
             child: GestureDetector(
-            onTap: isLocked
-                ? null
-                : () {
-                    if (number == 1) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (context) =>
-                              const AnimalKingdomMissionScreen(),
-                        ),
-                      );
-                    }
-                  },
+            onTap: isCurrent ? onTap : null,
             child: Container(
               width: nodeSize,
               height: nodeSize,
@@ -807,7 +976,9 @@ class _CaseNode extends StatelessWidget {
           if (isCurrent) ...[
             const SizedBox(height: 4),
             Text(
-              'TAP TO START',
+              currentStageHasProgress
+                  ? 'CONTINUE MISSION'
+                  : 'TAP TO START',
               maxLines: 1,
               style: AppTextStyles.category.copyWith(
                 color: Colors.white,

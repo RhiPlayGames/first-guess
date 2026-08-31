@@ -49,6 +49,11 @@ class _CreativeWorldSubcategoryScreenState
       firebaseKey: 'fashion_fashion_designers',
     ),
     _CreativeWorldSubcategory(
+      'Furniture & Jewellery',
+      'assets/images/categories/creative_world/furniture_jewellery.webp',
+      firebaseKey: 'furniture_jewellery',
+    ),
+    _CreativeWorldSubcategory(
       'Museums & Galleries',
       'assets/images/categories/creative_world/museums_galleries_creative_awards.webp',
       firebaseKey: 'museums_galleries_creative_awards',

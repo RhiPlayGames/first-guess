@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../case_files/models/case_progress.dart';
+import '../case_files/services/case_path_service.dart';
 import '../services/achievement_service.dart';
 import '../services/player_stats_service.dart';
 import '../theme/app_colors.dart';
-import '../widgets/app_home_button.dart';
 
 class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
@@ -17,6 +18,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   PlayerStats _stats = const PlayerStats();
   int _dailyFlashCompleted = 0;
   int _dailyFlashPerfect5s = 0;
+  CaseProgress? _animalKingdomProgress;
   bool _isLoading = true;
   _FilterData? _selectedFilter;
 
@@ -38,6 +40,15 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
         await DailyFlashMilestoneService
             .loadPerfect5s();
 
+    CaseProgress? animalKingdomProgress;
+
+    try {
+      animalKingdomProgress =
+          await CasePathService.loadAnimalKingdomProgress();
+    } catch (_) {
+      // Achievements still load even if Case Files is unavailable.
+    }
+
     if (!mounted) {
       return;
     }
@@ -46,6 +57,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       _stats = savedStats;
       _dailyFlashCompleted = dailyFlashCompleted;
       _dailyFlashPerfect5s = dailyFlashPerfect5s;
+      _animalKingdomProgress = animalKingdomProgress;
       _isLoading = false;
     });
   }
@@ -57,7 +69,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_1',
         title: 'Flash Starter',
-        description: 'Complete your first Daily Flash 5',
+        description: 'Complete your first Daily Flash 5.',
         rarity: AchievementRarity.bronze,
         category: AchievementCategory.dailyFlash,
         target: 1,
@@ -67,7 +79,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_10',
         title: 'Flash Regular',
-        description: 'Complete 10 Daily Flash 5 challenges',
+        description: 'Complete 10 Daily Flash 5 challenges.',
         rarity: AchievementRarity.silver,
         category: AchievementCategory.dailyFlash,
         target: 10,
@@ -77,7 +89,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_50',
         title: 'Flash Veteran',
-        description: 'Complete 50 Daily Flash 5 challenges',
+        description: 'Complete 50 Daily Flash 5 challenges.',
         rarity: AchievementRarity.gold,
         category: AchievementCategory.dailyFlash,
         target: 50,
@@ -87,7 +99,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_100',
         title: 'Flash Legend',
-        description: 'Complete 100 Daily Flash 5 challenges',
+        description: 'Complete 100 Daily Flash 5 challenges.',
         rarity: AchievementRarity.diamond,
         category: AchievementCategory.dailyFlash,
         target: 100,
@@ -97,7 +109,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_perfect_1',
         title: 'Perfect Flash',
-        description: 'Score a perfect 5 out of 5 in Daily Flash 5',
+        description: 'Score a perfect 5 out of 5 in Daily Flash 5.',
         rarity: AchievementRarity.bronze,
         category: AchievementCategory.dailyFlash,
         target: 1,
@@ -107,7 +119,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_perfect_5',
         title: 'Perfect Five',
-        description: 'Score 5 perfect Daily Flash 5s',
+        description: 'Score 5 perfect Daily Flash 5s.',
         rarity: AchievementRarity.silver,
         category: AchievementCategory.dailyFlash,
         target: 5,
@@ -117,7 +129,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_perfect_25',
         title: 'Flash Perfectionist',
-        description: 'Score 25 perfect Daily Flash 5s',
+        description: 'Score 25 perfect Daily Flash 5s.',
         rarity: AchievementRarity.gold,
         category: AchievementCategory.dailyFlash,
         target: 25,
@@ -146,18 +158,11 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
     }
 
     achievements.sort((first, second) {
-      final int firstStatusRank = _achievementStatusRank(first);
-      final int secondStatusRank = _achievementStatusRank(second);
+      final bool firstUnlocked = first.isUnlocked(_stats);
+      final bool secondUnlocked = second.isUnlocked(_stats);
 
-      if (firstStatusRank != secondStatusRank) {
-        return firstStatusRank.compareTo(secondStatusRank);
-      }
-
-      final int firstCategoryRank = _achievementCategoryRank(first.category);
-      final int secondCategoryRank = _achievementCategoryRank(second.category);
-
-      if (firstCategoryRank != secondCategoryRank) {
-        return firstCategoryRank.compareTo(secondCategoryRank);
+      if (firstUnlocked != secondUnlocked) {
+        return firstUnlocked ? -1 : 1;
       }
 
       return first.target.compareTo(second.target);
@@ -166,53 +171,12 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
     return achievements;
   }
 
-  int _achievementStatusRank(Achievement achievement) {
-    if (achievement.isUnlocked(_stats)) {
-      return 2;
-    }
-
-    if (achievement.progress(_stats) > 0) {
-      return 0;
-    }
-
-    return 1;
-  }
-
-  int _achievementCategoryRank(AchievementCategory category) {
-    switch (category) {
-      case AchievementCategory.xp:
-        return 0;
-      case AchievementCategory.score:
-        return 1;
-      case AchievementCategory.streak:
-        return 2;
-      case AchievementCategory.firstGuess:
-        return 3;
-      case AchievementCategory.dailyFlash:
-        return 4;
-      case AchievementCategory.books:
-        return 5;
-      case AchievementCategory.countries:
-        return 6;
-      case AchievementCategory.flags:
-        return 7;
-      case AchievementCategory.animals:
-        return 8;
-      case AchievementCategory.footballTeams:
-        return 9;
-      case AchievementCategory.movies:
-        return 10;
-      case AchievementCategory.general:
-        return 11;
-    }
-  }
-
   List<Achievement> get _dailyFlashAchievementsForSummary {
     return <Achievement>[
       Achievement(
         id: 'daily_flash_1',
         title: 'Flash Starter',
-        description: 'Complete your first Daily Flash 5',
+        description: 'Complete your first Daily Flash 5.',
         rarity: AchievementRarity.bronze,
         category: AchievementCategory.dailyFlash,
         target: 1,
@@ -222,7 +186,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_10',
         title: 'Flash Regular',
-        description: 'Complete 10 Daily Flash 5 challenges',
+        description: 'Complete 10 Daily Flash 5 challenges.',
         rarity: AchievementRarity.silver,
         category: AchievementCategory.dailyFlash,
         target: 10,
@@ -232,7 +196,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_50',
         title: 'Flash Veteran',
-        description: 'Complete 50 Daily Flash 5 challenges',
+        description: 'Complete 50 Daily Flash 5 challenges.',
         rarity: AchievementRarity.gold,
         category: AchievementCategory.dailyFlash,
         target: 50,
@@ -242,7 +206,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_100',
         title: 'Flash Legend',
-        description: 'Complete 100 Daily Flash 5 challenges',
+        description: 'Complete 100 Daily Flash 5 challenges.',
         rarity: AchievementRarity.diamond,
         category: AchievementCategory.dailyFlash,
         target: 100,
@@ -252,7 +216,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_perfect_1',
         title: 'Perfect Flash',
-        description: 'Score a perfect 5 out of 5 in Daily Flash 5',
+        description: 'Score a perfect 5 out of 5 in Daily Flash 5.',
         rarity: AchievementRarity.bronze,
         category: AchievementCategory.dailyFlash,
         target: 1,
@@ -262,7 +226,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_perfect_5',
         title: 'Perfect Five',
-        description: 'Score 5 perfect Daily Flash 5s',
+        description: 'Score 5 perfect Daily Flash 5s.',
         rarity: AchievementRarity.silver,
         category: AchievementCategory.dailyFlash,
         target: 5,
@@ -272,7 +236,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_perfect_25',
         title: 'Flash Perfectionist',
-        description: 'Score 25 perfect Daily Flash 5s',
+        description: 'Score 25 perfect Daily Flash 5s.',
         rarity: AchievementRarity.gold,
         category: AchievementCategory.dailyFlash,
         target: 25,
@@ -301,31 +265,15 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.white,
         elevation: 0,
-        toolbarHeight: 82,
-        title: const Padding(
-          padding: EdgeInsets.only(top: 14),
-          child: Text(
-            'MY ACHIEVEMENTS',
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.6,
-            ),
+        centerTitle: true,
+        title: const Text(
+          'MY ACHIEVEMENTS',
+          style: TextStyle(
+            fontFamily: 'Oswald',
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.6,
           ),
         ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(
-              right: 26,
-              top: 14,
-            ),
-            child: Align(
-              alignment: Alignment.topRight,
-              child: FirstGuessHomeButton(),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: _isLoading
@@ -355,6 +303,10 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                             _AchievementSummary(
                               completedCount: completedCount,
                               totalCount: totalCount,
+                              animalKingdomBadgeEarned:
+                                  _animalKingdomProgress
+                                          ?.isCompleted ??
+                                      false,
                             ),
                             const SizedBox(height: 20),
                             _CategoryFilters(
@@ -418,10 +370,12 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 class _AchievementSummary extends StatelessWidget {
   final int completedCount;
   final int totalCount;
+  final bool animalKingdomBadgeEarned;
 
   const _AchievementSummary({
     required this.completedCount,
     required this.totalCount,
+    required this.animalKingdomBadgeEarned,
   });
 
   @override
@@ -439,6 +393,69 @@ class _AchievementSummary extends StatelessWidget {
       ),
       child: Column(
         children: [
+          if (animalKingdomBadgeEarned) ...[
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'CASE BADGES',
+                style: TextStyle(
+                  fontFamily: 'Oswald',
+                  color: AppColors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 86,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  Tooltip(
+                    message: 'Animal Kingdom Case Badge',
+                    child: Container(
+                      width: 86,
+                      height: 86,
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius:
+                            BorderRadius.circular(18),
+                        border: Border.all(
+                          color: AppColors.orange,
+                          width: 1.4,
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x33FE5E02),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(15),
+                        child: Image.asset(
+                          'assets/images/badges/animal_kingdom_case_file_badge.webp',
+                          fit: BoxFit.contain,
+                          filterQuality:
+                              FilterQuality.high,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Divider(
+              color: AppColors.border,
+              height: 1,
+            ),
+            const SizedBox(height: 14),
+          ],
           Container(
             width: 72,
             height: 72,
@@ -672,9 +689,6 @@ class _AchievementCard extends StatelessWidget {
             ? _AchievementDisplayStatus.inProgress
             : _AchievementDisplayStatus.notStarted;
 
-    final bool isNotStarted =
-        status == _AchievementDisplayStatus.notStarted;
-
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: 16,
@@ -701,7 +715,7 @@ class _AchievementCard extends StatelessWidget {
         children: [
           _AchievementIcon(
             achievement: achievement,
-            isNotStarted: isNotStarted,
+            isCompleted: isCompleted,
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -714,9 +728,9 @@ class _AchievementCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Oswald',
-                    color: isNotStarted
-                        ? AppColors.grey
-                        : AppColors.white,
+                    color: isCompleted
+                        ? AppColors.white
+                        : AppColors.grey,
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.4,
@@ -730,9 +744,9 @@ class _AchievementCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Inter',
-                    color: isNotStarted
-                        ? AppColors.grey
-                        : AppColors.white,
+                    color: isCompleted
+                        ? AppColors.white
+                        : AppColors.grey,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     height: 1.3,
@@ -753,8 +767,8 @@ class _AchievementCard extends StatelessWidget {
 }
 
 enum _AchievementDisplayStatus {
-  inProgress,
   notStarted,
+  inProgress,
   completed,
 }
 
@@ -770,20 +784,12 @@ class _AchievementStatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String label;
-    final IconData? icon;
+    final IconData icon;
     final Color backgroundColor;
     final Color foregroundColor;
     final Color borderColor;
 
     switch (status) {
-      case _AchievementDisplayStatus.inProgress:
-        label = 'IN PROGRESS';
-        icon = null;
-        backgroundColor = AppColors.orange;
-        foregroundColor = AppColors.white;
-        borderColor = AppColors.orange;
-        break;
-
       case _AchievementDisplayStatus.notStarted:
         label = 'NOT STARTED';
         icon = Icons.more_horiz_rounded;
@@ -792,11 +798,19 @@ class _AchievementStatusPill extends StatelessWidget {
         borderColor = AppColors.darkGrey;
         break;
 
+      case _AchievementDisplayStatus.inProgress:
+        label = 'IN PROGRESS';
+        icon = Icons.hourglass_bottom_rounded;
+        backgroundColor = AppColors.orange;
+        foregroundColor = Colors.black;
+        borderColor = AppColors.orange;
+        break;
+
       case _AchievementDisplayStatus.completed:
         label = 'COMPLETED';
         icon = Icons.check_circle_rounded;
         backgroundColor = completedGreen;
-        foregroundColor = AppColors.white;
+        foregroundColor = Colors.black;
         borderColor = completedGreen;
         break;
     }
@@ -821,14 +835,12 @@ class _AchievementStatusPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (icon != null) ...[
-            Icon(
-              icon,
-              color: foregroundColor,
-              size: 17,
-            ),
-            const SizedBox(width: 6),
-          ],
+          Icon(
+            icon,
+            color: foregroundColor,
+            size: 17,
+          ),
+          const SizedBox(width: 6),
           Flexible(
             child: Text(
               label,
@@ -853,11 +865,11 @@ class _AchievementStatusPill extends StatelessWidget {
 
 class _AchievementIcon extends StatelessWidget {
   final Achievement achievement;
-  final bool isNotStarted;
+  final bool isCompleted;
 
   const _AchievementIcon({
     required this.achievement,
-    required this.isNotStarted,
+    required this.isCompleted,
   });
 
   String get _imagePath {
@@ -912,14 +924,12 @@ class _AchievementIcon extends StatelessWidget {
         shape: BoxShape.circle,
         color: AppColors.background,
         border: Border.all(
-          color: isNotStarted
-              ? AppColors.darkGrey
-              : AppColors.orange,
-          width: isNotStarted ? 1.0 : 1.3,
+          color: AppColors.orange,
+          width: 1.3,
         ),
       ),
       child: Opacity(
-        opacity: isNotStarted ? 0.45 : 1.0,
+        opacity: isCompleted ? 1 : 0.72,
         child: Image.asset(
           _imagePath,
           fit: BoxFit.contain,

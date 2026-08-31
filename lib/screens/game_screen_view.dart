@@ -356,10 +356,20 @@ extension _GameScreenView on _GameScreenState {
   }
 
   Widget buildGameScreen() {
+    final mission = activeCaseStage == null
+        ? null
+        : CasePathService.animalKingdomMissionForStage(
+            activeCaseStage!,
+          );
+
+    final double caseToolbarHeight = 56;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        toolbarHeight: 102,
+        toolbarHeight: widget.launchedFromCaseFile
+            ? caseToolbarHeight
+            : 102,
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.white,
         elevation: 0,
@@ -379,12 +389,21 @@ extension _GameScreenView on _GameScreenState {
         ),
         leadingWidth: 64,
         title: Text(
-          widget.categoryName,
-          style: const TextStyle(
+          widget.launchedFromCaseFile
+              ? activeCaseStage != null
+                  ? 'ANIMAL KINGDOM - CASE $activeCaseStage'
+                  : 'ANIMAL KINGDOM - CASE'
+              : widget.categoryName,
+          maxLines: 1,
+          style: TextStyle(
             fontFamily: 'Oswald',
-            color: AppColors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
+            color: widget.launchedFromCaseFile
+                ? AppColors.orange
+                : AppColors.white,
+            fontSize: widget.launchedFromCaseFile ? 18 : 18,
+            fontWeight: widget.launchedFromCaseFile
+                ? FontWeight.w800
+                : FontWeight.w500,
             letterSpacing: 0.6,
           ),
         ),
@@ -399,6 +418,20 @@ extension _GameScreenView on _GameScreenState {
             ),
           ),
         ],
+        bottom: widget.launchedFromCaseFile &&
+                caseProgressLoaded &&
+                mission != null
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(34),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 7),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: _buildCaseObjectiveRows(mission),
+                  ),
+                ),
+              )
+            : null,
       ),
       body: SafeArea(
         child: Stack(
@@ -459,6 +492,88 @@ extension _GameScreenView on _GameScreenState {
     );
   }
 
+  Widget _buildCaseObjectiveRows(dynamic mission) {
+    final List<Widget> items = <Widget>[
+      _buildCaseObjectiveInline(
+        label: 'Q CORRECT',
+        current: activeCaseCorrectCount,
+        required: mission.correctRequired,
+      ),
+    ];
+
+    if ((mission.clueThresholdRequired ?? 0) > 0 &&
+        mission.clueThreshold != null) {
+      items.add(_buildCaseObjectiveDivider());
+      items.add(
+        _buildCaseObjectiveInline(
+          label: 'BY CLUE ${mission.clueThreshold}',
+          current: activeCaseClueThresholdCount,
+          required: mission.clueThresholdRequired!,
+        ),
+      );
+    }
+
+    if ((mission.firstGuessesRequired ?? 0) > 0) {
+      items.add(_buildCaseObjectiveDivider());
+      items.add(
+        _buildCaseObjectiveInline(
+          label: 'FIRST GUESSES',
+          current: activeCaseFirstGuessCount,
+          required: mission.firstGuessesRequired!,
+        ),
+      );
+    }
+
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: items,
+      ),
+    );
+  }
+
+  Widget _buildCaseObjectiveInline({
+    required String label,
+    required int current,
+    required int required,
+  }) {
+    final int shownCurrent = current.clamp(0, required);
+    final bool complete = current >= required;
+    final Color rowColor = complete
+        ? const Color(0xFF63D44A)
+        : AppColors.white;
+
+    return Text(
+      '$label - $shownCurrent/$required',
+      maxLines: 1,
+      style: TextStyle(
+        fontFamily: 'Oswald',
+        color: rowColor,
+        fontSize: 16,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.2,
+      ),
+    );
+  }
+
+  Widget _buildCaseObjectiveDivider() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 6),
+      child: Text(
+        '|',
+        style: TextStyle(
+          fontFamily: 'Oswald',
+          color: AppColors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+
   Widget buildGamePanel() {
     return Stack(
       children: [
@@ -499,7 +614,8 @@ extension _GameScreenView on _GameScreenState {
                       Positioned.fill(
                         child: buildVisualPanel(),
                       ),
-                      if (isPracticeModeActive)
+                      if (isPracticeModeActive &&
+                          !widget.launchedFromCaseFile)
                         const Positioned(
                           top: 10,
                           right: 10,

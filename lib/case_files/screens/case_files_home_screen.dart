@@ -1,12 +1,143 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/app_home_button.dart';
+import '../models/case_progress.dart';
+import '../services/case_path_service.dart';
 import 'animal_kingdom_case_path_screen.dart';
 
-class CaseFilesHomeScreen extends StatelessWidget {
+class CaseFilesHomeScreen extends StatefulWidget {
   const CaseFilesHomeScreen({super.key});
+
+  @override
+  State<CaseFilesHomeScreen> createState() =>
+      _CaseFilesHomeScreenState();
+}
+
+class _CaseFilesHomeScreenState
+    extends State<CaseFilesHomeScreen> {
+  CaseProgress? _animalKingdomProgress;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAnimalKingdomProgress();
+  }
+
+  Future<void> _loadAnimalKingdomProgress() async {
+    try {
+      final CaseProgress progress =
+          await CasePathService.loadAnimalKingdomProgress();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _animalKingdomProgress = progress;
+      });
+    } catch (_) {
+      // Keep the card usable if progress cannot be loaded.
+    }
+  }
+
+  bool get _animalKingdomStarted {
+    final CaseProgress? progress = _animalKingdomProgress;
+
+    if (progress == null) {
+      return false;
+    }
+
+    final stage = progress.currentStageProgress;
+
+    return progress.completedStageCount > 0 ||
+        stage.correctCount > 0 ||
+        stage.clueThresholdCount > 0 ||
+        stage.firstGuessCount > 0;
+  }
+
+  String get _animalKingdomStatus {
+    final CaseProgress? progress = _animalKingdomProgress;
+
+    if (progress == null) {
+      return 'CASE 1';
+    }
+
+    if (progress.isCompleted) {
+      return 'BADGE EARNED';
+    }
+
+    return 'CASE ${progress.currentStage}';
+  }
+
+  String get _animalKingdomButtonLabel {
+    final CaseProgress? progress = _animalKingdomProgress;
+
+    if (progress?.isCompleted ?? false) {
+      return 'VIEW CASE MAP';
+    }
+
+    return _animalKingdomStarted
+        ? 'CONTINUE CASE'
+        : 'VIEW CASE';
+  }
+
+  Future<void> _qaResetAnimalKingdomTo19Of20() async {
+    try {
+      final CaseProgress progress =
+          await CasePathService
+              .qaResetAnimalKingdomTo19Of20();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _animalKingdomProgress = progress;
+      });
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'QA reset complete: Animal Kingdom is now 19/20. Case 20 is ready.',
+            ),
+          ),
+        );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              'QA reset failed: $error',
+            ),
+          ),
+        );
+    }
+  }
+
+  Future<void> _openAnimalKingdomCase() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            const AnimalKingdomCasePathScreen(),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadAnimalKingdomProgress();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +154,20 @@ class CaseFilesHomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               const _CaseFilesHero(),
+              if (kDebugMode) ...[
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed:
+                      _qaResetAnimalKingdomTo19Of20,
+                  icon: const Icon(
+                    Icons.restart_alt_rounded,
+                    size: 18,
+                  ),
+                  label: const Text(
+                    'QA: RESET ANIMAL KINGDOM TO 19/20',
+                  ),
+                ),
+              ],
               const SizedBox(height: 10),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,17 +177,13 @@ class CaseFilesHomeScreen extends StatelessWidget {
                       title: 'ANIMAL KINGDOM',
                       imagePath:
                           'assets/images/case_files/topics/animal_world.webp',
-                      status: '10 BIRDS QUESTIONS',
-                      buttonLabel: 'VIEW CASE',
+                      status: _animalKingdomStatus,
+                      buttonLabel: _animalKingdomButtonLabel,
+                      badgeEarned:
+                          _animalKingdomProgress?.isCompleted ?? false,
                       imageScale: 1.22,
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (context) =>
-                                const AnimalKingdomCasePathScreen(),
-                          ),
-                        );
-                      },
+                      titleColor: Colors.black,
+                      onTap: _openAnimalKingdomCase,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -256,7 +397,9 @@ class _CaseFileCard extends StatelessWidget {
   final String imagePath;
   final String status;
   final String buttonLabel;
+  final bool badgeEarned;
   final double imageScale;
+  final Color titleColor;
   final VoidCallback? onTap;
 
   const _CaseFileCard({
@@ -264,7 +407,9 @@ class _CaseFileCard extends StatelessWidget {
     required this.imagePath,
     required this.status,
     this.buttonLabel = 'VIEW CASE',
+    this.badgeEarned = false,
     this.imageScale = 1.0,
+    this.titleColor = AppColors.white,
     this.onTap,
   });
 
@@ -408,8 +553,7 @@ class _CaseFileCard extends StatelessWidget {
                                               .category
                                               .copyWith(
                                         color:
-                                            AppColors
-                                                .white,
+                                            titleColor,
                                         fontSize: 15.5,
                                         height: 1,
                                         fontWeight:
@@ -417,7 +561,9 @@ class _CaseFileCard extends StatelessWidget {
                                                 .w900,
                                         letterSpacing:
                                             0.05,
-                                        shadows: const [
+                                        shadows: titleColor == Colors.black
+                                            ? null
+                                            : const [
                                           Shadow(
                                             color:
                                                 Color(
@@ -480,72 +626,47 @@ class _CaseFileCard extends StatelessWidget {
                                 height: 1,
                               ),
                               SizedBox(
-                                height: 13,
+                                height: 20,
                                 child: Center(
                                   child: FittedBox(
-                                    fit: BoxFit
-                                        .scaleDown,
-                                    child: Text(
-                                      status,
-                                      maxLines: 1,
-                                      textAlign:
-                                          TextAlign
-                                              .center,
-                                      style:
-                                          AppTextStyles
-                                              .label
-                                              .copyWith(
-                                        color:
-                                            AppColors
-                                                .white,
-                                        fontSize: 11.2,
-                                        fontWeight:
-                                            FontWeight
-                                                .w900,
-                                        letterSpacing:
-                                            0.12,
-                                        shadows: const [
-                                          Shadow(
-                                            color:
-                                                Color(
-                                              0xFF2A1708,
+                                    fit: BoxFit.scaleDown,
+                                    child: Row(
+                                      mainAxisSize:
+                                          MainAxisSize.min,
+                                      children: [
+                                        if (badgeEarned) ...[
+                                          const Icon(
+                                            Icons
+                                                .workspace_premium_rounded,
+                                            color: Color(
+                                              0xFFB87500,
                                             ),
-                                            blurRadius:
-                                                1.0,
-                                            offset:
-                                                Offset(
-                                              -0.8,
-                                              0,
-                                            ),
+                                            size: 18,
                                           ),
-                                          Shadow(
-                                            color:
-                                                Color(
-                                              0xFF2A1708,
-                                            ),
-                                            blurRadius:
-                                                1.0,
-                                            offset:
-                                                Offset(
-                                              0.8,
-                                              0,
-                                            ),
-                                          ),
-                                          Shadow(
-                                            color:
-                                                Color(
-                                              0xFF2A1708,
-                                            ),
-                                            blurRadius:
-                                                1.5,
-                                            offset:
-                                                Offset(
-                                              0,
-                                              1,
-                                            ),
+                                          const SizedBox(
+                                            width: 4,
                                           ),
                                         ],
-                                      ),
+                                        Text(
+                                          status,
+                                          maxLines: 1,
+                                          textAlign:
+                                              TextAlign.center,
+                                          style:
+                                              AppTextStyles
+                                                  .label
+                                                  .copyWith(
+                                            color:
+                                                Colors.black,
+                                            fontSize: 16.5,
+                                            fontWeight:
+                                                FontWeight
+                                                    .w900,
+                                            letterSpacing:
+                                                0.15,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),

@@ -94,9 +94,16 @@ class _BooksAuthorsSubcategoryScreenState
               'assets/images/categories/subcategories/books_authors/opening_lines.webp',
         ),
     _BooksAuthorsSubcategory(
-          'Poems & Plays',
+          'Plays',
           Icons.theater_comedy_rounded,
-          firebaseKey: 'poems_plays',
+          firebaseKey: 'plays',
+          imagePath:
+              'assets/images/categories/subcategories/books_authors/plays.webp',
+        ),
+    _BooksAuthorsSubcategory(
+          'Poems',
+          Icons.auto_stories_rounded,
+          firebaseKey: 'poems',
           imagePath:
               'assets/images/categories/subcategories/books_authors/poems.webp',
         ),

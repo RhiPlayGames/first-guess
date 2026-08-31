@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../case_files/models/gameplay_result_event.dart';
+import '../case_files/services/case_path_service.dart';
 import '../models/quiz_item.dart';
 import '../services/firebase_challenge_service.dart';
 import '../services/player_stats_service.dart';
@@ -41,6 +43,7 @@ class GameScreen extends StatefulWidget {
   final QuizItem? initialItem;
   final bool launchedFromSurpriseMe;
   final bool showSurpriseToast;
+  final bool launchedFromCaseFile;
 
   const GameScreen.capitalCities({
     super.key,
@@ -48,6 +51,7 @@ class GameScreen extends StatefulWidget {
     this.initialItem,
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
+    this.launchedFromCaseFile = false,
   }) : gameType = QuizGameType.capitalCities;
 
   const GameScreen.countrySilhouettes({
@@ -56,6 +60,7 @@ class GameScreen extends StatefulWidget {
     this.initialItem,
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
+    this.launchedFromCaseFile = false,
   }) : gameType = QuizGameType.countrySilhouettes;
 
   const GameScreen.currencies({
@@ -64,6 +69,7 @@ class GameScreen extends StatefulWidget {
     this.initialItem,
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
+    this.launchedFromCaseFile = false,
   }) : gameType = QuizGameType.currencies;
 
   const GameScreen.majorCities({
@@ -72,6 +78,7 @@ class GameScreen extends StatefulWidget {
     this.initialItem,
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
+    this.launchedFromCaseFile = false,
   }) : gameType = QuizGameType.majorCities;
 
   const GameScreen.birds({
@@ -80,6 +87,7 @@ class GameScreen extends StatefulWidget {
     this.initialItem,
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
+    this.launchedFromCaseFile = false,
   }) : gameType = QuizGameType.birds;
 
   const GameScreen.dinosaurs({
@@ -88,6 +96,7 @@ class GameScreen extends StatefulWidget {
     this.initialItem,
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
+    this.launchedFromCaseFile = false,
   }) : gameType = QuizGameType.dinosaurs;
 
   const GameScreen.breakfastFoods({
@@ -96,15 +105,17 @@ class GameScreen extends StatefulWidget {
     this.initialItem,
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
+    this.launchedFromCaseFile = false,
   }) : gameType = QuizGameType.breakfastFoods;
 
   const GameScreen.dessertsCakesSweets({
-  super.key,
-  required this.items,
-  this.initialItem,
-  this.launchedFromSurpriseMe = false,
-  this.showSurpriseToast = false,
-}) : gameType = QuizGameType.dessertsCakesSweets;
+    super.key,
+    required this.items,
+    this.initialItem,
+    this.launchedFromSurpriseMe = false,
+    this.showSurpriseToast = false,
+    this.launchedFromCaseFile = false,
+  }) : gameType = QuizGameType.dessertsCakesSweets;
 
 
   const GameScreen.firebaseDynamic({
@@ -113,6 +124,7 @@ class GameScreen extends StatefulWidget {
     this.initialItem,
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
+    this.launchedFromCaseFile = false,
   }) : gameType = QuizGameType.firebaseDynamic;
 
   bool get isFlagGame =>
@@ -391,6 +403,12 @@ class _GameScreenState extends State<GameScreen> {
   bool currentQuestionIsReplay = false;
   bool practiceModeNoticeShown = false;
 
+  int? activeCaseStage;
+  int activeCaseCorrectCount = 0;
+  int activeCaseClueThresholdCount = 0;
+  int activeCaseFirstGuessCount = 0;
+  bool caseProgressLoaded = false;
+
   int currentClueIndex = 0;
   int lives = maximumLives;
   int guessesThisRound = 0;
@@ -440,6 +458,10 @@ class _GameScreenState extends State<GameScreen> {
         widget.showSurpriseToast;
 
     loadPlayerStats();
+
+    if (widget.launchedFromCaseFile) {
+      unawaited(loadAnimalKingdomGameplayProgress());
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await initialiseQuestionHistoryAndRound();
