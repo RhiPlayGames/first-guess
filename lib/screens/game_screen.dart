@@ -343,7 +343,20 @@ class GameScreen extends StatefulWidget {
         return GameCategory.foodDrink;
       case QuizGameType.firebaseDynamic:
         final String id = _representativeQuestionId;
-        if (id.startsWith('animals_')) {
+        const List<String> animalQuestionIdPrefixes = <String>[
+          'animals_',
+          'birds_',
+          'dinosaurs_',
+          'habitats_animal_groups_',
+          'insects_spiders_',
+          'safari_jungle_animals_',
+          'jungle_safari_animals_',
+          'mammals_',
+          'reptiles_amphibians_',
+          'sea_creatures_',
+          'tracks_footprints_',
+        ];
+        if (animalQuestionIdPrefixes.any(id.startsWith)) {
           return GameCategory.animals;
         }
         if (id.startsWith('food_drink_')) {

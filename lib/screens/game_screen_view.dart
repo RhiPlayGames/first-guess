@@ -356,11 +356,46 @@ extension _GameScreenView on _GameScreenState {
   }
 
   Widget buildGameScreen() {
+    final String representativeCaseQuestionId =
+        currentItem.id ?? widget.initialItem?.id ?? widget.items.first.id ?? '';
+    final bool isRoundTheWorldCase =
+        _countrySubcategoryFromQuestionId(representativeCaseQuestionId) != null;
+    final bool isSecretsOfThePastCase =
+        _pastPresentSubcategoryFromQuestionId(
+              representativeCaseQuestionId,
+            ) !=
+            null;
+    final bool isTasteAndTreatsCase =
+        _foodDrinkSubcategoryFromQuestionId(
+              representativeCaseQuestionId,
+            ) !=
+            null;
+
     final mission = activeCaseStage == null
         ? null
-        : CasePathService.animalKingdomMissionForStage(
-            activeCaseStage!,
-          );
+        : isRoundTheWorldCase
+            ? CasePathService.roundTheWorldMissionForStage(
+                activeCaseStage!,
+              )
+            : isSecretsOfThePastCase
+                ? CasePathService.secretsOfThePastMissionForStage(
+                    activeCaseStage!,
+                  )
+                : isTasteAndTreatsCase
+                    ? CasePathService.tasteAndTreatsMissionForStage(
+                        activeCaseStage!,
+                      )
+                    : CasePathService.animalKingdomMissionForStage(
+                        activeCaseStage!,
+                      );
+
+    final String activeCaseName = isRoundTheWorldCase
+        ? 'AROUND THE WORLD'
+        : isSecretsOfThePastCase
+            ? 'SECRETS OF THE PAST'
+            : isTasteAndTreatsCase
+                ? 'TASTES & TREATS'
+                : 'ANIMAL KINGDOM';
 
     final double caseToolbarHeight = 56;
 
@@ -391,8 +426,8 @@ extension _GameScreenView on _GameScreenState {
         title: Text(
           widget.launchedFromCaseFile
               ? activeCaseStage != null
-                  ? 'ANIMAL KINGDOM - CASE $activeCaseStage'
-                  : 'ANIMAL KINGDOM - CASE'
+                  ? '$activeCaseName - CASE $activeCaseStage'
+                  : '$activeCaseName - CASE'
               : widget.categoryName,
           maxLines: 1,
           style: TextStyle(
@@ -495,7 +530,7 @@ extension _GameScreenView on _GameScreenState {
   Widget _buildCaseObjectiveRows(dynamic mission) {
     final List<Widget> items = <Widget>[
       _buildCaseObjectiveInline(
-        label: 'Q CORRECT',
+        label: 'CORRECT',
         current: activeCaseCorrectCount,
         required: mission.correctRequired,
       ),

@@ -30,6 +30,8 @@ class RevealImagePanel extends StatelessWidget {
     this.imageScale = 1.0,
   });
 
+  static const bool _pixelationEnabled = false;
+
   static const List<double> _blurLevels = [
     30,
     26,
@@ -107,7 +109,9 @@ class RevealImagePanel extends StatelessWidget {
   Widget _buildRevealImage() {
     switch (effect) {
       case RevealEffect.pixelate:
-        return _buildPixelatedImage();
+        return _pixelationEnabled
+            ? _buildPixelatedImage()
+            : _buildClearImage();
 
       case RevealEffect.blur:
         return _buildBlurredImage();

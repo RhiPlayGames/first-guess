@@ -21,6 +21,61 @@ Future<void> showGameResultDialog({
   String? primaryButtonLabel,
   String? secondaryButtonLabel,
 }) {
+  final bool isAnimalKingdomComplete =
+      title == 'ANIMAL KINGDOM COMPLETE!';
+
+  if (isAnimalKingdomComplete) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black87,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 18,
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final double width =
+                  constraints.maxWidth.clamp(280.0, 560.0);
+              final double height = width * (1092 / 1365);
+
+              return SizedBox(
+                width: width,
+                height: height,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(
+                      'assets/images/case_files/animal_kingdom_complete.webp',
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
+                    ),
+                    Positioned(
+                      left: width * 0.22,
+                      right: width * 0.22,
+                      top: height * 0.79,
+                      height: height * 0.12,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: onPlayAgain,
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   final bool isGameOver = title == 'GAME OVER';
   final bool isCorrect = title == 'CORRECT!';
   final bool isFirstGuess = title == 'FIRST GUESS!';

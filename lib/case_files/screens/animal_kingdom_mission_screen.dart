@@ -17,13 +17,10 @@ class AnimalKingdomMissionScreen extends StatefulWidget {
       'assets/images/case_paths/animal_kingdom/animal_kingdom_map.webp';
 
   static const String _progressPanelAsset =
-      'assets/images/case_paths/animal_kingdom/case_progress_panel.webp';
+      'assets/images/case_paths/animal_kingdom/case_progress_panel_black.webp';
 
   static const String _missionCardAsset =
-      'assets/images/case_paths/animal_kingdom/animal_kingdom_mission_card.webp';
-
-  static const String _animalsImage =
-      'assets/images/case_paths/animal_kingdom/animal_kingdom_main.webp';
+      'assets/images/case_paths/animal_kingdom/animal_kingdom_mission_cardV2.webp';
 
   @override
   State<AnimalKingdomMissionScreen> createState() =>
@@ -564,11 +561,11 @@ class _MissionProgressPanel extends StatelessWidget {
             filterQuality: FilterQuality.high,
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(30, 12, 18, 12),
+            padding: const EdgeInsets.fromLTRB(46, 12, 20, 12),
             child: Row(
               children: [
                 SizedBox(
-                  width: 142,
+                  width: 112,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -576,19 +573,19 @@ class _MissionProgressPanel extends StatelessWidget {
                       Text(
                         'MISSION PROGRESS',
                         style: AppTextStyles.category.copyWith(
-                          color: Colors.black,
-                          fontSize: 16,
+                          color: Colors.white,
+                          fontSize: 14,
                           fontWeight: FontWeight.w900,
                           height: 1,
                           letterSpacing: -0.2,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
                         '${progress.correctCount} / ${mission.correctRequired}',
                         style: AppTextStyles.label.copyWith(
-                          color: Colors.black,
-                          fontSize: 27,
+                          color: const Color(0xFFFE5E02),
+                          fontSize: 23,
                           fontWeight: FontWeight.w900,
                           height: 1,
                         ),
@@ -596,7 +593,7 @@ class _MissionProgressPanel extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 Expanded(
                   child: Container(
                     height: 20,
@@ -631,32 +628,7 @@ class _MissionProgressPanel extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
-                Container(
-                  width: 44,
-                  height: 44,
-                  margin: const EdgeInsets.only(right: 7),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFE5E02),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFD96519),
-                      width: 2,
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x66000000),
-                        blurRadius: 5,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.pets,
-                    color: Colors.white,
-                    size: 25,
-                  ),
-                ),
+
               ],
             ),
           ),
@@ -687,11 +659,11 @@ class _MissionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 1008 / 1035,
+      aspectRatio: 1122 / 1402,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final originalHeight = width * (1254 / 1008);
+          final originalHeight = width * (1402 / 1122);
 
           return Stack(
             fit: StackFit.expand,
@@ -701,52 +673,27 @@ class _MissionCard extends StatelessWidget {
                   alignment: Alignment.topCenter,
                   minWidth: width,
                   maxWidth: width,
-                  minHeight: width * (1254 / 1008),
-                  maxHeight: width * (1254 / 1008),
+                  minHeight: width * (1402 / 1122),
+                  maxHeight: width * (1402 / 1122),
                   child: Image.asset(
                     AnimalKingdomMissionScreen._missionCardAsset,
                     width: width,
-                    height: width * (1254 / 1008),
+                    height: width * (1402 / 1122),
                     fit: BoxFit.fill,
                     filterQuality: FilterQuality.high,
                   ),
                 ),
               ),
 
-              // Shared high-resolution Animal Kingdom image.
-              Positioned(
-                left: width * 0.095,
-                right: width * 0.095,
-                top: originalHeight * 0.145,
-                height: originalHeight * 0.305,
-                child: Image.asset(
-                  AnimalKingdomMissionScreen._animalsImage,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                ),
-              ),
-
-              // Mission wording fits entirely inside the parchment panel.
+              // Dynamic mission wording sits inside the blank parchment area in V2.
               Positioned(
                 left: width * 0.10,
                 right: width * 0.10,
-                top: originalHeight * 0.535,
+                top: originalHeight * 0.690,
                 height: originalHeight * 0.155,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'YOUR MISSION',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.category.copyWith(
-                        color: const Color(0xFFFE5E02),
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.35,
-                        height: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     Text(
                       mission.missionText,
                       maxLines: 2,
@@ -763,12 +710,12 @@ class _MissionCard extends StatelessWidget {
                 ),
               ),
 
-              // Clickable text placed over the built-in orange button.
+              // Clickable dynamic text placed over the blank orange CTA in V2.
               Positioned(
-                left: width * 0.17,
-                right: width * 0.17,
-                top: originalHeight * 0.718,
-                height: originalHeight * 0.092,
+                left: width * 0.14,
+                right: width * 0.14,
+                top: originalHeight * 0.850,
+                height: originalHeight * 0.090,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(

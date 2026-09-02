@@ -592,8 +592,37 @@ extension _GameScreenLogic on _GameScreenState {
     }
 
     try {
-      final progress =
-          await CasePathService.loadAnimalKingdomProgress();
+      final String representativeId =
+          widget.initialItem?.id ??
+          (widget.items.isNotEmpty
+              ? widget.items.first.id ?? ''
+              : '');
+
+      final bool isRoundTheWorld =
+          _countrySubcategoryFromQuestionId(
+                representativeId,
+              ) !=
+              null;
+
+      final bool isSecretsOfThePast =
+          _pastPresentSubcategoryFromQuestionId(
+                representativeId,
+              ) !=
+              null;
+
+      final bool isTasteAndTreats =
+          _foodDrinkSubcategoryFromQuestionId(
+                representativeId,
+              ) !=
+              null;
+
+      final progress = isRoundTheWorld
+          ? await CasePathService.loadRoundTheWorldProgress()
+          : isSecretsOfThePast
+              ? await CasePathService.loadSecretsOfThePastProgress()
+              : isTasteAndTreats
+                  ? await CasePathService.loadTasteAndTreatsProgress()
+                  : await CasePathService.loadAnimalKingdomProgress();
 
       if (!mounted) {
         return;
@@ -611,10 +640,122 @@ extension _GameScreenLogic on _GameScreenState {
       });
     } catch (error, stackTrace) {
       debugPrint(
-        'ANIMAL KINGDOM CASE PROGRESS LOAD ERROR: $error',
+        'CASE FILE PROGRESS LOAD ERROR: $error',
       );
       debugPrintStack(stackTrace: stackTrace);
     }
+  }
+
+  String? _countrySubcategoryFromQuestionId(
+    String questionId,
+  ) {
+    if (questionId.startsWith('countries_')) {
+      final String remainder =
+          questionId.substring('countries_'.length);
+      final int finalUnderscore =
+          remainder.lastIndexOf('_');
+
+      if (finalUnderscore > 0) {
+        final String parsed =
+            remainder.substring(0, finalUnderscore);
+
+        if (parsed == 'currencies') {
+          return 'currencies_languages';
+        }
+
+        return parsed;
+      }
+    }
+
+    const Map<String, String> countryQuestionIdPrefixes =
+        <String, String>{
+      'country_silhouettes_': 'country_silhouettes',
+      'flags_': 'flags',
+      'capitals_': 'capitals',
+      'major_cities_': 'major_cities',
+      'states_regions_': 'states_regions',
+      'maps_borders_': 'maps_borders',
+      'landmarks_world_wonders_': 'landmarks_world_wonders',
+      'currencies_languages_': 'currencies_languages',
+      'currencies_': 'currencies_languages',
+      'national_symbols_': 'national_symbols',
+      'islands_mountains_rivers_': 'islands_mountains_rivers',
+      'national_foods_': 'national_foods',
+    };
+
+    for (final MapEntry<String, String> entry
+        in countryQuestionIdPrefixes.entries) {
+      if (questionId.startsWith(entry.key)) {
+        return entry.value;
+      }
+    }
+
+    return null;
+  }
+
+  String? _pastPresentSubcategoryFromQuestionId(
+    String questionId,
+  ) {
+    if (questionId.startsWith('past_present_')) {
+      final String remainder =
+          questionId.substring('past_present_'.length);
+      final int finalUnderscore = remainder.lastIndexOf('_');
+
+      if (finalUnderscore > 0) {
+        return remainder.substring(0, finalUnderscore);
+      }
+    }
+
+    const Map<String, String> pastPresentQuestionIdPrefixes =
+        <String, String>{
+      'historical_events_': 'historical_events',
+      'battles_wars_': 'battles_wars',
+      'ancient_civilisations_empires_':
+          'ancient_civilisations_empires',
+      'historical_eras_': 'historical_eras',
+      'archaeology_': 'archaeology',
+      'historic_objects_': 'historic_objects',
+      'castles_ruins_': 'castles_ruins',
+      'monarchies_dynasties_': 'monarchies_dynasties',
+      'revolutions_political_movements_':
+          'revolutions_political_movements',
+      'historical_mysteries_': 'historical_mysteries',
+      'myths_legends_': 'myths_legends',
+      'traditions_cultural_customs_':
+          'traditions_cultural_customs',
+      'ancient_religions_beliefs_':
+          'ancient_religions_beliefs',
+      'then_now_': 'then_now',
+      'important_dates_': 'important_dates',
+    };
+
+    for (final MapEntry<String, String> entry
+        in pastPresentQuestionIdPrefixes.entries) {
+      if (questionId.startsWith(entry.key)) {
+        return entry.value;
+      }
+    }
+
+    return null;
+  }
+
+  String? _foodDrinkSubcategoryFromQuestionId(
+    String questionId,
+  ) {
+    if (!questionId.startsWith('food_drink_')) {
+      return null;
+    }
+
+    final String remainder =
+        questionId.substring('food_drink_'.length);
+    final int finalUnderscore = remainder.lastIndexOf('_');
+
+    if (finalUnderscore <= 0) {
+      return null;
+    }
+
+    final String parsed = remainder.substring(0, finalUnderscore);
+    return parsed.isEmpty ? null : parsed;
   }
 
   Future<int?> recordAnimalKingdomCaseResult({
@@ -628,25 +769,80 @@ extension _GameScreenLogic on _GameScreenState {
       return null;
     }
 
-    String? subcategory;
+    bool isRoundTheWorld = false;
+    bool isSecretsOfThePast = false;
+    bool isTasteAndTreats = false;
+    String? category;
+    String? subcategory =
+        _countrySubcategoryFromQuestionId(questionId);
 
-    if (widget.gameType == QuizGameType.birds) {
-      subcategory = 'birds';
-    } else if (widget.gameType == QuizGameType.dinosaurs) {
-      subcategory = 'dinosaurs';
-    } else if (questionId.startsWith('animals_')) {
-      final String remainder =
-          questionId.substring('animals_'.length);
-      final int finalUnderscore =
-          remainder.lastIndexOf('_');
+    if (subcategory != null) {
+      isRoundTheWorld = true;
+      category = 'countries';
+    } else {
+      subcategory =
+          _pastPresentSubcategoryFromQuestionId(questionId);
 
-      if (finalUnderscore > 0) {
-        subcategory =
-            remainder.substring(0, finalUnderscore);
+      if (subcategory != null) {
+        isSecretsOfThePast = true;
+        category = 'past_present';
+      } else {
+        subcategory = _foodDrinkSubcategoryFromQuestionId(questionId);
+
+        if (subcategory != null) {
+          isTasteAndTreats = true;
+          category = 'food_drink';
+        }
+      }
+
+      if (subcategory == null && widget.gameType == QuizGameType.birds) {
+        subcategory = 'birds';
+      } else if (subcategory == null && widget.gameType == QuizGameType.dinosaurs) {
+        subcategory = 'dinosaurs';
+      } else if (subcategory == null && questionId.startsWith('animals_')) {
+        final String remainder =
+            questionId.substring('animals_'.length);
+        final int finalUnderscore =
+            remainder.lastIndexOf('_');
+
+        if (finalUnderscore > 0) {
+          subcategory =
+              remainder.substring(0, finalUnderscore);
+        }
+      } else if (subcategory == null) {
+        const Map<String, String> animalQuestionIdPrefixes =
+            <String, String>{
+          'birds_': 'birds',
+          'dinosaurs_': 'dinosaurs',
+          'habitats_animal_groups_': 'habitats_animal_groups',
+          'insects_spiders_': 'insects_spiders',
+          'safari_jungle_animals_': 'jungle_safari_animals',
+          'jungle_safari_animals_': 'jungle_safari_animals',
+          'mammals_': 'mammals',
+          'reptiles_amphibians_': 'reptiles_amphibians',
+          'sea_creatures_': 'sea_creatures',
+          'tracks_footprints_': 'tracks_footprints',
+        };
+
+        for (final MapEntry<String, String> entry
+            in animalQuestionIdPrefixes.entries) {
+          if (questionId.startsWith(entry.key)) {
+            subcategory = entry.value;
+            break;
+          }
+        }
+      }
+
+      if (subcategory != null &&
+          !isSecretsOfThePast &&
+          !isTasteAndTreats) {
+        category = 'animals';
       }
     }
 
-    if (subcategory == null || subcategory.isEmpty) {
+    if (subcategory == null ||
+        subcategory.isEmpty ||
+        category == null) {
       return null;
     }
 
@@ -662,16 +858,66 @@ extension _GameScreenLogic on _GameScreenState {
       'tracks_footprints',
     };
 
-    if (!animalSubcategories.contains(subcategory)) {
+    const Set<String> countrySubcategories = <String>{
+      'country_silhouettes',
+      'flags',
+      'capitals',
+      'major_cities',
+      'states_regions',
+      'maps_borders',
+      'landmarks_world_wonders',
+      'currencies_languages',
+      'national_symbols',
+      'islands_mountains_rivers',
+      'national_foods',
+    };
+
+    const Set<String> pastPresentSubcategories = <String>{
+      'historical_events',
+      'battles_wars',
+      'ancient_civilisations_empires',
+      'historical_eras',
+      'archaeology',
+      'historic_objects',
+      'castles_ruins',
+      'monarchies_dynasties',
+      'revolutions_political_movements',
+      'historical_mysteries',
+      'myths_legends',
+      'traditions_cultural_customs',
+      'ancient_religions_beliefs',
+      'then_now',
+      'important_dates',
+    };
+
+    if (isRoundTheWorld) {
+      if (!countrySubcategories.contains(subcategory)) {
+        return null;
+      }
+    } else if (isSecretsOfThePast) {
+      if (!pastPresentSubcategories.contains(subcategory)) {
+        return null;
+      }
+    } else if (isTasteAndTreats) {
+      // Food & Drink uses dynamic Firebase subcategory IDs.
+      // Any non-empty food_drink_* subcategory is valid here.
+    } else if (!animalSubcategories.contains(subcategory)) {
       return null;
     }
 
     int? stageBefore = activeCaseStage;
 
     try {
-      if (widget.launchedFromCaseFile && stageBefore == null) {
-        final progressBefore =
-            await CasePathService.loadAnimalKingdomProgress();
+      if (widget.launchedFromCaseFile &&
+          stageBefore == null) {
+        final progressBefore = isRoundTheWorld
+            ? await CasePathService.loadRoundTheWorldProgress()
+            : isSecretsOfThePast
+                ? await CasePathService.loadSecretsOfThePastProgress()
+                : isTasteAndTreats
+                    ? await CasePathService.loadTasteAndTreatsProgress()
+                    : await CasePathService.loadAnimalKingdomProgress();
+
         stageBefore = progressBefore.currentStage;
       }
 
@@ -682,7 +928,7 @@ extension _GameScreenLogic on _GameScreenState {
           GameplayResultEvent(
         attemptId: attemptId,
         questionId: questionId,
-        category: 'animals',
+        category: category,
         subcategory: subcategory,
         correct: true,
         clueNumberSolved: clueNumber,
@@ -691,29 +937,69 @@ extension _GameScreenLogic on _GameScreenState {
         completedAt: DateTime.now(),
       );
 
-      final updatedProgress =
-          await CasePathService.recordAnimalKingdomResult(
-        event: event,
-      );
+      final updatedProgress = isRoundTheWorld
+          ? await CasePathService.recordRoundTheWorldResult(
+              event: event,
+            )
+          : isSecretsOfThePast
+              ? await CasePathService.recordSecretsOfThePastResult(
+                  event: event,
+                )
+              : isTasteAndTreats
+                  ? await CasePathService.recordTasteAndTreatsResult(
+                      event: event,
+                    )
+                  : await CasePathService.recordAnimalKingdomResult(
+                      event: event,
+                    );
 
       int? completedStage;
 
       if (widget.launchedFromCaseFile &&
-          stageBefore != null &&
-          CasePathService.isAnimalKingdomStageCompleted(
-            progress: updatedProgress,
-            stage: stageBefore,
-          )) {
-        completedStage = stageBefore;
+          stageBefore != null) {
+        final bool stageCompleted = isRoundTheWorld
+            ? CasePathService.isRoundTheWorldStageCompleted(
+                progress: updatedProgress,
+                stage: stageBefore,
+              )
+            : isSecretsOfThePast
+                ? CasePathService.isSecretsOfThePastStageCompleted(
+                    progress: updatedProgress,
+                    stage: stageBefore,
+                  )
+                : isTasteAndTreats
+                    ? CasePathService.isTasteAndTreatsStageCompleted(
+                        progress: updatedProgress,
+                        stage: stageBefore,
+                      )
+                    : CasePathService.isAnimalKingdomStageCompleted(
+                    progress: updatedProgress,
+                    stage: stageBefore,
+                  );
+
+        if (stageCompleted) {
+          completedStage = stageBefore;
+        }
       }
 
       if (widget.launchedFromCaseFile && mounted) {
         setState(() {
           if (completedStage != null) {
-            final completedMission =
-                CasePathService.animalKingdomMissionForStage(
-              completedStage,
-            );
+            final completedMission = isRoundTheWorld
+                ? CasePathService.roundTheWorldMissionForStage(
+                    completedStage
+                  )
+                : isSecretsOfThePast
+                    ? CasePathService.secretsOfThePastMissionForStage(
+                        completedStage
+                      )
+                    : isTasteAndTreats
+                        ? CasePathService.tasteAndTreatsMissionForStage(
+                            completedStage
+                          )
+                        : CasePathService.animalKingdomMissionForStage(
+                        completedStage
+                      );
 
             activeCaseStage = completedStage;
             activeCaseCorrectCount =
@@ -740,7 +1026,8 @@ extension _GameScreenLogic on _GameScreenState {
       return completedStage;
     } catch (error, stackTrace) {
       debugPrint(
-        'ANIMAL KINGDOM CASE TRACKING ERROR: $error',
+        '${isRoundTheWorld ? 'AROUND THE WORLD' : isSecretsOfThePast ? 'SECRETS OF THE PAST' : isTasteAndTreats ? 'A TASTE OF MYSTERY' : 'ANIMAL KINGDOM'} '
+        'CASE TRACKING ERROR: $error',
       );
       debugPrintStack(stackTrace: stackTrace);
       return null;
@@ -837,20 +1124,61 @@ extension _GameScreenLogic on _GameScreenState {
 
     if (widget.launchedFromCaseFile &&
         completedCaseStage != null) {
+      final bool isRoundTheWorldCase =
+          _countrySubcategoryFromQuestionId(
+                currentItem.id ?? '',
+              ) !=
+              null;
+
+      final bool isSecretsOfThePastCase =
+          _pastPresentSubcategoryFromQuestionId(
+                currentItem.id ?? '',
+              ) !=
+              null;
+
+      final bool isTasteAndTreatsCase =
+          _foodDrinkSubcategoryFromQuestionId(
+                currentItem.id ?? '',
+              ) !=
+              null;
+
+      final int totalStages = isRoundTheWorldCase
+          ? CasePathService.roundTheWorldTotalStages
+          : isSecretsOfThePastCase
+              ? CasePathService.secretsOfThePastTotalStages
+              : isTasteAndTreatsCase
+                  ? CasePathService.tasteAndTreatsTotalStages
+                  : CasePathService.animalKingdomTotalStages;
+
       final bool completedEntireCasePath =
-          completedCaseStage >=
-              CasePathService.animalKingdomTotalStages;
+          completedCaseStage >= totalStages;
+
+      final String caseName = isRoundTheWorldCase
+          ? 'AROUND THE WORLD'
+          : isSecretsOfThePastCase
+              ? 'SECRETS OF THE PAST'
+              : isTasteAndTreatsCase
+                  ? 'A TASTE OF MYSTERY'
+                  : 'ANIMAL KINGDOM';
+
+      final String badgeName = isRoundTheWorldCase
+          ? 'AROUND THE WORLD CASE BADGE'
+          : isSecretsOfThePastCase
+              ? 'SECRETS OF THE PAST CASE BADGE'
+              : isTasteAndTreatsCase
+                  ? 'A TASTE OF MYSTERY CASE BADGE'
+                  : 'ANIMAL KINGDOM CASE BADGE';
 
       final String completionTitle =
           completedEntireCasePath
-              ? 'ANIMAL KINGDOM COMPLETE!'
+              ? '$caseName COMPLETE!'
               : 'CASE $completedCaseStage COMPLETE!';
 
       final String completionMessage =
           completedEntireCasePath
               ? 'You\'ve correctly identified:\n'
                   '${currentItem.answer.toUpperCase()}\n'
-                  'BADGE EARNED: ANIMAL KINGDOM CASE BADGE'
+                  'BADGE EARNED: $badgeName'
               : 'You\'ve correctly identified:\n'
                   '${currentItem.answer.toUpperCase()}\n'
                   'Case ${completedCaseStage + 1} is now unlocked.';
@@ -859,7 +1187,13 @@ extension _GameScreenLogic on _GameScreenState {
         title: completionTitle,
         message: completionMessage,
         imageAsset: completedEntireCasePath
-            ? 'assets/images/badges/animal_kingdom_case_file_badge.webp'
+            ? isRoundTheWorldCase
+                ? 'assets/images/badges/around_the_world_case_file_badge.webp'
+                : isSecretsOfThePastCase
+                    ? 'assets/images/badges/mysteries_legends_case_file_badge.webp'
+                    : isTasteAndTreatsCase
+                        ? 'assets/images/badges/tastes_treats_case_file_badge.webp'
+                        : 'assets/images/badges/animal_kingdom_case_file_badge.webp'
             : 'assets/images/ui/popups/challenges_complete.webp',
         primaryButtonLabel: 'BACK TO CASE MAP',
         suppressDefaultSecondaryButton: true,

@@ -657,7 +657,7 @@ class _QuickPlayRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                flex: 5,
+                flex: 11,
                 child: _DailyFlashCard(
                   onTap: onDailyFlashPressed,
                   isNarrow: isNarrow,
@@ -666,7 +666,7 @@ class _QuickPlayRow extends StatelessWidget {
               ),
               SizedBox(width: gap),
               Expanded(
-                flex: 4,
+                flex: 9,
                 child: _CaseFilesCard(
                   onTap: onCaseFilesPressed,
                   isNarrow: isNarrow,
@@ -697,55 +697,21 @@ class _CaseFilesCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(10),
-        child: Container(
-          height: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: 8,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.panel,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: AppColors.orange,
-              width: 1.2,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.black,
+            alignment: Alignment.center,
+            child: Image.asset(
+              'assets/images/case_files/case_file_mainV2_image.webp',
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.contain,
+              alignment: Alignment.center,
+              filterQuality: FilterQuality.high,
             ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x22FE5E02),
-                blurRadius: 8,
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 5,
-                child: Image.asset(
-                  'assets/images/case_files/case_file_main_image.webp',
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                ),
-              ),
-              const SizedBox(width: 5),
-              Expanded(
-                flex: 4,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'MY CASE\nFILES',
-                    maxLines: 2,
-                    style: AppTextStyles.category.copyWith(
-                      color: AppColors.white,
-                      fontSize: isNarrow ? 18 : 20,
-                      height: 1.02,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
       ),

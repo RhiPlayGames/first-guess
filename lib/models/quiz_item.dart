@@ -44,7 +44,11 @@ class QuizItem {
 
       if (normalisedGuess == normalisedAnswer ||
           _withoutSpaces(normalisedGuess) ==
-              _withoutSpaces(normalisedAnswer)) {
+              _withoutSpaces(normalisedAnswer) ||
+          _isSingularPluralMatch(
+            normalisedGuess,
+            normalisedAnswer,
+          )) {
         return GuessMatch.correct;
       }
     }
@@ -161,6 +165,131 @@ class QuizItem {
 
   static String _withoutSpaces(String value) {
     return value.replaceAll(' ', '');
+  }
+
+  static bool _isSingularPluralMatch(
+    String first,
+    String second,
+  ) {
+    if (first.isEmpty || second.isEmpty || first == second) {
+      return false;
+    }
+
+    if (_pluralForms(first).contains(second) ||
+        _pluralForms(second).contains(first)) {
+      return true;
+    }
+
+    final String compactFirst = _withoutSpaces(first);
+    final String compactSecond = _withoutSpaces(second);
+
+    return _pluralForms(compactFirst).contains(compactSecond) ||
+        _pluralForms(compactSecond).contains(compactFirst);
+  }
+
+  static Set<String> _pluralForms(String value) {
+    final String normalised = value.trim();
+
+    if (normalised.isEmpty) {
+      return <String>{};
+    }
+
+    final List<String> words = normalised.split(' ');
+    final String finalWord = words.removeLast();
+
+    final Set<String> pluralWords =
+        _pluralFormsForWord(finalWord);
+
+    if (words.isEmpty) {
+      return pluralWords;
+    }
+
+    final String prefix = '${words.join(' ')} ';
+
+    return pluralWords
+        .map((String pluralWord) => '$prefix$pluralWord')
+        .toSet();
+  }
+
+  static Set<String> _pluralFormsForWord(String word) {
+    const Map<String, List<String>> irregular =
+        <String, List<String>>{
+      'person': <String>['people'],
+      'man': <String>['men'],
+      'woman': <String>['women'],
+      'child': <String>['children'],
+      'mouse': <String>['mice'],
+      'goose': <String>['geese'],
+      'tooth': <String>['teeth'],
+      'foot': <String>['feet'],
+      'ox': <String>['oxen'],
+      'analysis': <String>['analyses'],
+      'diagnosis': <String>['diagnoses'],
+      'thesis': <String>['theses'],
+      'crisis': <String>['crises'],
+      'phenomenon': <String>['phenomena'],
+      'criterion': <String>['criteria'],
+      'index': <String>['indexes', 'indices'],
+      'appendix': <String>['appendixes', 'appendices'],
+      'matrix': <String>['matrices', 'matrixes'],
+      'vertex': <String>['vertices'],
+      'cactus': <String>['cactuses', 'cacti'],
+      'fungus': <String>['funguses', 'fungi'],
+      'nucleus': <String>['nucleuses', 'nuclei'],
+      'syllabus': <String>['syllabuses', 'syllabi'],
+      'quiz': <String>['quizzes'],
+      'knife': <String>['knives'],
+      'life': <String>['lives'],
+      'wife': <String>['wives'],
+      'leaf': <String>['leaves'],
+      'loaf': <String>['loaves'],
+      'wolf': <String>['wolves'],
+      'shelf': <String>['shelves'],
+      'calf': <String>['calves'],
+      'half': <String>['halves'],
+      'self': <String>['selves'],
+      'thief': <String>['thieves'],
+      'potato': <String>['potatoes'],
+      'tomato': <String>['tomatoes'],
+      'hero': <String>['heroes'],
+      'echo': <String>['echoes'],
+      'fish': <String>['fish', 'fishes'],
+      'sheep': <String>['sheep'],
+      'deer': <String>['deer'],
+      'species': <String>['species'],
+      'series': <String>['series'],
+      'aircraft': <String>['aircraft'],
+      'salmon': <String>['salmon', 'salmons'],
+      'trout': <String>['trout', 'trouts'],
+    };
+
+    final List<String>? irregularForms = irregular[word];
+
+    if (irregularForms != null) {
+      return irregularForms.toSet();
+    }
+
+    if (word.length > 1 &&
+        word.endsWith('y') &&
+        !_isVowel(word[word.length - 2])) {
+      return <String>{
+        '${word.substring(0, word.length - 1)}ies',
+      };
+    }
+
+    if (word.endsWith('s') ||
+        word.endsWith('x') ||
+        word.endsWith('z') ||
+        word.endsWith('ch') ||
+        word.endsWith('sh')) {
+      return <String>{'${word}es'};
+    }
+
+    return <String>{'${word}s'};
+  }
+
+  static bool _isVowel(String character) {
+    return 'aeiou'.contains(character);
   }
 
   static bool _isCloseSpelling(

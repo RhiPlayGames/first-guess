@@ -19,6 +19,9 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   int _dailyFlashCompleted = 0;
   int _dailyFlashPerfect5s = 0;
   CaseProgress? _animalKingdomProgress;
+  CaseProgress? _roundTheWorldProgress;
+  CaseProgress? _secretsOfThePastProgress;
+  CaseProgress? _tasteAndTreatsProgress;
   bool _isLoading = true;
   _FilterData? _selectedFilter;
 
@@ -41,10 +44,24 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
             .loadPerfect5s();
 
     CaseProgress? animalKingdomProgress;
+    CaseProgress? roundTheWorldProgress;
+    CaseProgress? secretsOfThePastProgress;
+    CaseProgress? tasteAndTreatsProgress;
 
     try {
       animalKingdomProgress =
           await CasePathService.loadAnimalKingdomProgress();
+    } catch (_) {
+      // Achievements still load even if Case Files is unavailable.
+    }
+
+    try {
+      roundTheWorldProgress =
+          await CasePathService.loadRoundTheWorldProgress();
+      secretsOfThePastProgress =
+          await CasePathService.loadSecretsOfThePastProgress();
+      tasteAndTreatsProgress =
+          await CasePathService.loadTasteAndTreatsProgress();
     } catch (_) {
       // Achievements still load even if Case Files is unavailable.
     }
@@ -58,6 +75,9 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       _dailyFlashCompleted = dailyFlashCompleted;
       _dailyFlashPerfect5s = dailyFlashPerfect5s;
       _animalKingdomProgress = animalKingdomProgress;
+      _roundTheWorldProgress = roundTheWorldProgress;
+      _secretsOfThePastProgress = secretsOfThePastProgress;
+      _tasteAndTreatsProgress = tasteAndTreatsProgress;
       _isLoading = false;
     });
   }
@@ -171,94 +191,8 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
     return achievements;
   }
 
-  List<Achievement> get _dailyFlashAchievementsForSummary {
-    return <Achievement>[
-      Achievement(
-        id: 'daily_flash_1',
-        title: 'Flash Starter',
-        description: 'Complete your first Daily Flash 5.',
-        rarity: AchievementRarity.bronze,
-        category: AchievementCategory.dailyFlash,
-        target: 1,
-        achievementPoints: 20,
-        progressSelector: (_) => _dailyFlashCompleted,
-      ),
-      Achievement(
-        id: 'daily_flash_10',
-        title: 'Flash Regular',
-        description: 'Complete 10 Daily Flash 5 challenges.',
-        rarity: AchievementRarity.silver,
-        category: AchievementCategory.dailyFlash,
-        target: 10,
-        achievementPoints: 60,
-        progressSelector: (_) => _dailyFlashCompleted,
-      ),
-      Achievement(
-        id: 'daily_flash_50',
-        title: 'Flash Veteran',
-        description: 'Complete 50 Daily Flash 5 challenges.',
-        rarity: AchievementRarity.gold,
-        category: AchievementCategory.dailyFlash,
-        target: 50,
-        achievementPoints: 125,
-        progressSelector: (_) => _dailyFlashCompleted,
-      ),
-      Achievement(
-        id: 'daily_flash_100',
-        title: 'Flash Legend',
-        description: 'Complete 100 Daily Flash 5 challenges.',
-        rarity: AchievementRarity.diamond,
-        category: AchievementCategory.dailyFlash,
-        target: 100,
-        achievementPoints: 300,
-        progressSelector: (_) => _dailyFlashCompleted,
-      ),
-      Achievement(
-        id: 'daily_flash_perfect_1',
-        title: 'Perfect Flash',
-        description: 'Score a perfect 5 out of 5 in Daily Flash 5.',
-        rarity: AchievementRarity.bronze,
-        category: AchievementCategory.dailyFlash,
-        target: 1,
-        achievementPoints: 30,
-        progressSelector: (_) => _dailyFlashPerfect5s,
-      ),
-      Achievement(
-        id: 'daily_flash_perfect_5',
-        title: 'Perfect Five',
-        description: 'Score 5 perfect Daily Flash 5s.',
-        rarity: AchievementRarity.silver,
-        category: AchievementCategory.dailyFlash,
-        target: 5,
-        achievementPoints: 75,
-        progressSelector: (_) => _dailyFlashPerfect5s,
-      ),
-      Achievement(
-        id: 'daily_flash_perfect_25',
-        title: 'Flash Perfectionist',
-        description: 'Score 25 perfect Daily Flash 5s.',
-        rarity: AchievementRarity.gold,
-        category: AchievementCategory.dailyFlash,
-        target: 25,
-        achievementPoints: 150,
-        progressSelector: (_) => _dailyFlashPerfect5s,
-      ),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
-    final List<Achievement> allAchievements = <Achievement>[
-      ...AchievementService.achievements,
-      ..._dailyFlashAchievementsForSummary,
-    ];
-
-    final int completedCount = allAchievements
-        .where((achievement) => achievement.isUnlocked(_stats))
-        .length;
-
-    final int totalCount = allAchievements.length;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -301,10 +235,20 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                         delegate: SliverChildListDelegate(
                           [
                             _AchievementSummary(
-                              completedCount: completedCount,
-                              totalCount: totalCount,
                               animalKingdomBadgeEarned:
                                   _animalKingdomProgress
+                                          ?.isCompleted ??
+                                      false,
+                              roundTheWorldBadgeEarned:
+                                  _roundTheWorldProgress
+                                          ?.isCompleted ??
+                                      false,
+                              secretsOfThePastBadgeEarned:
+                                  _secretsOfThePastProgress
+                                          ?.isCompleted ??
+                                      false,
+                              tasteAndTreatsBadgeEarned:
+                                  _tasteAndTreatsProgress
                                           ?.isCompleted ??
                                       false,
                             ),
@@ -317,20 +261,9 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                 });
                               },
                             ),
-                            const SizedBox(height: 20),
-                            Text(
-                              _selectedFilter == null ||
-                                      _selectedFilter!.categories == null
-                                  ? 'ALL ACHIEVEMENTS'
-                                  : '${_selectedFilter!.label} ACHIEVEMENTS',
-                              style: const TextStyle(
-                                color: AppColors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 16),
+                            const _AchievementDivider(),
+                            const SizedBox(height: 16),
                           ],
                         ),
                       ),
@@ -368,150 +301,165 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 }
 
 class _AchievementSummary extends StatelessWidget {
-  final int completedCount;
-  final int totalCount;
   final bool animalKingdomBadgeEarned;
+  final bool roundTheWorldBadgeEarned;
+  final bool secretsOfThePastBadgeEarned;
+  final bool tasteAndTreatsBadgeEarned;
 
   const _AchievementSummary({
-    required this.completedCount,
-    required this.totalCount,
     required this.animalKingdomBadgeEarned,
+    required this.roundTheWorldBadgeEarned,
+    required this.secretsOfThePastBadgeEarned,
+    required this.tasteAndTreatsBadgeEarned,
   });
 
   @override
   Widget build(BuildContext context) {
-    final double progress = totalCount == 0
-        ? 0
-        : completedCount / totalCount;
-
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
       decoration: BoxDecoration(
         color: AppColors.panel,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (animalKingdomBadgeEarned) ...[
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'CASE BADGES',
-                style: TextStyle(
-                  fontFamily: 'Oswald',
-                  color: AppColors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.6,
-                ),
-              ),
+          const Text(
+            'BADGES',
+            style: TextStyle(
+              fontFamily: 'Oswald',
+              color: AppColors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.6,
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 86,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const double gap = 10;
+              final double badgeWidth =
+                  (constraints.maxWidth - (gap * 3)) / 4;
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Tooltip(
-                    message: 'Animal Kingdom Case Badge',
-                    child: Container(
-                      width: 86,
-                      height: 86,
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius:
-                            BorderRadius.circular(18),
-                        border: Border.all(
-                          color: AppColors.orange,
-                          width: 1.4,
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x33FE5E02),
-                            blurRadius: 10,
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(15),
-                        child: Image.asset(
-                          'assets/images/badges/animal_kingdom_case_file_badge.webp',
-                          fit: BoxFit.contain,
-                          filterQuality:
-                              FilterQuality.high,
-                        ),
-                      ),
-                    ),
+                  _CaseFileBadge(
+                    imagePath:
+                        'assets/images/badges/animal_kingdom_case_file_badge.webp',
+                    tooltip: animalKingdomBadgeEarned
+                        ? 'Animal Kingdom Case Badge'
+                        : 'Animal Kingdom Case Badge — not yet earned',
+                    earned: animalKingdomBadgeEarned,
+                    width: badgeWidth,
+                  ),
+                  const SizedBox(width: gap),
+                  _CaseFileBadge(
+                    imagePath:
+                        'assets/images/badges/amazing_world_case_file_badge.webp',
+                    tooltip: roundTheWorldBadgeEarned
+                        ? 'Around the World Case Badge'
+                        : 'Around the World Case Badge — not yet earned',
+                    earned: roundTheWorldBadgeEarned,
+                    width: badgeWidth,
+                  ),
+                  const SizedBox(width: gap),
+                  _CaseFileBadge(
+                    imagePath:
+                        'assets/images/badges/mysteries_legends_case_file_badge.webp',
+                    tooltip: secretsOfThePastBadgeEarned
+                        ? 'Secrets of the Past Case Badge'
+                        : 'Secrets of the Past Case Badge — not yet earned',
+                    earned: secretsOfThePastBadgeEarned,
+                    width: badgeWidth,
+                  ),
+                  const SizedBox(width: gap),
+                  _CaseFileBadge(
+                    imagePath:
+                        'assets/images/badges/tastes_treats_case_file_badge.webp',
+                    tooltip: tasteAndTreatsBadgeEarned
+                        ? 'Tastes & Treats Case Badge'
+                        : 'Tastes & Treats Case Badge — not yet earned',
+                    earned: tasteAndTreatsBadgeEarned,
+                    width: badgeWidth,
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            Divider(
-              color: AppColors.border,
-              height: 1,
-            ),
-            const SizedBox(height: 14),
-          ],
-          Container(
-            width: 72,
-            height: 72,
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.background,
-              border: Border.all(
-                color: AppColors.orange,
-                width: 1.4,
-              ),
-            ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CaseFileBadge extends StatelessWidget {
+  final String imagePath;
+  final String tooltip;
+  final bool earned;
+  final double width;
+
+  const _CaseFileBadge({
+    required this.imagePath,
+    required this.tooltip,
+    required this.earned,
+    required this.width,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Opacity(
+        opacity: earned ? 1 : 0.28,
+        child: SizedBox(
+          width: width,
+          child: AspectRatio(
+            aspectRatio: 1,
             child: Image.asset(
-              'assets/images/stats/my_stats/achievements.webp',
+              imagePath,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.high,
             ),
           ),
-          const SizedBox(height: 14),
-          Text(
-            '$completedCount / $totalCount',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.w600,
-              height: 1,
-            ),
-          ),
-          const SizedBox(height: 5),
-          const Text(
-            'ACHIEVEMENTS COMPLETED',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              color: AppColors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 18),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 12,
-              backgroundColor: AppColors.border,
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(
-                AppColors.orange,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
+    );
+  }
+}
+
+class _AchievementDivider extends StatelessWidget {
+  const _AchievementDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(
+          child: Divider(
+            color: AppColors.orange,
+            thickness: 1,
+            height: 1,
+          ),
+        ),
+        Transform.rotate(
+          angle: 0.785398,
+          child: Container(
+            width: 10,
+            height: 10,
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            color: AppColors.orange,
+          ),
+        ),
+        const Expanded(
+          child: Divider(
+            color: AppColors.orange,
+            thickness: 1,
+            height: 1,
+          ),
+        ),
+      ],
     );
   }
 }

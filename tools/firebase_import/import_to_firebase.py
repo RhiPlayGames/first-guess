@@ -85,7 +85,7 @@ def split_accepted_answers(value) -> list[str]:
     text = str(value).strip()
     if not text:
         return []
-    items = [item.strip().lower() for item in text.split("|")]
+    items = [item.strip().lower() for item in text.split("*")]
     return [item for item in items if item]
 
 
@@ -212,7 +212,7 @@ def read_and_validate(workbook_path: Path):
     return records
 
 
-def resolve_local_image(record):
+def resolve_local_image(record, replace_images=False):
     image_path = record["imagePath"].replace("\\", "/")
     prefix = "challenge_images/"
 
@@ -232,6 +232,11 @@ def resolve_local_image(record):
         )
 
     local_path = LOCAL_CATEGORY_IMAGE_ROOT.joinpath(*parts)
+
+    if replace_images:
+        optimized_path = local_path.parent / "optimized" / local_path.name
+        if optimized_path.exists() and optimized_path.is_file():
+            local_path = optimized_path
 
     if not local_path.exists():
         stop(
@@ -317,7 +322,10 @@ def main():
     print("Checking exact local image paths...")
     local_images = {}
     for record in records:
-        local_path = resolve_local_image(record)
+        local_path = resolve_local_image(
+            record,
+            replace_images=args.replace_images,
+        )
         local_images[record["questionId"]] = local_path
         print(f"LOCAL OK {record['questionId']} -> {local_path}")
 

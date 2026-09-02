@@ -131,8 +131,6 @@ class _AnimalKingdomCasePathScreenState
 
     final CaseProgress progress = _progress!;
     final int currentStage = progress.currentStage;
-    final int completedStages = progress.completedStageCount;
-    final int totalStages = progress.totalStages;
     final stageProgress = progress.currentStageProgress;
     final bool currentStageHasProgress =
         stageProgress.correctCount > 0 ||
@@ -146,7 +144,7 @@ class _AnimalKingdomCasePathScreenState
           builder: (context, constraints) {
             // The map uses a fixed design canvas and scales to the phone width.
             const designWidth = 430.0;
-            const designHeight = 1340.0;
+            const designHeight = 1900.0;
 
             final availableWidth = constraints.maxWidth;
             final scale = availableWidth / designWidth;
@@ -165,11 +163,14 @@ class _AnimalKingdomCasePathScreenState
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
-                          const Positioned.fill(
+                          const Positioned(
+                            left: 0,
+                            right: 0,
+                            top: 88,
+                            bottom: 0,
                             child: _MapBackground(),
                           ),
 
-                          // Header
                           Positioned(
                             left: 12,
                             top: 8,
@@ -185,7 +186,6 @@ class _AnimalKingdomCasePathScreenState
                             child: FirstGuessHomeButton(),
                           ),
 
-                          // Title
                           const Positioned(
                             left: 54,
                             right: 54,
@@ -193,36 +193,15 @@ class _AnimalKingdomCasePathScreenState
                             child: _MapTitle(),
                           ),
 
-                          // Progress panel
-                          Positioned(
-                            left: 58,
-                            right: 58,
-                            top: 96,
-                            height: 96,
-                            child: _CaseProgressPanel(
-                              currentStage: currentStage,
-                              completedStages: completedStages,
-                              totalStages: totalStages,
-                            ),
+                          const Positioned(
+                            left: 72,
+                            right: 72,
+                            top: 118,
+                            height: 88,
+                            child: _AnimalKingdomHeader(),
                           ),
 
-                          // Case Start
-                          const Positioned(
-                            left: 12,
-                            top: 190,
-                            width: 78,
-                            child: _DecorativeImage(
-                              path: '${AnimalKingdomCasePathScreen._assetBase}/case_start.webp',
-                              angle: -0.08,
-                            ),
-                          ),
-
-                          // Winding dotted trail behind the case nodes.
-                          const Positioned(
-                            left: 0,
-                            top: 0,
-                            right: 0,
-                            bottom: 0,
+                          const Positioned.fill(
                             child: IgnorePointer(
                               child: CustomPaint(
                                 painter: _CasePathPainter(),
@@ -230,271 +209,26 @@ class _AnimalKingdomCasePathScreenState
                             ),
                           ),
 
-                          // Consistent winding path from top to bottom.
-                          _CaseNode(
-                            number: 1,
-                            left: 108,
-                            top: 205,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(1),
-                          ),
-                          _CaseNode(
-                            number: 2,
-                            left: 260,
-                            top: 305,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(2),
-                          ),
-
-                          const Positioned(
-                            right: 12,
-                            top: 330,
-                            width: 82,
-                            child: _DecorativeImage(
-                              path: '${AnimalKingdomCasePathScreen._assetBase}/polaroid_zebra.webp',
-                              angle: 0.12,
-                              whiteBacking: true,
-                              cropBlackCanvas: true,
-                            ),
-                          ),
-
-                          _CaseNode(
-                            number: 3,
-                            left: 158,
-                            top: 360,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(3),
-                          ),
-                          _CaseNode(
-                            number: 4,
-                            left: 282,
-                            top: 415,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(4),
-                          ),
-
-                          const Positioned(
-                            left: 12,
-                            top: 430,
-                            width: 82,
-                            child: _DecorativeImage(
-                              path: '${AnimalKingdomCasePathScreen._assetBase}/animal_facts.webp',
-                              angle: -0.06,
-                            ),
-                          ),
-
-                          _CaseNode(
-                            number: 5,
-                            left: 118,
-                            top: 470,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(5),
-                          ),
-                          _CaseNode(
-                            number: 6,
-                            left: 260,
-                            top: 525,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(6),
-                          ),
-                          _CaseNode(
-                            number: 7,
-                            left: 135,
-                            top: 580,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(7),
-                          ),
-                          _CaseNode(
-                            number: 8,
-                            left: 275,
-                            top: 635,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(8),
-                          ),
-
-                          // Detective dog moved to the right-hand side.
-                          const Positioned(
-                            right: 4,
-                            top: 590,
-                            width: 92,
-                            child: _DecorativeImage(
-                              path: '${AnimalKingdomCasePathScreen._assetBase}/detective_dog.webp',
-                            ),
-                          ),
-
-                          _CaseNode(
-                            number: 9,
-                            left: 110,
-                            top: 690,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(9),
-                          ),
-
-                          const Positioned(
-                            left: 14,
-                            top: 655,
-                            width: 82,
-                            child: _DecorativeImage(
-                              path: '${AnimalKingdomCasePathScreen._assetBase}/polaroid_lion.webp',
-                              angle: -0.11,
-                              whiteBacking: true,
-                              cropBlackCanvas: true,
-                            ),
-                          ),
-                          _CaseNode(
-                            number: 10,
-                            left: 270,
-                            top: 745,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(10),
-                          ),
-
-                          const Positioned(
-                            right: 14,
-                            top: 775,
-                            width: 82,
-                            child: _DecorativeImage(
-                              path: '${AnimalKingdomCasePathScreen._assetBase}/polaroid_elephant.webp',
-                              angle: -0.10,
-                              whiteBacking: true,
-                              cropBlackCanvas: true,
-                            ),
-                          ),
-                          _CaseNode(
-                            number: 11,
-                            left: 125,
-                            top: 800,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(11),
-                          ),
-                          _CaseNode(
-                            number: 12,
-                            left: 280,
-                            top: 855,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(12),
-                          ),
-                          _CaseNode(
-                            number: 13,
-                            left: 115,
-                            top: 910,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(13),
-                          ),
-                          _CaseNode(
-                            number: 14,
-                            left: 270,
-                            top: 965,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(14),
-                          ),
-                          _CaseNode(
-                            number: 15,
-                            left: 125,
-                            top: 1020,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(15),
-                          ),
-                          _CaseNode(
-                            number: 16,
-                            left: 280,
-                            top: 1075,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(16),
-                          ),
-                          _CaseNode(
-                            number: 17,
-                            left: 120,
-                            top: 1130,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(17),
-                          ),
-                          _CaseNode(
-                            number: 18,
-                            left: 260,
-                            top: 1175,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(18),
-                          ),
-                          _CaseNode(
-                            number: 19,
-                            left: 115,
-                            top: 1220,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(19),
-                          ),
-                          _CaseNode(
-                            number: 20,
-                            left: 235,
-                            top: 1270,
-                            currentStage: currentStage,
-                            currentStageHasProgress:
-                                currentStageHasProgress,
-                            onTap: () => _openMission(20),
-                          ),
-
-                          // Tiger Polaroid positioned beside Case 13.
-                          const Positioned(
-                            left: 14,
-                            top: 875,
-                            width: 84,
-                            child: _DecorativeImage(
-                              path: '${AnimalKingdomCasePathScreen._assetBase}/polaroid_tiger.webp',
-                              angle: -0.11,
-                              whiteBacking: true,
-                              cropBlackCanvas: true,
-                            ),
-                          ),
-
-                          const Positioned(
-                            right: 12,
-                            top: 1110,
-                            width: 84,
-                            child: _DecorativeImage(
-                              path: '${AnimalKingdomCasePathScreen._assetBase}/polaroid_giraffe.webp',
-                              angle: 0.11,
-                              whiteBacking: true,
-                              cropBlackCanvas: true,
-                            ),
-                          ),
+                          _CaseNode(number: 1, left: 118, top: 278, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(1)),
+                          _CaseNode(number: 2, left: 278, top: 356, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(2)),
+                          _CaseNode(number: 3, left: 148, top: 438, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(3)),
+                          _CaseNode(number: 4, left: 294, top: 520, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(4)),
+                          _CaseNode(number: 5, left: 122, top: 602, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(5)),
+                          _CaseNode(number: 6, left: 282, top: 684, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(6)),
+                          _CaseNode(number: 7, left: 142, top: 766, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(7)),
+                          _CaseNode(number: 8, left: 296, top: 848, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(8)),
+                          _CaseNode(number: 9, left: 124, top: 930, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(9)),
+                          _CaseNode(number: 10, left: 284, top: 1012, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(10)),
+                          _CaseNode(number: 11, left: 144, top: 1094, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(11)),
+                          _CaseNode(number: 12, left: 298, top: 1176, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(12)),
+                          _CaseNode(number: 13, left: 122, top: 1258, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(13)),
+                          _CaseNode(number: 14, left: 282, top: 1340, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(14)),
+                          _CaseNode(number: 15, left: 142, top: 1422, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(15)),
+                          _CaseNode(number: 16, left: 296, top: 1504, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(16)),
+                          _CaseNode(number: 17, left: 124, top: 1586, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(17)),
+                          _CaseNode(number: 18, left: 282, top: 1668, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(18)),
+                          _CaseNode(number: 19, left: 142, top: 1750, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(19)),
+                          _CaseNode(number: 20, left: 278, top: 1828, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(20)),
                         ],
                       ),
                     ),
@@ -516,7 +250,7 @@ class _MapBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Image.asset(
       '${AnimalKingdomCasePathScreen._assetBase}/animal_kingdom_map.webp',
-      fit: BoxFit.cover,
+      fit: BoxFit.fill,
       alignment: Alignment.topCenter,
       filterQuality: FilterQuality.high,
     );
@@ -582,168 +316,24 @@ class _MapTitle extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 7),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: Text(
-                'Complete missions. Follow the trail. Solve the case.',
-                maxLines: 1,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.body.copyWith(
-                  color: Colors.white,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.15,
-                  shadows: const [
-                    Shadow(
-                      color: Colors.black,
-                      blurRadius: 4,
-                      offset: Offset(0, 1),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 7),
-            const Icon(
-              Icons.pets,
-              color: Colors.white,
-              size: 15,
-            ),
-          ],
-        ),
+
       ],
     );
   }
 }
 
-class _CaseProgressPanel extends StatelessWidget {
-  final int currentStage;
-  final int completedStages;
-  final int totalStages;
-
-  const _CaseProgressPanel({
-    required this.currentStage,
-    required this.completedStages,
-    required this.totalStages,
-  });
+class _AnimalKingdomHeader extends StatelessWidget {
+  const _AnimalKingdomHeader();
 
   @override
   Widget build(BuildContext context) {
-    final progress = totalStages <= 0
-        ? 0.0
-        : (completedStages / totalStages).clamp(0.0, 1.0);
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.asset(
-          '${AnimalKingdomCasePathScreen._assetBase}/case_progress_panel.webp',
-          fit: BoxFit.fill,
-          filterQuality: FilterQuality.high,
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(30, 14, 24, 12),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 128,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'CASE PROGRESS',
-                      maxLines: 1,
-                      style: AppTextStyles.category.copyWith(
-                        color: Colors.black,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        height: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '$completedStages / $totalStages',
-                      maxLines: 1,
-                      style: AppTextStyles.label.copyWith(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        height: 1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 7),
-              Expanded(
-                child: Container(
-                  height: 19,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF28261D),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: const Color(0xFF4B412C),
-                      width: 1.2,
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(2),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: FractionallySizedBox(
-                        widthFactor: progress,
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(0xFFFE5E02),
-                                Color(0xFFD96519),
-                                Color(0xFFB85A1A),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 46,
-                height: 46,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFE5E02),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFD96519),
-                      width: 2,
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x66000000),
-                        blurRadius: 5,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.pets,
-                    color: Colors.white,
-                    size: 23,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+    return Center(
+      child: Image.asset(
+        '${AnimalKingdomCasePathScreen._assetBase}/animal_kingdom_header.webp',
+        fit: BoxFit.contain,
+        alignment: Alignment.center,
+        filterQuality: FilterQuality.high,
+      ),
     );
   }
 }
@@ -752,26 +342,26 @@ class _CasePathPainter extends CustomPainter {
   const _CasePathPainter();
 
   static const List<Offset> _points = [
-    Offset(137, 234),
-    Offset(289, 334),
-    Offset(187, 389),
-    Offset(311, 444),
-    Offset(147, 499),
-    Offset(289, 554),
-    Offset(164, 609),
-    Offset(304, 664),
-    Offset(139, 719),
-    Offset(299, 774),
-    Offset(154, 829),
-    Offset(314, 889),
-    Offset(144, 939),
-    Offset(299, 994),
-    Offset(154, 1049),
-    Offset(309, 1104),
-    Offset(149, 1159),
-    Offset(289, 1204),
-    Offset(144, 1249),
-    Offset(264, 1299),
+    Offset(147, 307),
+    Offset(307, 385),
+    Offset(177, 467),
+    Offset(323, 549),
+    Offset(151, 631),
+    Offset(311, 713),
+    Offset(171, 795),
+    Offset(325, 877),
+    Offset(153, 959),
+    Offset(313, 1041),
+    Offset(173, 1123),
+    Offset(327, 1205),
+    Offset(151, 1287),
+    Offset(311, 1369),
+    Offset(171, 1451),
+    Offset(325, 1533),
+    Offset(153, 1615),
+    Offset(311, 1697),
+    Offset(171, 1779),
+    Offset(314, 1864),
   ];
 
   @override
@@ -895,11 +485,11 @@ class _CaseNode extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: isFinal
+                  colors: isComplete
                       ? const [
-                          Color(0xFFFFC45C),
-                          Color(0xFFD96519),
-                          Color(0xFF6A2B10),
+                          Color(0xFF75C84A),
+                          Color(0xFF3E9B35),
+                          Color(0xFF246E28),
                         ]
                       : isCurrent
                           ? const [
@@ -907,10 +497,11 @@ class _CaseNode extends StatelessWidget {
                               Color(0xFFFE5E02),
                               Color(0xFFFE5E02),
                             ]
-                          : isComplete
+                          : isFinal
                               ? const [
-                                  Color(0xFFA9683C),
-                                  Color(0xFF6D3F27),
+                                  Color(0xFFFFC45C),
+                                  Color(0xFFD96519),
+                                  Color(0xFF6A2B10),
                                 ]
                               : const [
                                   Color(0xFF6B5B48),
@@ -1019,66 +610,6 @@ class _CaseNode extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _DecorativeImage extends StatelessWidget {
-  final String path;
-  final double angle;
-  final bool whiteBacking;
-  final bool cropBlackCanvas;
-
-  const _DecorativeImage({
-    required this.path,
-    this.angle = 0,
-    this.whiteBacking = false,
-    this.cropBlackCanvas = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final Widget image = Image.asset(
-      path,
-      fit: BoxFit.contain,
-      filterQuality: FilterQuality.high,
-    );
-
-    if (!whiteBacking) {
-      return Transform.rotate(
-        angle: angle,
-        child: image,
-      );
-    }
-
-    return Transform.rotate(
-      angle: angle,
-      child: Container(
-        padding: const EdgeInsets.all(5),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(2),
-          border: Border.all(
-            color: Colors.white,
-            width: 1.2,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x66000000),
-              blurRadius: 7,
-              offset: Offset(2, 4),
-            ),
-          ],
-        ),
-        child: ClipRect(
-          child: cropBlackCanvas
-              ? Transform.scale(
-                  scale: 1.13,
-                  child: image,
-                )
-              : image,
-        ),
       ),
     );
   }

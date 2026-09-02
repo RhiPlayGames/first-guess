@@ -63,6 +63,13 @@ flutter:
     - assets/images/categories/watch_play/
     - assets/images/categories/creative_world/
     - assets/images/categories/science_nature/
+    - assets/images/badges/
+    - assets/images/case_files/
+    - assets/images/case_paths/animal_kingdom/
+    - assets/images/case_paths/round_the_world/
+    - assets/images/case_paths/secrets_of_the_past/
+    - assets/images/case_paths/taste_and_treats/
+
 
   fonts:
     - family: Oswald
