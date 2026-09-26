@@ -67815,7 +67815,7 @@ case 3:j=b
 if(p.c==null){s=1
 break}o=t.N
 n=A.q(o,t.S)
-for(m=0;m<11;++m){l=B.j6[m].c
+for(m=0;m<11;++m){l=B.j5[m].c
 k=p.f.h(0,l)
 if(k==null)k=A.ah(o)
 n.m(0,l,new A.aj(k,j.gdZ(j),A.w(k).i("aj<1>")).gJ(0))}p.n(new A.aCC(p,n))
@@ -67825,11 +67825,11 @@ wv(){var s=0,r=A.k(t.H),q,p=this,o,n,m,l,k,j
 var $async$wv=A.l(function(a,b){if(a===1)return A.h(b,r)
 for(;;)switch(s){case 0:j=A
 s=3
-return A.c(A.j9("books_authors",new A.W(B.j6,new A.aCx(),t.OI)),$async$wv)
+return A.c(A.j9("books_authors",new A.W(B.j5,new A.aCx(),t.OI)),$async$wv)
 case 3:k=j.cV(b,t.N,t.S)
 o=0
 case 4:if(!(o<11)){s=6
-break}n=B.j6[o].c
+break}n=B.j5[o].c
 m=p.e.h(0,n)
 if(m==null)m=0
 l=p.r.h(0,n)
@@ -67853,7 +67853,7 @@ s=7
 return A.c(A.hB("books_authors"),$async$Bs)
 case 7:m=a7
 if(n.c==null){s=1
-break}l=new A.W(B.j6,new A.aCz(),t.OI).dE(0)
+break}l=new A.W(B.j5,new A.aCz(),t.OI).dE(0)
 a0=t.N
 k=A.ah(a0)
 j=A.q(a0,t.S)
@@ -68044,7 +68044,7 @@ $S:26}
 A.aCI.prototype={
 $2(a,b){var s=this.a,r=s.aeu(a,b,12)
 if(r===0)return new A.a0Q(s.z,s.gaet(),"Random Books & Authors challenge",null)
-return s.aes(B.j6[r-1])},
+return s.aes(B.j5[r-1])},
 $S:31}
 A.a0Q.prototype={
 q(a){var s,r,q,p=null,o=A.u(18),n=this.c,m=n?p:this.d,l=A.u(18),k=A.u(18),j=A.U(B.i,1.4),i=A.u(16),h=A.U(B.i,1.2)
@@ -68686,7 +68686,7 @@ case 3:j=b
 if(p.c==null){s=1
 break}o=t.N
 n=A.q(o,t.S)
-for(m=0;m<7;++m){l=B.j5[m].c
+for(m=0;m<7;++m){l=B.j4[m].c
 k=p.f.h(0,l)
 if(k==null)k=A.ah(o)
 n.m(0,l,new A.aj(k,j.gdZ(j),A.w(k).i("aj<1>")).gJ(0))}p.n(new A.aFb(p,n))
@@ -68696,11 +68696,11 @@ wF(){var s=0,r=A.k(t.H),q,p=this,o,n,m,l,k,j
 var $async$wF=A.l(function(a,b){if(a===1)return A.h(b,r)
 for(;;)switch(s){case 0:j=A
 s=3
-return A.c(A.j9("creative_world",new A.W(B.j5,new A.aF6(),t._f)),$async$wF)
+return A.c(A.j9("creative_world",new A.W(B.j4,new A.aF6(),t._f)),$async$wF)
 case 3:k=j.cV(b,t.N,t.S)
 o=0
 case 4:if(!(o<7)){s=6
-break}n=B.j5[o].c
+break}n=B.j4[o].c
 m=p.e.h(0,n)
 if(m==null)m=0
 l=p.r.h(0,n)
@@ -68724,7 +68724,7 @@ s=7
 return A.c(A.hB("creative_world"),$async$BK)
 case 7:m=a7
 if(n.c==null){s=1
-break}l=new A.W(B.j5,new A.aF8(),t._f).dE(0)
+break}l=new A.W(B.j4,new A.aF8(),t._f).dE(0)
 a0=t.N
 k=A.ah(a0)
 j=A.q(a0,t.S)
@@ -68915,7 +68915,7 @@ $S:26}
 A.aFh.prototype={
 $2(a,b){var s=this.a,r=s.ah9(a,b,8)
 if(r===0)return new A.a0O(s.z,s.gah8(),"Random Creative World challenge",null)
-return s.ah7(B.j5[r-1])},
+return s.ah7(B.j4[r-1])},
 $S:31}
 A.a0O.prototype={
 q(a){var s,r,q,p=null,o=A.u(18),n=this.c,m=n?p:this.d,l=A.u(18),k=A.u(18),j=A.U(B.i,1.4),i=A.u(16),h=A.U(B.i,1.2)
@@ -68983,7 +68983,7 @@ case 3:j=b
 if(p.c==null){s=1
 break}o=t.N
 n=A.q(o,t.S)
-for(m=0;m<12;++m){l=B.j7[m].c
+for(m=0;m<12;++m){l=B.j6[m].c
 k=p.f.h(0,l)
 if(k==null)k=A.ah(o)
 n.m(0,l,new A.aj(k,j.gdZ(j),A.w(k).i("aj<1>")).gJ(0))}p.n(new A.aHB(p,n))
@@ -68993,11 +68993,11 @@ xf(){var s=0,r=A.k(t.H),q,p=this,o,n,m,l,k,j
 var $async$xf=A.l(function(a,b){if(a===1)return A.h(b,r)
 for(;;)switch(s){case 0:j=A
 s=3
-return A.c(A.j9("famous_people",new A.W(B.j7,new A.aHw(),t.e9)),$async$xf)
+return A.c(A.j9("famous_people",new A.W(B.j6,new A.aHw(),t.e9)),$async$xf)
 case 3:k=j.cV(b,t.N,t.S)
 o=0
 case 4:if(!(o<12)){s=6
-break}n=B.j7[o].c
+break}n=B.j6[o].c
 m=p.e.h(0,n)
 if(m==null)m=0
 l=p.r.h(0,n)
@@ -69021,7 +69021,7 @@ s=7
 return A.c(A.hB("famous_people"),$async$CF)
 case 7:m=a7
 if(n.c==null){s=1
-break}l=new A.W(B.j7,new A.aHy(),t.e9).dE(0)
+break}l=new A.W(B.j6,new A.aHy(),t.e9).dE(0)
 a0=t.N
 k=A.ah(a0)
 j=A.q(a0,t.S)
@@ -69212,7 +69212,7 @@ $S:26}
 A.aHH.prototype={
 $2(a,b){var s=this.a,r=s.ary(a,b,13)
 if(r===0)return new A.a0G(s.z,s.gaqI(),"Random Who Am I? challenge",null)
-return s.afj(B.j7[r-1])},
+return s.afj(B.j6[r-1])},
 $S:31}
 A.a0G.prototype={
 q(a){var s,r,q,p=null,o=A.u(18),n=this.c,m=n?p:this.d,l=A.u(18),k=A.u(18),j=A.U(B.i,1.4),i=A.u(16),h=A.U(B.i,1.2)
@@ -70125,7 +70125,7 @@ case 3:j=b
 if(p.c==null){s=1
 break}o=t.N
 n=A.q(o,t.S)
-for(m=0;m<27;++m){l=B.j4[m].c
+for(m=0;m<27;++m){l=B.j7[m].c
 k=p.f.h(0,l)
 if(k==null)k=A.ah(o)
 n.m(0,l,new A.aj(k,j.gdZ(j),A.w(k).i("aj<1>")).gJ(0))}p.n(new A.aQI(p,n))
@@ -70135,11 +70135,11 @@ xv(){var s=0,r=A.k(t.H),q,p=this,o,n,m,l,k,j
 var $async$xv=A.l(function(a,b){if(a===1)return A.h(b,r)
 for(;;)switch(s){case 0:j=A
 s=3
-return A.c(A.j9("music",new A.W(B.j4,new A.aQD(),t.Wm)),$async$xv)
+return A.c(A.j9("music",new A.W(B.j7,new A.aQD(),t.Wm)),$async$xv)
 case 3:k=j.cV(b,t.N,t.S)
 o=0
 case 4:if(!(o<27)){s=6
-break}n=B.j4[o].c
+break}n=B.j7[o].c
 m=p.e.h(0,n)
 if(m==null)m=0
 l=p.r.h(0,n)
@@ -70163,7 +70163,7 @@ s=7
 return A.c(A.hB("music"),$async$CZ)
 case 7:m=a7
 if(n.c==null){s=1
-break}l=new A.W(B.j4,new A.aQF(),t.Wm).dE(0)
+break}l=new A.W(B.j7,new A.aQF(),t.Wm).dE(0)
 a0=t.N
 k=A.ah(a0)
 j=A.q(a0,t.S)
@@ -70354,7 +70354,7 @@ $S:26}
 A.aQO.prototype={
 $2(a,b){var s=this.a,r=s.apw(a,b,28)
 if(r===0)return new A.a0L(s.z,s.gapv(),"Random Music challenge",null)
-return s.apu(B.j4[r-1])},
+return s.apu(B.j7[r-1])},
 $S:31}
 A.a0L.prototype={
 q(a){var s,r,q,p=null,o=A.u(18),n=this.c,m=n?p:this.d,l=A.u(18),k=A.u(18),j=A.U(B.i,1.4),i=A.u(16),h=A.U(B.i,1.2)
@@ -125340,34 +125340,6 @@ B.vq=s([B.am7,B.amc,B.ama,B.amb,B.am9,B.am8],A.as("I<pc>"))
 B.nq=new A.z(0.26666666666666666,0.996078431372549,0.3686274509803922,0.00784313725490196,B.p)
 B.J6=new A.bV(0,B.ai,B.nq,B.t,10)
 B.vr=s([B.J6],t.V)
-B.aom=new A.dd("Bands \u2014 1960\u20131969",u.s,"bands_1960_1969")
-B.aoD=new A.dd("Bands \u2014 1970\u20131979",u.s,"bands_1970_1979")
-B.aoF=new A.dd("Bands \u2014 1980\u20131989",u.s,"bands_1980_1989")
-B.aot=new A.dd("Bands \u2014 1990\u20131999",u.s,"bands_1990_1999")
-B.aoC=new A.dd("Bands \u2014 2000\u20132009",u.s,"bands_2000_2009")
-B.aou=new A.dd("Bands \u2014 2010\u20132019",u.s,"bands_2010_2019")
-B.aoG=new A.dd("Bands \u2014 2020\u20132026",u.s,"bands_2020_2026")
-B.aow=new A.dd("Bands \u2014 Pre-1960",u.s,"bands_pre_1960")
-B.aon=new A.dd("Composers","assets/images/categories/music/composers.webp","composers")
-B.aop=new A.dd("Instruments","assets/images/categories/music/instruments.webp","instruments")
-B.aoB=new A.dd("Music Genres","assets/images/categories/music/music_genres.webp","music_genres")
-B.aoH=new A.dd("Solo Artists \u2014 1960\u20131969",u.s,"solo_artists_1960_1969")
-B.aoI=new A.dd("Solo Artists \u2014 1970\u20131979",u.s,"solo_artists_1970_1979")
-B.aoJ=new A.dd("Solo Artists \u2014 1980\u20131989",u.s,"solo_artists_1980_1989")
-B.aoK=new A.dd("Solo Artists \u2014 1990\u20131999",u.s,"solo_artists_1990_1999")
-B.aor=new A.dd("Solo Artists \u2014 2000\u20132009",u.s,"solo_artists_2000_2009")
-B.aos=new A.dd("Solo Artists \u2014 2010\u20132019",u.s,"solo_artists_2010_2019")
-B.aov=new A.dd("Solo Artists \u2014 2020\u20132026",u.s,"solo_artists_2020_2026")
-B.aoE=new A.dd("Solo Artists \u2014 Pre-1960",u.s,"solo_artists_pre_1960")
-B.aoy=new A.dd("Song Lyrics \u2014 1960\u20131969",u.s,"song_lyrics_1960_1969")
-B.aoq=new A.dd("Song Lyrics \u2014 1970\u20131979",u.s,"song_lyrics_1970_1979")
-B.aox=new A.dd("Song Lyrics \u2014 1980\u20131989",u.s,"song_lyrics_1980_1989")
-B.aoL=new A.dd("Song Lyrics \u2014 1990\u20131999",u.s,"song_lyrics_1990_1999")
-B.aoM=new A.dd("Song Lyrics \u2014 2000\u20132009",u.s,"song_lyrics_2000_2009")
-B.aoo=new A.dd("Song Lyrics \u2014 2010\u20132019",u.s,"song_lyrics_2010_2019")
-B.aoA=new A.dd("Song Lyrics \u2014 2020\u20132026",u.s,"song_lyrics_2020_2026")
-B.aoz=new A.dd("Song Lyrics \u2014 Pre-1960",u.s,"song_lyrics_pre_1960")
-B.j4=s([B.aom,B.aoD,B.aoF,B.aot,B.aoC,B.aou,B.aoG,B.aow,B.aon,B.aop,B.aoB,B.aoH,B.aoI,B.aoJ,B.aoK,B.aor,B.aos,B.aov,B.aoE,B.aoy,B.aoq,B.aox,B.aoL,B.aoM,B.aoo,B.aoA,B.aoz],A.as("I<dd>"))
 B.a9Q=new A.oQ(1,"server")
 B.a9R=new A.oQ(2,"cache")
 B.XN=s([B.qk,B.a9Q,B.a9R],A.as("I<oQ>"))
@@ -125407,7 +125379,7 @@ B.alS=new A.k4("Fashion","assets/images/categories/creative_world/fashion_fashio
 B.alT=new A.k4("Museums & Galleries","assets/images/categories/creative_world/museums_galleries_creative_awards.webp","museums_galleries")
 B.alX=new A.k4("Paintings & Sculptures","assets/images/categories/creative_world/paintings_sculptures.webp","paintings_sculptures")
 B.alY=new A.k4("Theatre","assets/images/categories/creative_world/theatre_dance_ballet.webp","theatre")
-B.j5=s([B.alW,B.alU,B.alV,B.alS,B.alT,B.alX,B.alY],A.as("I<k4>"))
+B.j4=s([B.alW,B.alU,B.alV,B.alS,B.alT,B.alX,B.alY],A.as("I<k4>"))
 B.XW=s(["breakfast","desserts","dishes_world_cuisine","fruit_vegs","herbs_spices","snacks_street_food","drinks"],t.s)
 B.amM=new A.i3("First Word Starter",u.B)
 B.a1o=new A.aZ(1,B.amM,t.Ab)
@@ -125483,7 +125455,7 @@ B.alb=new A.hP("Opening Lines & Quotations",B.Tu,"opening_lines_quotations","ass
 B.TC=new A.bj(983593,"MaterialIcons",!1)
 B.ala=new A.hP("Plays",B.TC,"plays","assets/images/categories/subcategories/books_authors/plays.webp")
 B.alh=new A.hP("Poems",B.uC,"poems","assets/images/categories/subcategories/books_authors/poems.webp")
-B.j6=s([B.al9,B.ali,B.ale,B.alc,B.alg,B.alf,B.ald,B.alj,B.alb,B.ala,B.alh],A.as("I<hP>"))
+B.j5=s([B.al9,B.ali,B.ale,B.alc,B.alg,B.alf,B.ald,B.alj,B.alb,B.ala,B.alh],A.as("I<hP>"))
 B.b2=new A.Ko(0,"upstream")
 B.Y9=s([B.b2,B.D],A.as("I<Ko>"))
 B.bl=new A.Ku(0,"rtl")
@@ -125598,7 +125570,7 @@ B.amm=new A.hm("Pioneers & Record Breakers","assets/images/categories/who_am_i/p
 B.amg=new A.hm("Public & Internet Personalities","assets/images/categories/who_am_i/public_internet_personalities.webp","public_internet")
 B.ami=new A.hm("Royalty & Political Leaders","assets/images/categories/who_am_i/royalty_political_leaders.webp","royalty_leaders")
 B.amh=new A.hm("Scientists & Inventors","assets/images/categories/who_am_i/scientists_inventors.webp","scientists_inventors")
-B.j7=s([B.amd,B.amf,B.amj,B.ame,B.amo,B.amk,B.aml,B.amn,B.amm,B.amg,B.ami,B.amh],A.as("I<hm>"))
+B.j6=s([B.amd,B.amf,B.amj,B.ame,B.amo,B.amk,B.aml,B.amn,B.amm,B.amg,B.ami,B.amh],A.as("I<hm>"))
 B.Z0=s([],t.QP)
 B.vC=s([],A.as("I<bxb>"))
 B.Z3=s([],t.E)
@@ -125619,6 +125591,34 @@ B.YU=s([],t.n)
 B.vA=s([],t.t)
 B.vE=s([],t.ee)
 B.Z2=s([],t.XS)
+B.aoG=new A.dd("Bands \u2014 1960\u20131969","assets/images/categories/music/bands/bands1960-1969_128.webp","bands_1960_1969")
+B.aoE=new A.dd("Bands \u2014 1970\u20131979","assets/images/categories/music/bands/bands1970-1979_128.webp","bands_1970_1979")
+B.aou=new A.dd("Bands \u2014 1980\u20131989","assets/images/categories/music/bands/bands1980-1989_128.webp","bands_1980_1989")
+B.aoo=new A.dd("Bands \u2014 1990\u20131999","assets/images/categories/music/bands/bands1990-1999_128.webp","bands_1990_1999")
+B.aoB=new A.dd("Bands \u2014 2000\u20132009","assets/images/categories/music/bands/bands2000-2009_128.webp","bands_2000_2009")
+B.aox=new A.dd("Bands \u2014 2010\u20132019","assets/images/categories/music/bands/bands2010-2019_128.webp","bands_2010_2019")
+B.aor=new A.dd("Bands \u2014 2020\u20132026","assets/images/categories/music/bands/bands2020-2026_128.webp","bands_2020_2026")
+B.aoy=new A.dd("Bands \u2014 Pre-1960","assets/images/categories/music/bands/bandspre1960_128.webp","bands_pre_1960")
+B.aom=new A.dd("Composers","assets/images/categories/music/composers.webp","composers")
+B.aop=new A.dd("Instruments","assets/images/categories/music/instruments.webp","instruments")
+B.aoD=new A.dd("Music Genres","assets/images/categories/music/music_genres.webp","music_genres")
+B.aoH=new A.dd("Solo Artists \u2014 1960\u20131969",u.s,"solo_artists_1960_1969")
+B.aoI=new A.dd("Solo Artists \u2014 1970\u20131979",u.s,"solo_artists_1970_1979")
+B.aoJ=new A.dd("Solo Artists \u2014 1980\u20131989",u.s,"solo_artists_1980_1989")
+B.aoK=new A.dd("Solo Artists \u2014 1990\u20131999",u.s,"solo_artists_1990_1999")
+B.aos=new A.dd("Solo Artists \u2014 2000\u20132009",u.s,"solo_artists_2000_2009")
+B.aot=new A.dd("Solo Artists \u2014 2010\u20132019",u.s,"solo_artists_2010_2019")
+B.aov=new A.dd("Solo Artists \u2014 2020\u20132026",u.s,"solo_artists_2020_2026")
+B.aoF=new A.dd("Solo Artists \u2014 Pre-1960",u.s,"solo_artists_pre_1960")
+B.aoz=new A.dd("Song Lyrics \u2014 1960\u20131969",u.s,"song_lyrics_1960_1969")
+B.aoq=new A.dd("Song Lyrics \u2014 1970\u20131979",u.s,"song_lyrics_1970_1979")
+B.aow=new A.dd("Song Lyrics \u2014 1980\u20131989",u.s,"song_lyrics_1980_1989")
+B.aoL=new A.dd("Song Lyrics \u2014 1990\u20131999",u.s,"song_lyrics_1990_1999")
+B.aoM=new A.dd("Song Lyrics \u2014 2000\u20132009",u.s,"song_lyrics_2000_2009")
+B.aon=new A.dd("Song Lyrics \u2014 2010\u20132019",u.s,"song_lyrics_2010_2019")
+B.aoC=new A.dd("Song Lyrics \u2014 2020\u20132026",u.s,"song_lyrics_2020_2026")
+B.aoA=new A.dd("Song Lyrics \u2014 Pre-1960",u.s,"song_lyrics_pre_1960")
+B.j7=s([B.aoG,B.aoE,B.aou,B.aoo,B.aoB,B.aox,B.aor,B.aoy,B.aom,B.aop,B.aoD,B.aoH,B.aoI,B.aoJ,B.aoK,B.aos,B.aot,B.aov,B.aoF,B.aoz,B.aoq,B.aow,B.aoL,B.aoM,B.aon,B.aoC,B.aoA],A.as("I<dd>"))
 B.M6=new A.am(1,B.aw,"GET 10 SCIENCE & NATURE QUESTIONS CORRECT","science_nature",null,null,0,0)
 B.Li=new A.am(2,B.aw,"GET 10 PLANTS & TREES QUESTIONS CORRECT","science_nature","plants_trees",null,0,0)
 B.Mp=new A.am(3,B.aw,"GET 10 SPACE & ASTRONOMY QUESTIONS CORRECT","science_nature","space_astronomy",null,0,0)
