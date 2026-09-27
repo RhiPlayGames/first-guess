@@ -64986,7 +64986,7 @@ o=new A.aJM(r,a0)
 n=A.a([],t.p)
 if(a.length!==0)n.push(p.$2$idleHeight$slot(r?20:40,0))
 for(m=t.kK,l=t.BM,k=t.C4,q=0;j=c.w,q<j.length;++q){i=j[q]
-h=c.Q||c.x.p(0,q)
+h=c.x.p(0,q)
 g=o.$4$dragging$index$item$locked(!1,q,i,h)
 j=!h
 if(j){f=new A.q3(new A.aJR(o,q,i),new A.aJS(c,q),new A.aJT(c,a,B.b.hi(a,q)),b,k)
