@@ -65974,7 +65974,7 @@ a0=A.R(b3,A.X(A.a([a2,B.au,new A.EP(a3,b3),a4,B.au,new A.kE(new A.ib(1,a7,b3),ne
 f=A.X(A.a([B.bL,new A.eP(d,b,a,f,!0,b3),B.a0,A.bI(B.ad,A.a([a0,A.dC(0,A.iX(A.aQ(A.DS(A.b8f(B.qo,B.cE,0.9),B.a6,B.cE,0),b3,b3),!0,b3))],e),B.u,B.a2)],e),B.a7,b3,B.d,B.h)}h=A.cP(f,new A.M(b4,8,h,28),b3,B.R)
 if(i){b4=b2.c
 b4.toString
-j=B.e.ba((A.a1(b4,B.x,j).w.a.a-1440)/2,28,1/0)+28
+j=B.e.ba((A.a1(b4,B.x,j).w.a.a-1440)/2,28,1/0)
 b4=j}else b4=10
 j=i?b3:10
 f=i?560:b3
