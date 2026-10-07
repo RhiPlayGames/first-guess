@@ -1,11 +1,14 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../services/firebase_challenge_service.dart';
 import '../../services/player_stats_service.dart';
+import '../../services/subcategory_progress_status.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../../widgets/app_home_button.dart';
+import '../../widgets/classic_category_header.dart';
 import '../../widgets/subcategory_status_badge.dart';
+import '../../widgets/responsive_subcategory_list.dart';
 import '../../widgets/stats_panel.dart';
 import '../game_screen.dart';
 
@@ -27,8 +30,9 @@ class _CountriesSubcategoryScreenState
               'assets/images/categories/subcategories/countries/capitals_cities.webp',
           played: 0,
           total: 10,
-          status: _SubcategoryStatus.notStarted,
+          status: SubcategoryProgressStatus.start,
           idPrefix: 'countries_capitals_',
+          firebaseKey: 'capitals',
         ),
     _CountriesSubcategoryData(
           title: 'Country Silhouettes',
@@ -36,8 +40,9 @@ class _CountriesSubcategoryScreenState
               'assets/images/categories/subcategories/countries/countries_silhouettes.webp',
           played: 0,
           total: 10,
-          status: _SubcategoryStatus.notStarted,
+          status: SubcategoryProgressStatus.start,
           idPrefix: 'countries_country_silhouettes_',
+          firebaseKey: 'country_silhouettes',
         ),
     _CountriesSubcategoryData(
           title: 'Currencies',
@@ -45,8 +50,9 @@ class _CountriesSubcategoryScreenState
               'assets/images/categories/subcategories/countries/currencies_languages.webp',
           played: 0,
           total: 10,
-          status: _SubcategoryStatus.notStarted,
+          status: SubcategoryProgressStatus.start,
           idPrefix: 'countries_currencies_',
+          firebaseKey: 'currencies',
         ),
     _CountriesSubcategoryData(
           title: 'Flags',
@@ -54,8 +60,9 @@ class _CountriesSubcategoryScreenState
               'assets/images/categories/subcategories/countries/flags.webp',
           played: 0,
           total: 30,
-          status: _SubcategoryStatus.notStarted,
+          status: SubcategoryProgressStatus.start,
           idPrefix: 'countries_flags_',
+          firebaseKey: 'flags',
         ),
     _CountriesSubcategoryData(
           title: 'Major Cities',
@@ -63,17 +70,9 @@ class _CountriesSubcategoryScreenState
               'assets/images/categories/subcategories/countries/major_cities.webp',
           played: 0,
           total: 10,
-          status: _SubcategoryStatus.notStarted,
+          status: SubcategoryProgressStatus.start,
           idPrefix: 'countries_major_cities_',
-        ),
-    _CountriesSubcategoryData(
-          title: 'National Foods',
-          imagePath:
-              'assets/images/categories/subcategories/countries/national_foods.webp',
-          played: 0,
-          total: 10,
-          status: _SubcategoryStatus.notStarted,
-          idPrefix: 'countries_national_foods_',
+          firebaseKey: 'major_cities',
         ),
     _CountriesSubcategoryData(
           title: 'National Symbols',
@@ -81,8 +80,9 @@ class _CountriesSubcategoryScreenState
               'assets/images/categories/subcategories/countries/national_symbols.webp',
           played: 0,
           total: 10,
-          status: _SubcategoryStatus.notStarted,
+          status: SubcategoryProgressStatus.start,
           idPrefix: 'countries_national_symbols_',
+          firebaseKey: 'national_symbols',
         ),
     _CountriesSubcategoryData(
           title: 'Natural Wonders & Landscapes',
@@ -90,8 +90,9 @@ class _CountriesSubcategoryScreenState
               'assets/images/categories/subcategories/countries/islands_mountains_rivers.webp',
           played: 0,
           total: 10,
-          status: _SubcategoryStatus.notStarted,
+          status: SubcategoryProgressStatus.start,
           idPrefix: 'countries_natural_wonders_landscapes_',
+          firebaseKey: 'natural_wonders_landscapes',
         ),
     _CountriesSubcategoryData(
           title: 'States & Regions',
@@ -99,15 +100,20 @@ class _CountriesSubcategoryScreenState
               'assets/images/categories/subcategories/countries/states_regions.webp',
           played: 0,
           total: 20,
-          status: _SubcategoryStatus.notStarted,
+          status: SubcategoryProgressStatus.start,
           idPrefix: 'countries_states_regions_',
+          firebaseKey: 'states_regions',
         ),
   ];
 
   Map<String, int> _playedCounts = <String, int>{};
+  Map<String, int> _liveQuestionCounts = <String, int>{};
+  Map<String, Set<String>> _liveQuestionIds = <String, Set<String>>{};
+  Map<String, int> _completedQuestionTotals = <String, int>{};
 
   PlayerStats _playerStats = const PlayerStats();
   bool _statsLoaded = false;
+  bool _surpriseMeLoading = false;
 
   @override
   void initState() {
@@ -116,10 +122,22 @@ class _CountriesSubcategoryScreenState
   }
 
   Future<void> _refreshScreenData() async {
-    await Future.wait([
+    await Future.wait<void>(<Future<void>>[
       _loadPlayerStats(),
-      _loadPlayedCounts(),
+      _loadLiveQuestionData(),
     ]);
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadPlayedCounts();
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadAndUpdateCompletionSnapshots();
   }
 
   Future<void> _loadPlayerStats() async {
@@ -136,31 +154,132 @@ class _CountriesSubcategoryScreenState
     });
   }
 
-  Future<void> _loadPlayedCounts() async {
-    final Map<String, String> prefixesBySubcategory =
-        <String, String>{
-      for (final _CountriesSubcategoryData item in _subcategories)
-        if (item.idPrefix != null)
-          item.title: item.idPrefix!,
-    };
+  Future<void> _loadLiveQuestionData() async {
+    try {
+      final List<QueryDocumentSnapshot<Map<String, dynamic>>> documents =
+          await FirebaseChallengeService.loadLiveCategoryDocuments(
+        category: 'countries',
+      );
 
-    final Map<String, int> countsByPrefix =
-        await QuestionHistoryService
-            .countPlayedQuestionsByPrefixes(
-      prefixesBySubcategory.values,
+      if (!mounted) {
+        return;
+      }
+
+      final Set<String> knownKeys =
+          _subcategories.map((_CountriesSubcategoryData item) => item.firebaseKey).toSet();
+      final Map<String, int> counts = <String, int>{
+        for (final String key in knownKeys) key: 0,
+      };
+      final Map<String, Set<String>> idsBySubcategory =
+          <String, Set<String>>{
+        for (final String key in knownKeys) key: <String>{},
+      };
+
+      for (final QueryDocumentSnapshot<Map<String, dynamic>> document
+          in documents) {
+        final String subcategory =
+            (document.data()['subcategory'] ?? '').toString().trim();
+
+        if (!knownKeys.contains(subcategory)) {
+          continue;
+        }
+
+        idsBySubcategory[subcategory]!.add(document.id);
+      }
+
+      for (final String key in knownKeys) {
+        counts[key] = idsBySubcategory[key]!.length;
+      }
+
+      setState(() {
+        _liveQuestionCounts = counts;
+        _liveQuestionIds = idsBySubcategory;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _liveQuestionCounts = <String, int>{};
+        _liveQuestionIds = <String, Set<String>>{};
+      });
+    }
+  }
+
+  Future<void> _loadPlayedCounts() async {
+    final Set<String> playedIds =
+        await QuestionHistoryService.loadPlayedQuestionIds();
+
+    if (!mounted) {
+      return;
+    }
+
+    final Map<String, int> counts = <String, int>{};
+
+    for (final _CountriesSubcategoryData item in _subcategories) {
+      final Set<String> liveIds =
+          _liveQuestionIds[item.firebaseKey] ?? <String>{};
+
+      if (liveIds.isNotEmpty) {
+        counts[item.title] =
+            liveIds.where(playedIds.contains).length;
+      } else if (item.idPrefix != null) {
+        counts[item.title] =
+            playedIds.where((id) => id.startsWith(item.idPrefix!)).length;
+      } else {
+        counts[item.title] = item.played;
+      }
+    }
+
+    setState(() {
+      _playedCounts = counts;
+    });
+  }
+
+  Future<void> _loadAndUpdateCompletionSnapshots() async {
+    final Map<String, int> savedCompletedTotals =
+        await SubcategoryCompletionHistoryService.loadCompletedTotals(
+      category: 'countries',
+      subcategories:
+          _subcategories.map((item) => item.firebaseKey),
     );
+
+    final Map<String, int> updatedCompletedTotals =
+        Map<String, int>.from(savedCompletedTotals);
+
+    for (final _CountriesSubcategoryData item in _subcategories) {
+      final int totalQuestions = _totalFor(item);
+      final int playedQuestions = _playedFor(item);
+
+      if (totalQuestions > 0 &&
+          playedQuestions >= totalQuestions) {
+        await SubcategoryCompletionHistoryService.recordCompletion(
+          category: 'countries',
+          subcategory: item.firebaseKey,
+          totalQuestions: totalQuestions,
+        );
+
+        updatedCompletedTotals[item.firebaseKey] =
+            totalQuestions;
+      }
+    }
 
     if (!mounted) {
       return;
     }
 
     setState(() {
-      _playedCounts = <String, int>{
-        for (final MapEntry<String, String> entry
-            in prefixesBySubcategory.entries)
-          entry.key: countsByPrefix[entry.value] ?? 0,
-      };
+      _completedQuestionTotals =
+          updatedCompletedTotals;
     });
+  }
+
+  int _totalFor(_CountriesSubcategoryData item) {
+    final int liveTotal =
+        _liveQuestionCounts[item.firebaseKey] ?? 0;
+
+    return liveTotal > 0 ? liveTotal : item.total;
   }
 
   int _playedFor(_CountriesSubcategoryData item) {
@@ -168,27 +287,152 @@ class _CountriesSubcategoryScreenState
         ? item.played
         : (_playedCounts[item.title] ?? 0);
 
-    return played > item.total ? item.total : played;
+    final int total = _totalFor(item);
+    return played > total ? total : played;
   }
 
-  _SubcategoryStatus _statusFor(
+  SubcategoryProgressStatus _statusFor(
     _CountriesSubcategoryData item,
   ) {
-    if (item.idPrefix == null) {
-      return item.status;
-    }
-
     final int played = _playedFor(item);
+    final int total = _totalFor(item);
+    final int completedTotal =
+        _completedQuestionTotals[item.firebaseKey] ?? 0;
 
-    if (played <= 0) {
-      return _SubcategoryStatus.notStarted;
+    final bool hadPreviouslyCompleted =
+        SubcategoryCompletionHistoryService
+            .hasNewQuestionsSinceCompletion(
+      completedTotal: completedTotal,
+      playedQuestions: played,
+      totalQuestions: total,
+    );
+
+    return SubcategoryProgressStatus.resolve(
+      isAvailable: total > 0,
+      playedQuestions: played,
+      totalQuestions: total,
+      hadPreviouslyCompleted: hadPreviouslyCompleted,
+    );
+  }
+
+  Future<void> _openCategorySurprise() async {
+    if (_surpriseMeLoading) {
+      return;
     }
 
-    if (played >= item.total) {
-      return _SubcategoryStatus.allCaughtUp;
+    setState(() {
+      _surpriseMeLoading = true;
+    });
+
+    try {
+      final Set<String> playedIds =
+          await QuestionHistoryService.loadPlayedQuestionIds();
+
+      final FirebaseSurpriseSelection? selected =
+          await FirebaseChallengeService
+              .loadRandomLiveCategorySurpriseQuestion(
+        category: 'countries',
+        playedQuestionIds: playedIds,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (selected == null) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior: SnackBarBehavior.floating,
+              content: Text(
+                'No live Countries questions were found.',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+        return;
+      }
+
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => GameScreen.firebaseDynamic(
+            items: [selected.item],
+            initialItem: selected.item,
+            launchedFromSurpriseMe: true,
+            showSurpriseToast: true,
+          ),
+        ),
+      );
+
+      if (mounted) {
+        await _refreshScreenData();
+      }
+    } catch (error, stackTrace) {
+      debugPrint('COUNTRIES SURPRISE ME ERROR: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.panel,
+            behavior: SnackBarBehavior.floating,
+            content: Text(
+              'Countries Surprise Me could not be loaded.',
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _surpriseMeLoading = false;
+        });
+      }
+    }
+  }
+
+  Widget _buildSubcategoryCard(
+    BuildContext context,
+    _CountriesSubcategoryData item,
+  ) {
+    return _CountriesSubcategoryCard(
+      data: item,
+      played: _playedFor(item),
+      total: _totalFor(item),
+      status: _statusFor(item),
+      onTap: () => _handleTap(context, item),
+    );
+  }
+
+  int _orderedIndexForDisplay(
+    BuildContext context,
+    int displayIndex,
+    int totalCards,
+  ) {
+    if (MediaQuery.sizeOf(context).width < 900) {
+      return displayIndex;
     }
 
-    return _SubcategoryStatus.inProgress;
+    final int rows = (totalCards + 1) ~/ 2;
+    final int row = displayIndex ~/ 2;
+    final int column = displayIndex % 2;
+
+    return column == 0 ? row : rows + row;
   }
 
   @override
@@ -196,10 +440,9 @@ class _CountriesSubcategoryScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            const _CountriesHeader(),
-            Padding(
+        child: ResponsiveSubcategoryPage(
+            header: const ClassicCategoryHeader(title: 'COUNTRIES'),
+            statsPanel: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
               child: StatsPanel(
                 totalScore:
@@ -212,29 +455,36 @@ class _CountriesSubcategoryScreenState
                     _statsLoaded ? _playerStats.gamesPlayed : 0,
               ),
             ),
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
-                itemCount: _subcategories.length,
+            padding: const EdgeInsets.fromLTRB(
+                  16,
+                  4,
+                  16,
+                  28,
+                ),
+                itemCount: _subcategories.length + 1,
                 separatorBuilder: (_, _) =>
                     const SizedBox(height: 10),
-                itemBuilder: (
-                  BuildContext context,
-                  int index,
-                ) {
-                  final _CountriesSubcategoryData item =
-                      _subcategories[index];
-
-                  return _CountriesSubcategoryCard(
-                    data: item,
-                    played: _playedFor(item),
-                    status: _statusFor(item),
-                    onTap: () => _handleTap(context, item),
+                itemBuilder: (context, index) {
+                  final int orderedIndex =
+                      _orderedIndexForDisplay(
+                    context,
+                    index,
+                    _subcategories.length + 1,
                   );
+
+                  if (orderedIndex == 0) {
+                    return _CategorySurpriseCard(
+                    isLoading: _surpriseMeLoading,
+                    onTap: _openCategorySurprise,
+                    description: 'Random Countries challenge',
+                  );
+                  }
+
+                  return _buildSubcategoryCard(
+                  context,
+                  _subcategories[orderedIndex - 1],
+                );
                 },
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -487,6 +737,7 @@ class _CountriesSubcategoryScreenState
           MaterialPageRoute<void>(
             builder: (context) => GameScreen.firebaseDynamic(
               items: items,
+              subcategoryTitle: 'Flags',
               launchedFromSurpriseMe: false,
               showSurpriseToast: false,
             ),
@@ -634,6 +885,7 @@ class _CountriesSubcategoryScreenState
           MaterialPageRoute<void>(
             builder: (context) => GameScreen.firebaseDynamic(
               items: items,
+              subcategoryTitle: 'Natural Wonders & Landscapes',
               launchedFromSurpriseMe: false,
               showSurpriseToast: false,
             ),
@@ -663,84 +915,6 @@ class _CountriesSubcategoryScreenState
               behavior: SnackBarBehavior.floating,
               content: Text(
                 'Natural Wonders & Landscapes could not be loaded from Firebase.',
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          );
-      }
-
-      return;
-    }
-
-    if (item.title == 'National Foods') {
-      try {
-        final items =
-            await FirebaseChallengeService.loadLiveSubcategory(
-          category: 'countries',
-          subcategory: 'national_foods',
-        );
-
-        if (!context.mounted) {
-          return;
-        }
-
-        if (items.isEmpty) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                backgroundColor: AppColors.panel,
-                behavior: SnackBarBehavior.floating,
-                content: Text(
-                  'No live National Foods questions were found.',
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            );
-          return;
-        }
-
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (context) => GameScreen.firebaseDynamic(
-              items: items,
-              launchedFromSurpriseMe: false,
-              showSurpriseToast: false,
-            ),
-          ),
-        );
-
-        if (mounted) {
-          await _refreshScreenData();
-        }
-      } catch (error, stackTrace) {
-        debugPrint(
-          'NATIONAL FOODS FIREBASE ERROR: $error',
-        );
-        debugPrintStack(
-          stackTrace: stackTrace,
-        );
-
-        if (!context.mounted) {
-          return;
-        }
-
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.panel,
-              behavior: SnackBarBehavior.floating,
-              content: Text(
-                'National Foods could not be loaded from Firebase.',
                 style: AppTextStyles.body.copyWith(
                   color: AppColors.white,
                   fontSize: 13,
@@ -790,6 +964,7 @@ class _CountriesSubcategoryScreenState
           MaterialPageRoute<void>(
             builder: (context) => GameScreen.firebaseDynamic(
               items: items,
+              subcategoryTitle: 'National Symbols',
               launchedFromSurpriseMe: false,
               showSurpriseToast: false,
             ),
@@ -837,7 +1012,7 @@ class _CountriesSubcategoryScreenState
         final items =
             await FirebaseChallengeService.loadLiveSubcategory(
           category: 'countries',
-          subcategory: 'states_and_regions',
+          subcategory: 'states_regions',
         );
 
         if (!context.mounted) {
@@ -868,6 +1043,7 @@ class _CountriesSubcategoryScreenState
           MaterialPageRoute<void>(
             builder: (context) => GameScreen.firebaseDynamic(
               items: items,
+              subcategoryTitle: 'States & Regions',
               launchedFromSurpriseMe: false,
               showSurpriseToast: false,
             ),
@@ -911,26 +1087,27 @@ class _CountriesSubcategoryScreenState
     }
 
     final String message;
+    final SubcategoryProgressStatus progressStatus =
+        _statusFor(item);
 
-    switch (item.status) {
-      case _SubcategoryStatus.notStarted:
+    switch (progressStatus.state) {
+      case SubcategoryProgressState.comingSoon:
+        message = '${item.title} is coming soon.';
+        break;
+      case SubcategoryProgressState.start:
         message = 'Start ${item.title}.';
         break;
-      case _SubcategoryStatus.inProgress:
+      case SubcategoryProgressState.continuePlaying:
         message =
-            'Continue ${item.title}: ${item.played} of ${item.total} played.';
+            'Continue ${item.title}: ${_playedFor(item)} of ${_totalFor(item)} played.';
         break;
-      case _SubcategoryStatus.allCaughtUp:
-        message =
-            'You are all caught up in ${item.title}. You can play again anytime.';
-        break;
-      case _SubcategoryStatus.newQuestions:
+      case SubcategoryProgressState.newQuestions:
         message =
             'New questions are waiting in ${item.title}.';
         break;
-      case _SubcategoryStatus.playAgain:
+      case SubcategoryProgressState.completed:
         message =
-            'You are all caught up in ${item.title}. Play again to improve your score.';
+            'You have completed all current ${item.title} questions.';
         break;
     }
 
@@ -953,54 +1130,96 @@ class _CountriesSubcategoryScreenState
   }
 }
 
-class _CountriesHeader extends StatelessWidget {
-  const _CountriesHeader();
+class _CategorySurpriseCard extends StatelessWidget {
+  const _CategorySurpriseCard({
+    required this.isLoading,
+    required this.onTap,
+    required this.description,
+  });
+
+  final bool isLoading;
+  final VoidCallback onTap;
+  final String description;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-      child: Column(
-        children: [
-          SizedBox(
-            width: double.infinity,
-            height: 74,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Center(
-                  child: Text(
-                    'COUNTRIES',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.category.copyWith(
-                      color: AppColors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.45,
-                    ),
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: isLoading ? null : onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          padding: const EdgeInsets.fromLTRB(12, 13, 12, 13),
+          decoration: BoxDecoration(
+            color: AppColors.panel,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: AppColors.orange,
+              width: 1.4,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.orange,
+                    width: 1.2,
                   ),
                 ),
-                const Positioned(
-                  right: 10,
-                  top: 12,
-                  child: FirstGuessHomeButton(),
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Image.asset(
+                    'assets/images/categories/surprise_me.webp',
+                    width: 52,
+                    height: 52,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 0),
-          Center(
-            child: Text(
-              'Choose a subcategory to start playing',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.body.copyWith(
-                color: AppColors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
               ),
-            ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Surprise Me',
+                      style: AppTextStyles.category.copyWith(
+                        color: AppColors.white,
+                        fontSize: subcategoryTitleFontSize(context),
+                        fontWeight: FontWeight.w600,
+                        height: 1.08,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      isLoading ? 'Picking a challenge...' : description,
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.white,
+                        fontSize: subcategoryProgressFontSize(context),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              SubcategoryStatusBadge(
+                text: isLoading ? 'PICKING...' : 'PLAY',
+                color: AppColors.orange,
+                filled: true,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1010,24 +1229,24 @@ class _CountriesSubcategoryCard extends StatelessWidget {
   const _CountriesSubcategoryCard({
     required this.data,
     required this.played,
+    required this.total,
     required this.status,
     required this.onTap,
   });
 
   final _CountriesSubcategoryData data;
   final int played;
-  final _SubcategoryStatus status;
+  final int total;
+  final SubcategoryProgressStatus status;
   final VoidCallback onTap;
 
-  static const Color _purple = Color(0xFFB86CFF);
-  static const Color _blue = Color(0xFF4EA8FF);
   static const Color _progressTrack = Color(0xFF2B2B2B);
 
   @override
   Widget build(BuildContext context) {
-    final double progress = data.total == 0
+    final double progress = total == 0
         ? 0
-        : (played / data.total).clamp(0.0, 1.0);
+        : (played / total).clamp(0.0, 1.0);
 
     return Material(
       color: Colors.transparent,
@@ -1080,7 +1299,7 @@ class _CountriesSubcategoryCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.category.copyWith(
                         color: AppColors.white,
-                        fontSize: 18.5,
+                        fontSize: subcategoryTitleFontSize(context),
                         fontWeight: FontWeight.w600,
                         height: 1.08,
                         letterSpacing: 0.1,
@@ -1088,10 +1307,10 @@ class _CountriesSubcategoryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 7),
                     Text(
-                      '$played of ${data.total} played',
+                      '$played of $total played',
                       style: AppTextStyles.body.copyWith(
                         color: AppColors.white,
-                        fontSize: 14.5,
+                        fontSize: subcategoryProgressFontSize(context),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1114,8 +1333,8 @@ class _CountriesSubcategoryCard extends StatelessWidget {
               const SizedBox(width: 12),
               ConstrainedBox(
                 constraints: const BoxConstraints(
-                  minWidth: 100,
-                  maxWidth: 132,
+                  minWidth: 118,
+                  maxWidth: 150,
                 ),
                 child: _buildStatusArea(),
               ),
@@ -1127,59 +1346,21 @@ class _CountriesSubcategoryCard extends StatelessWidget {
   }
 
   Widget _buildStatusArea() {
-    if (status == _SubcategoryStatus.allCaughtUp) {
-      return const Align(
-        alignment: Alignment.centerRight,
-        child: SubcategoryStatusBadge(
-          text: 'PLAY AGAIN',
-          color: _blue,
-        ),
-      );
-    }
+    final bool isCompleted =
+        status.state == SubcategoryProgressState.completed;
 
     return Align(
       alignment: Alignment.centerRight,
-      child: _buildSingleStatusBadge(),
+      child: SubcategoryStatusBadge(
+        text: status.ctaLabel,
+        color: isCompleted
+            ? AppColors.darkGrey
+            : AppColors.orange,
+        filled: true,
+      ),
     );
   }
 
-  Widget _buildSingleStatusBadge() {
-    switch (status) {
-      case _SubcategoryStatus.notStarted:
-        return const SubcategoryStatusBadge(
-          text: 'NOT STARTED',
-          color: AppColors.white,
-        );
-      case _SubcategoryStatus.inProgress:
-        return const SubcategoryStatusBadge(
-          text: 'IN PROGRESS',
-          color: AppColors.orange,
-        );
-      case _SubcategoryStatus.allCaughtUp:
-        return const SubcategoryStatusBadge(
-          text: 'PLAY AGAIN',
-          color: _blue,
-        );
-      case _SubcategoryStatus.newQuestions:
-        return const SubcategoryStatusBadge(
-          text: 'NEW QUESTIONS',
-          color: _purple,
-        );
-      case _SubcategoryStatus.playAgain:
-        return const SubcategoryStatusBadge(
-          text: 'PLAY AGAIN',
-          color: _blue,
-        );
-    }
-  }
-}
-
-enum _SubcategoryStatus {
-  notStarted,
-  inProgress,
-  allCaughtUp,
-  newQuestions,
-  playAgain,
 }
 
 class _CountriesSubcategoryData {
@@ -1189,6 +1370,7 @@ class _CountriesSubcategoryData {
     required this.played,
     required this.total,
     required this.status,
+    required this.firebaseKey,
     this.idPrefix,
   });
 
@@ -1196,6 +1378,7 @@ class _CountriesSubcategoryData {
   final String imagePath;
   final int played;
   final int total;
-  final _SubcategoryStatus status;
+  final SubcategoryProgressStatus status;
+  final String firebaseKey;
   final String? idPrefix;
 }

@@ -6,8 +6,9 @@ import '../../services/player_stats_service.dart';
 import '../../services/subcategory_progress_status.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../../widgets/app_home_button.dart';
+import '../../widgets/classic_category_header.dart';
 import '../../widgets/subcategory_status_badge.dart';
+import '../../widgets/responsive_subcategory_list.dart';
 import '../../widgets/stats_panel.dart';
 import '../game_screen.dart';
 
@@ -29,11 +30,6 @@ class _CreativeWorldSubcategoryScreenState
       firebaseKey: 'architecture_architects',
     ),
     _CreativeWorldSubcategory(
-      'Art Movements & Design Styles',
-      'assets/images/categories/creative_world/art_movements_design_styles.webp',
-      firebaseKey: 'art_movements_design_styles',
-    ),
-    _CreativeWorldSubcategory(
       'Artists',
       'assets/images/categories/creative_world/artist.webp',
       firebaseKey: 'artists',
@@ -46,17 +42,12 @@ class _CreativeWorldSubcategoryScreenState
     _CreativeWorldSubcategory(
       'Fashion',
       'assets/images/categories/creative_world/fashion_fashion_designers.webp',
-      firebaseKey: 'fashion_fashion_designers',
-    ),
-    _CreativeWorldSubcategory(
-      'Furniture & Jewellery',
-      'assets/images/categories/creative_world/furniture_jewellery.webp',
-      firebaseKey: 'furniture_jewellery',
+      firebaseKey: 'fashion',
     ),
     _CreativeWorldSubcategory(
       'Museums & Galleries',
       'assets/images/categories/creative_world/museums_galleries_creative_awards.webp',
-      firebaseKey: 'museums_galleries_creative_awards',
+      firebaseKey: 'museums_galleries',
     ),
     _CreativeWorldSubcategory(
       'Paintings & Sculptures',
@@ -64,14 +55,9 @@ class _CreativeWorldSubcategoryScreenState
       firebaseKey: 'paintings_sculptures',
     ),
     _CreativeWorldSubcategory(
-      'Photography & Photographers',
-      'assets/images/categories/creative_world/photography_photographers.webp',
-      firebaseKey: 'photography_photographers',
-    ),
-    _CreativeWorldSubcategory(
-      'Theatre, Dance & Ballet',
+      'Theatre',
       'assets/images/categories/creative_world/theatre_dance_ballet.webp',
-      firebaseKey: 'theatre_dance_ballet',
+      firebaseKey: 'theatre',
     ),
   ];
 
@@ -83,6 +69,7 @@ class _CreativeWorldSubcategoryScreenState
 
   PlayerStats _playerStats = const PlayerStats();
   bool _statsLoaded = false;
+  bool _surpriseMeLoading = false;
 
   @override
   void initState() {
@@ -105,13 +92,10 @@ class _CreativeWorldSubcategoryScreenState
   }
 
   Future<void> _refreshSubcategoryProgress() async {
-    await _loadPlayerStats();
-
-    if (!mounted) {
-      return;
-    }
-
-    await _loadFirebaseSubcategoryAvailability();
+    await Future.wait<void>(<Future<void>>[
+      _loadPlayerStats(),
+      _loadFirebaseSubcategoryAvailability(),
+    ]);
 
     if (!mounted) {
       return;
@@ -193,39 +177,44 @@ class _CreativeWorldSubcategoryScreenState
 
   Future<void> _loadFirebaseSubcategoryAvailability() async {
     try {
-      final List<Future<QuerySnapshot<Map<String, dynamic>>>> checks =
-          _items.map((_CreativeWorldSubcategory item) {
-        return FirebaseFirestore.instance
-            .collection('challenges')
-            .where('category', isEqualTo: 'creative_world')
-            .where('subcategory', isEqualTo: item.firebaseKey)
-            .where('status', isEqualTo: 'live')
-            .get();
-      }).toList();
-
-      final List<QuerySnapshot<Map<String, dynamic>>> results =
-          await Future.wait(checks);
+      final List<QueryDocumentSnapshot<Map<String, dynamic>>> documents =
+          await FirebaseChallengeService.loadLiveCategoryDocuments(
+        category: 'creative_world',
+      );
 
       if (!mounted) {
         return;
       }
 
+      final Set<String> knownKeys =
+          _items.map((_CreativeWorldSubcategory item) => item.firebaseKey).toSet();
       final Set<String> liveSubcategories = <String>{};
-      final Map<String, int> liveQuestionCounts = <String, int>{};
+      final Map<String, int> liveQuestionCounts = <String, int>{
+        for (final String key in knownKeys) key: 0,
+      };
       final Map<String, Set<String>> liveQuestionIds =
-          <String, Set<String>>{};
+          <String, Set<String>>{
+        for (final String key in knownKeys) key: <String>{},
+      };
 
-      for (int i = 0; i < _items.length; i++) {
-        final String firebaseKey = _items[i].firebaseKey;
-        final Set<String> ids = results[i].docs
-            .map((doc) => doc.id)
-            .toSet();
+      for (final QueryDocumentSnapshot<Map<String, dynamic>> document
+          in documents) {
+        final String subcategory =
+            (document.data()['subcategory'] ?? '').toString().trim();
 
-        liveQuestionIds[firebaseKey] = ids;
-        liveQuestionCounts[firebaseKey] = ids.length;
+        if (!knownKeys.contains(subcategory)) {
+          continue;
+        }
 
-        if (ids.isNotEmpty) {
-          liveSubcategories.add(firebaseKey);
+        liveQuestionIds[subcategory]!.add(document.id);
+      }
+
+      for (final String key in knownKeys) {
+        final int count = liveQuestionIds[key]!.length;
+        liveQuestionCounts[key] = count;
+
+        if (count > 0) {
+          liveSubcategories.add(key);
         }
       }
 
@@ -289,6 +278,7 @@ class _CreativeWorldSubcategoryScreenState
         MaterialPageRoute<void>(
           builder: (context) => GameScreen.firebaseDynamic(
             items: items,
+            subcategoryTitle: item.title,
             launchedFromSurpriseMe: false,
             showSurpriseToast: false,
           ),
@@ -322,15 +312,154 @@ class _CreativeWorldSubcategoryScreenState
     }
   }
 
+  Future<void> _openCategorySurprise() async {
+    if (_surpriseMeLoading) {
+      return;
+    }
+
+    setState(() {
+      _surpriseMeLoading = true;
+    });
+
+    try {
+      final Set<String> playedIds =
+          await QuestionHistoryService.loadPlayedQuestionIds();
+
+      final FirebaseSurpriseSelection? selected =
+          await FirebaseChallengeService
+              .loadRandomLiveCategorySurpriseQuestion(
+        category: 'creative_world',
+        playedQuestionIds: playedIds,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (selected == null) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.panel,
+              behavior: SnackBarBehavior.floating,
+              content: Text(
+                'No live Creative World questions were found.',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+        return;
+      }
+
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => GameScreen.firebaseDynamic(
+            items: [selected.item],
+            initialItem: selected.item,
+            launchedFromSurpriseMe: true,
+            showSurpriseToast: true,
+          ),
+        ),
+      );
+
+      if (mounted) {
+        await _refreshSubcategoryProgress();
+      }
+    } catch (error, stackTrace) {
+      debugPrint('CREATIVE WORLD SURPRISE ME ERROR: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.panel,
+            behavior: SnackBarBehavior.floating,
+            content: Text(
+              'Creative World Surprise Me could not be loaded.',
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _surpriseMeLoading = false;
+        });
+      }
+    }
+  }
+
+  Widget _buildSubcategoryCard(
+    _CreativeWorldSubcategory item,
+  ) {
+    final bool isAvailable =
+        _liveFirebaseSubcategories.contains(item.firebaseKey);
+
+    final int totalQuestions =
+        _liveQuestionCounts[item.firebaseKey] ?? 0;
+
+    final int playedQuestions =
+        _playedQuestionCounts[item.firebaseKey] ?? 0;
+
+    final int completedTotal =
+        _completedQuestionTotals[item.firebaseKey] ?? 0;
+
+    final bool hadPreviouslyCompleted =
+        SubcategoryCompletionHistoryService
+            .hasNewQuestionsSinceCompletion(
+      completedTotal: completedTotal,
+      playedQuestions: playedQuestions,
+      totalQuestions: totalQuestions,
+    );
+
+    return _CreativeWorldCard(
+      item: item,
+      isAvailable: isAvailable,
+      totalQuestions: totalQuestions,
+      playedQuestions: playedQuestions,
+      hadPreviouslyCompleted: hadPreviouslyCompleted,
+      onTap: () => _openSubcategory(item),
+    );
+  }
+
+  int _orderedIndexForDisplay(
+    BuildContext context,
+    int displayIndex,
+    int totalCards,
+  ) {
+    if (MediaQuery.sizeOf(context).width < 900) {
+      return displayIndex;
+    }
+
+    final int rows = (totalCards + 1) ~/ 2;
+    final int row = displayIndex ~/ 2;
+    final int column = displayIndex % 2;
+
+    return column == 0 ? row : rows + row;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            const _Header(),
-            Padding(
+        child: ResponsiveSubcategoryPage(
+            header: const ClassicCategoryHeader(title: 'CREATIVE WORLD'),
+            statsPanel: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
               child: StatsPanel(
                 totalScore:
@@ -343,100 +472,131 @@ class _CreativeWorldSubcategoryScreenState
                     _statsLoaded ? _playerStats.gamesPlayed : 0,
               ),
             ),
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
-                itemCount: _items.length,
+            padding: const EdgeInsets.fromLTRB(
+                  16,
+                  4,
+                  16,
+                  28,
+                ),
+                itemCount: _items.length + 1,
                 separatorBuilder: (_, _) =>
                     const SizedBox(height: 10),
                 itemBuilder: (context, index) {
-                  final _CreativeWorldSubcategory item =
-                      _items[index];
-
-                  final bool isAvailable =
-                      _liveFirebaseSubcategories
-                          .contains(item.firebaseKey);
-
-                  final int totalQuestions =
-                      _liveQuestionCounts[item.firebaseKey] ?? 0;
-
-                  final int playedQuestions =
-                      _playedQuestionCounts[item.firebaseKey] ?? 0;
-
-                  final int completedTotal =
-                      _completedQuestionTotals[item.firebaseKey] ?? 0;
-
-                  final bool hadPreviouslyCompleted =
-                      SubcategoryCompletionHistoryService
-                          .hasNewQuestionsSinceCompletion(
-                    completedTotal: completedTotal,
-                    playedQuestions: playedQuestions,
-                    totalQuestions: totalQuestions,
+                  final int orderedIndex =
+                      _orderedIndexForDisplay(
+                    context,
+                    index,
+                    _items.length + 1,
                   );
 
-                  return _CreativeWorldCard(
-                    item: item,
-                    isAvailable: isAvailable,
-                    totalQuestions: totalQuestions,
-                    playedQuestions: playedQuestions,
-                    hadPreviouslyCompleted:
-                        hadPreviouslyCompleted,
-                    onTap: () => _openSubcategory(item),
+                  if (orderedIndex == 0) {
+                    return _CategorySurpriseCard(
+                    isLoading: _surpriseMeLoading,
+                    onTap: _openCategorySurprise,
+                    description: 'Random Creative World challenge',
                   );
+                  }
+
+                  return _buildSubcategoryCard(
+                  _items[orderedIndex - 1],
+                );
                 },
-              ),
-            ),
-          ],
         ),
       ),
     );
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header();
+class _CategorySurpriseCard extends StatelessWidget {
+  const _CategorySurpriseCard({
+    required this.isLoading,
+    required this.onTap,
+    required this.description,
+  });
+
+  final bool isLoading;
+  final VoidCallback onTap;
+  final String description;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-      child: Column(
-        children: [
-          SizedBox(
-            width: double.infinity,
-            height: 74,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Center(
-                  child: Text(
-                    'CREATIVE WORLD',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.category.copyWith(
-                      color: AppColors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.45,
-                    ),
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: isLoading ? null : onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          padding: const EdgeInsets.fromLTRB(12, 13, 12, 13),
+          decoration: BoxDecoration(
+            color: AppColors.panel,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: AppColors.orange,
+              width: 1.4,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.orange,
+                    width: 1.2,
                   ),
                 ),
-                const Align(
-                  alignment: Alignment.centerRight,
-                  child: FirstGuessHomeButton(),
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Image.asset(
+                    'assets/images/categories/surprise_me.webp',
+                    width: 52,
+                    height: 52,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Surprise Me',
+                      style: AppTextStyles.category.copyWith(
+                        color: AppColors.white,
+                        fontSize: subcategoryTitleFontSize(context),
+                        fontWeight: FontWeight.w600,
+                        height: 1.08,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      isLoading ? 'Picking a challenge...' : description,
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.white,
+                        fontSize: subcategoryProgressFontSize(context),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              SubcategoryStatusBadge(
+                text: isLoading ? 'PICKING...' : 'PLAY',
+                color: AppColors.orange,
+                filled: true,
+              ),
+            ],
           ),
-          Text(
-            'Choose a subcategory to start playing',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.body.copyWith(
-              color: AppColors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -514,7 +674,7 @@ class _CreativeWorldCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.category.copyWith(
                         color: AppColors.white,
-                        fontSize: 18.5,
+                        fontSize: subcategoryTitleFontSize(context),
                         fontWeight: FontWeight.w600,
                         height: 1.08,
                         letterSpacing: 0.1,
@@ -525,7 +685,7 @@ class _CreativeWorldCard extends StatelessWidget {
                       '${playedQuestions > totalQuestions ? totalQuestions : playedQuestions} of $totalQuestions played',
                       style: AppTextStyles.body.copyWith(
                         color: AppColors.white,
-                        fontSize: 14.5,
+                        fontSize: subcategoryProgressFontSize(context),
                         fontWeight: FontWeight.w600,
                       ),
                     ),

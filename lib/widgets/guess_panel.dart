@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-class GuessPanel extends StatelessWidget {
+class GuessPanel extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final bool enabled;
@@ -23,57 +23,127 @@ class GuessPanel extends StatelessWidget {
   });
 
   @override
+  State<GuessPanel> createState() => _GuessPanelState();
+}
+
+class _GuessPanelState extends State<GuessPanel> {
+  void _requestGuessFocus() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.enabled) {
+        return;
+      }
+
+      widget.focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.enabled) {
+      _requestGuessFocus();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant GuessPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (!oldWidget.enabled && widget.enabled) {
+      _requestGuessFocus();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Column(
       children: [
-        SizedBox(
-          height: 48,
-          child: TextField(
-            controller: controller,
-            focusNode: focusNode,
-            enabled: enabled,
-            onSubmitted: (_) {
-              if (enabled) {
-                onGuess();
-              }
-            },
-            textCapitalization: TextCapitalization.words,
-            textAlignVertical: TextAlignVertical.center,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              color: AppColors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-            ),
-            decoration: const InputDecoration(
-              hintText: 'Type your guess...',
-              hintStyle: TextStyle(
-                fontFamily: 'Inter',
-                color: AppColors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
+        LayoutBuilder(
+          builder: (
+            BuildContext context,
+            BoxConstraints constraints,
+          ) {
+            return Transform.translate(
+              offset: isDesktop
+                  ? Offset.zero
+                  : const Offset(-10, 0),
+              child: SizedBox(
+                width: isDesktop
+                    ? constraints.maxWidth
+                    : constraints.maxWidth + 20,
+                child: TextField(
+                  controller: widget.controller,
+                  focusNode: widget.focusNode,
+                  enabled: widget.enabled,
+                  autofocus: widget.enabled,
+                  onSubmitted: (_) {
+                    if (widget.enabled) {
+                      widget.onGuess();
+                    }
+                  },
+                  textCapitalization:
+                      TextCapitalization.words,
+                  textInputAction:
+                      TextInputAction.done,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    color: AppColors.white,
+                    fontSize: 17,
+                  ),
+                  decoration: const InputDecoration(
+                    hintText: 'Type your guess...',
+                    hintStyle: TextStyle(
+                      fontFamily: 'Inter',
+                      color: AppColors.white,
+                      fontSize: 17,
+                    ),
+                    filled: true,
+                    fillColor: AppColors.panel,
+                    contentPadding:
+                        EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 15,
+                    ),
+                    enabledBorder:
+                        OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.all(
+                        Radius.circular(16),
+                      ),
+                      borderSide: BorderSide(
+                        color: AppColors.orange,
+                      ),
+                    ),
+                    focusedBorder:
+                        OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.all(
+                        Radius.circular(16),
+                      ),
+                      borderSide: BorderSide(
+                        color: AppColors.orange,
+                        width: 2,
+                      ),
+                    ),
+                    disabledBorder:
+                        OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.all(
+                        Radius.circular(16),
+                      ),
+                      borderSide: BorderSide(
+                        color: AppColors.darkGrey,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              filled: true,
-              fillColor: AppColors.background,
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 15,
-                vertical: 13,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(14)),
-                borderSide: BorderSide(color: Color(0xFF444444), width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(14)),
-                borderSide: BorderSide(color: AppColors.orange, width: 1.5),
-              ),
-              disabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(14)),
-                borderSide: BorderSide(color: AppColors.darkGrey, width: 1),
-              ),
-            ),
-          ),
+            );
+          },
         ),
         const SizedBox(height: 10),
         Row(
@@ -82,7 +152,7 @@ class GuessPanel extends StatelessWidget {
               child: SizedBox(
                 height: 48,
                 child: FilledButton(
-                  onPressed: enabled ? onGuess : null,
+                  onPressed: widget.enabled ? widget.onGuess : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.orange,
                     foregroundColor: Colors.white,
@@ -114,14 +184,14 @@ class GuessPanel extends StatelessWidget {
               child: SizedBox(
                 height: 48,
                 child: OutlinedButton(
-                  onPressed: enabled && !isLastClue ? onNextClue : null,
+                  onPressed: widget.enabled && !widget.isLastClue ? widget.onNextClue : null,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.orange,
+                    foregroundColor: AppColors.white,
                     disabledForegroundColor: AppColors.darkGrey,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     side: BorderSide(
-                      color: enabled && !isLastClue
-                          ? AppColors.orange
+                      color: widget.enabled && !widget.isLastClue
+                          ? AppColors.white
                           : AppColors.darkGrey,
                       width: 1.5,
                     ),
@@ -152,7 +222,7 @@ class GuessPanel extends StatelessWidget {
           width: double.infinity,
           height: 48,
           child: FilledButton(
-            onPressed: enabled ? onGiveUp : null,
+            onPressed: widget.enabled ? widget.onGiveUp : null,
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFD32F2F),
               foregroundColor: AppColors.white,

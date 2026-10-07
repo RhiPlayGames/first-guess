@@ -1,7 +1,9 @@
+
 import 'package:flutter/material.dart';
 
 import '../../models/quiz_item.dart';
 import '../../screens/game_screen.dart';
+import '../../services/analytics_service.dart';
 import '../../services/firebase_challenge_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -11,13 +13,33 @@ import '../models/case_progress.dart';
 import '../services/case_path_service.dart';
 
 class SecretsOfThePastMissionScreen extends StatefulWidget {
-  const SecretsOfThePastMissionScreen({super.key});
+  final int? replayStage;
+
+  const SecretsOfThePastMissionScreen({
+    super.key,
+    this.replayStage,
+  });
 
   static const String _mapAsset =
       'assets/images/case_paths/secrets_of_the_past/secrets_of_the_past_map.webp';
 
   static const String _missionCardAsset =
-      'assets/images/case_paths/secrets_of_the_past/secrets_of_the_past_mission_card.webp';
+      'assets/images/case_files/New folder/screenbg.webp';
+
+  static const String _startMissionCtaAsset =
+      'assets/images/case_files/New folder/startmissionCTA.webp';
+
+  static const String _inProgressCtaAsset =
+      'assets/images/case_files/New folder/continueCTA.webp';
+
+  static const String _completedCtaAsset =
+      'assets/images/case_files/New folder/completedCTA.webp';
+
+  static const String _titleAsset =
+      'assets/images/case_files/New folder/secretsofthepasttext.webp';
+
+  static const String _iconAsset =
+      'assets/images/case_files/New folder/secretsofthepasticon.webp';
 
   @override
   State<SecretsOfThePastMissionScreen> createState() =>
@@ -33,21 +55,12 @@ class _SecretsOfThePastMissionScreenState
   bool _isStartingMission = false;
 
   static const List<String> _pastPresentSubcategories = <String>[
-    'historical_events',
-    'battles_wars',
     'ancient_civilisations_empires',
-    'historical_eras',
-    'archaeology',
-    'historic_objects',
+    'battles_wars',
     'castles_ruins',
-    'monarchies_dynasties',
-    'revolutions_political_movements',
-    'historical_mysteries',
+    'historical_events',
+    'historic_objects',
     'myths_legends',
-    'traditions_cultural_customs',
-    'ancient_religions_beliefs',
-    'then_now',
-    'important_dates',
   ];
 
   @override
@@ -68,10 +81,14 @@ class _SecretsOfThePastMissionScreenState
       final CaseProgress progress =
           await CasePathService.loadSecretsOfThePastProgress();
 
-      final CaseMission? mission =
-          CasePathService.currentSecretsOfThePastMission(
-        progress,
-      );
+      final CaseMission? mission = progress.isCompleted &&
+              widget.replayStage != null
+          ? CasePathService.secretsOfThePastMissionForStage(
+              widget.replayStage!,
+            )
+          : CasePathService.currentSecretsOfThePastMission(
+              progress,
+            );
 
       if (!mounted) {
         return;
@@ -81,7 +98,8 @@ class _SecretsOfThePastMissionScreenState
         _progress = progress;
         _mission = mission;
         _isLoading = false;
-        _loadFailed = mission == null && !progress.isCompleted;
+        _loadFailed = mission == null &&
+            !(progress.isCompleted && widget.replayStage == null);
       });
     } catch (error, stackTrace) {
       debugPrint(
@@ -128,6 +146,35 @@ class _SecretsOfThePastMissionScreenState
         return;
       }
 
+      final CaseProgress? progressBefore = _progress;
+      final bool isReplay =
+          (progressBefore?.isCompleted ?? false) &&
+          widget.replayStage != null;
+      final int stageNumber = mission.stage;
+      final DateTime analyticsSessionStartedAt = DateTime.now();
+
+      if (!isReplay) {
+        final CaseStageProgress? stageProgress =
+            progressBefore?.currentStageProgress;
+        final bool resume = stageProgress != null &&
+            stageProgress.stage == stageNumber &&
+            (stageProgress.correctCount > 0 ||
+                stageProgress.clueThresholdCount > 0 ||
+                stageProgress.firstGuessCount > 0);
+
+        await AnalyticsService.logCaseFileStageStarted(
+          caseKey: 'secrets_of_the_past',
+          caseName: 'SECRETS OF THE PAST',
+          stageNumber: stageNumber,
+          totalStages: CasePathService.secretsOfThePastTotalStages,
+          resume: resume,
+        );
+
+        if (!mounted) {
+          return;
+        }
+      }
+
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) {
@@ -136,6 +183,9 @@ class _SecretsOfThePastMissionScreenState
               launchedFromSurpriseMe: false,
               showSurpriseToast: false,
               launchedFromCaseFile: true,
+                caseFileReplay:
+                    (_progress?.isCompleted ?? false) &&
+                    widget.replayStage != null,
             );
           },
         ),
@@ -146,6 +196,24 @@ class _SecretsOfThePastMissionScreenState
       }
 
       await _loadMission();
+
+      if (!isReplay) {
+        final CaseProgress? progressAfter = _progress;
+        final bool stageCompleted =
+            progressAfter?.completedStages.contains(stageNumber) ?? false;
+
+        if (!stageCompleted) {
+          await AnalyticsService.logCaseFileAbandoned(
+            caseKey: 'secrets_of_the_past',
+            caseName: 'SECRETS OF THE PAST',
+            currentStage: stageNumber,
+            totalStages: CasePathService.secretsOfThePastTotalStages,
+            playTimeSeconds: DateTime.now()
+                .difference(analyticsSessionStartedAt)
+                .inSeconds,
+          );
+        }
+      }
     } catch (error, stackTrace) {
       debugPrint(
         'SECRETS OF THE PAST START MISSION ERROR: $error',
@@ -226,36 +294,18 @@ class _SecretsOfThePastMissionScreenState
 
   String _subcategoryLabel(String key) {
     switch (key) {
-      case 'historical_events':
-        return 'Historical Events';
-      case 'battles_wars':
-        return 'Battles & Wars';
       case 'ancient_civilisations_empires':
         return 'Ancient Civilisations & Empires';
-      case 'historical_eras':
-        return 'Historical Eras';
-      case 'archaeology':
-        return 'Archaeology';
-      case 'historic_objects':
-        return 'Historic Objects';
+      case 'battles_wars':
+        return 'Battles & Wars';
       case 'castles_ruins':
         return 'Castles & Ruins';
-      case 'monarchies_dynasties':
-        return 'Monarchies & Dynasties';
-      case 'revolutions_political_movements':
-        return 'Revolutions & Political Movements';
-      case 'historical_mysteries':
-        return 'Historical Mysteries';
+      case 'historical_events':
+        return 'Historical Events';
+      case 'historic_objects':
+        return 'Historical Objects';
       case 'myths_legends':
         return 'Myths & Legends';
-      case 'traditions_cultural_customs':
-        return 'Traditions & Cultural Customs';
-      case 'ancient_religions_beliefs':
-        return 'Ancient Religions & Beliefs';
-      case 'then_now':
-        return 'Then-and-Now';
-      case 'important_dates':
-        return 'Important Dates';
       default:
         return 'Past & Present';
     }
@@ -310,7 +360,7 @@ class _SecretsOfThePastMissionScreenState
 
     final CaseProgress progress = _progress!;
 
-    if (progress.isCompleted) {
+    if (progress.isCompleted && widget.replayStage == null) {
       return Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
@@ -378,111 +428,132 @@ class _SecretsOfThePastMissionScreenState
       );
     }
 
+    final double screenWidth =
+        MediaQuery.sizeOf(context).width;
+    final bool isDesktop = screenWidth >= 1200;
+    final double horizontalPadding = isDesktop
+        ? ((screenWidth - 760) / 2).clamp(16.0, double.infinity)
+        : 16.0;
+
     return Scaffold(
       backgroundColor: Colors.black,
-      body: LayoutBuilder(
-        builder: (
-          BuildContext context,
-          BoxConstraints viewportConstraints,
-        ) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: viewportConstraints.maxHeight,
+      body: Stack(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                8,
+                horizontalPadding,
+                0,
               ),
-              child: Stack(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Positioned.fill(
-                    child: Image.asset(
-                      SecretsOfThePastMissionScreen._mapAsset,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                      filterQuality: FilterQuality.high,
-                    ),
+                  _MissionHeader(
+                    onBackPressed: () =>
+                        Navigator.of(context).pop(),
                   ),
-                  Positioned.fill(
-                    child: Container(
-                      color: Colors.black.withValues(alpha: 0.20),
-                    ),
-                  ),
-                  SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        16,
-                        8,
-                        16,
-                        0,
-                      ),
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.stretch,
-                        children: [
-                          _MissionHeader(
-                            onBackPressed: () =>
-                                Navigator.of(context).pop(),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _isStartingMission ? null : _startMission,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 2),
+                        Text(
+                          'SECRETS OF THE PAST',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.category.copyWith(
+                            color: Colors.white,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.4,
+                            height: 1,
+                            shadows: const [
+                              Shadow(
+                                color: Colors.black,
+                                blurRadius: 1,
+                                offset: Offset(-1, 0),
+                              ),
+                              Shadow(
+                                color: Colors.black,
+                                blurRadius: 1,
+                                offset: Offset(1, 0),
+                              ),
+                              Shadow(
+                                color: Colors.black,
+                                blurRadius: 1,
+                                offset: Offset(0, -1),
+                              ),
+                              Shadow(
+                                color: Colors.black,
+                                blurRadius: 1,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-                          const _MissionTitle(),
-                          const SizedBox(height: 7),
-                          Text(
-                            'CASE ${mission.stage}',
-                            textAlign: TextAlign.center,
-                            style:
-                                AppTextStyles.category.copyWith(
-                              color: Colors.white,
-                              fontSize: 21,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.3,
-                              height: 1,
-                              shadows: const [
-                                Shadow(
-                                  color: Colors.black,
-                                  blurRadius: 1,
-                                  offset: Offset(-1, 0),
-                                ),
-                                Shadow(
-                                  color: Colors.black,
-                                  blurRadius: 1,
-                                  offset: Offset(1, 0),
-                                ),
-                                Shadow(
-                                  color: Colors.black,
-                                  blurRadius: 1,
-                                  offset: Offset(0, -1),
-                                ),
-                                Shadow(
-                                  color: Colors.black,
-                                  blurRadius: 1,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'CASE ${mission.stage}',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.category.copyWith(
+                            color: Colors.white,
+                            fontSize: 21,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.3,
+                            height: 1,
+                            shadows: const [
+                              Shadow(
+                                color: Colors.black,
+                                blurRadius: 1,
+                                offset: Offset(-1, 0),
+                              ),
+                              Shadow(
+                                color: Colors.black,
+                                blurRadius: 1,
+                                offset: Offset(1, 0),
+                              ),
+                              Shadow(
+                                color: Colors.black,
+                                blurRadius: 1,
+                                offset: Offset(0, -1),
+                              ),
+                              Shadow(
+                                color: Colors.black,
+                                blurRadius: 1,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 8),
-                          _MissionProgressPanel(
-                            mission: mission,
-                            progress:
-                                progress.currentStageProgress,
-                          ),
-                          const SizedBox(height: 8),
-                          _MissionCard(
-                            mission: mission,
-                            progress:
-                                progress.currentStageProgress,
-                            isStarting: _isStartingMission,
-                            onStartMission: _startMission,
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 16),
+                        _MissionProgressPanel(
+                          mission: mission,
+                          progress: progress.currentStageProgress,
+                    replayMode:
+                        progress.isCompleted && widget.replayStage != null,
+                        ),
+                        const SizedBox(height: 2),
+                        _MissionCard(
+                          mission: mission,
+                          progress: progress.currentStageProgress,
+                    replayMode:
+                        progress.isCompleted && widget.replayStage != null,
+                          isStarting: _isStartingMission,
+                          onStartMission: _startMission,
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          );
-        },
-      ),
+          ),
+          ],
+        ),
     );
   }
 }
@@ -528,196 +599,108 @@ class _MissionHeader extends StatelessWidget {
   }
 }
 
-class _MissionTitle extends StatelessWidget {
-  const _MissionTitle();
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      'SECRETS OF THE PAST',
-      textAlign: TextAlign.center,
-      style: AppTextStyles.category.copyWith(
-        color: Colors.white,
-        fontSize: 31,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 0.4,
-        height: 1,
-        shadows: const [
-          Shadow(
-            color: Colors.black,
-            blurRadius: 5,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _MissionProgressPanel extends StatelessWidget {
   final CaseMission mission;
   final CaseStageProgress progress;
+  final bool replayMode;
 
   const _MissionProgressPanel({
     required this.mission,
     required this.progress,
+    this.replayMode = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final int displayedCorrectCount =
+        replayMode ? 0 : progress.correctCount;
+
     final double progressValue = mission.correctRequired <= 0
         ? 0
-        : (progress.correctCount / mission.correctRequired)
+        : (displayedCorrectCount / mission.correctRequired)
             .clamp(0.0, 1.0);
 
     return Container(
-      height: 96,
+      height: 104,
+      padding: const EdgeInsets.fromLTRB(20, 13, 20, 13),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF151815),
-            Color(0xFF24251F),
-          ],
-        ),
+        color: const Color(0xE61C1C1A),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF9B8150),
+          color: const Color(0xFF8F7A55),
           width: 1.4,
         ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x99000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+            color: Color(0x88000000),
+            blurRadius: 7,
+            offset: Offset(0, 3),
           ),
         ],
       ),
-      child: Stack(
+      child: Row(
         children: [
-          Positioned(
-            left: 10,
-            right: 10,
-            top: 7,
-            child: Container(
-              height: 1,
-              color: const Color(0x337E6C48),
-            ),
-          ),
-          Positioned(
-            left: 10,
-            right: 10,
-            bottom: 7,
-            child: Container(
-              height: 1,
-              color: const Color(0x337E6C48),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              19,
-              13,
-              19,
-              13,
-            ),
-            child: Row(
+          SizedBox(
+            width: 126,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: 128,
-                  child: Column(
-                    mainAxisAlignment:
-                        MainAxisAlignment.center,
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'MISSION PROGRESS',
-                        style:
-                            AppTextStyles.category.copyWith(
-                          color:
-                              const Color(0xFFF6F0DF),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          height: 1,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        '${progress.correctCount} / ${mission.correctRequired}',
-                        style: AppTextStyles.label.copyWith(
-                          color:
-                              const Color(0xFFFE6A0A),
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          height: 1,
-                        ),
-                      ),
-                    ],
+                Text(
+                  'MISSION PROGRESS',
+                  style: AppTextStyles.category.copyWith(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    height: 1,
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Container(
-                    height: 18,
-                    decoration: BoxDecoration(
-                      color:
-                          const Color(0xFF2A2A22),
-                      borderRadius:
-                          BorderRadius.circular(20),
-                      border: Border.all(
-                        color:
-                            const Color(0xFF66593B),
-                        width: 1.2,
-                      ),
-                      boxShadow: const [
-                        BoxShadow(
-                          color:
-                              Color(0x66000000),
-                          blurRadius: 3,
-                          offset: Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    padding:
-                        const EdgeInsets.all(2),
-                    child: ClipRRect(
-                      borderRadius:
-                          BorderRadius.circular(20),
-                      child: Align(
-                        alignment:
-                            Alignment.centerLeft,
-                        child:
-                            FractionallySizedBox(
-                          widthFactor:
-                              progressValue,
-                          child: Container(
-                            decoration:
-                                const BoxDecoration(
-                              gradient:
-                                  LinearGradient(
-                                begin: Alignment
-                                    .centerLeft,
-                                end: Alignment
-                                    .centerRight,
-                                colors: [
-                                  Color(
-                                      0xFFFE5E02),
-                                  Color(
-                                      0xFFE77A20),
-                                  Color(
-                                      0xFFFFA13A),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                const SizedBox(height: 5),
+                Text(
+                  '$displayedCorrectCount / ${mission.correctRequired}',
+                  style: AppTextStyles.label.copyWith(
+                    color: const Color(0xFFFE5E02),
+                    fontSize: 23,
+                    fontWeight: FontWeight.w900,
+                    height: 1,
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              height: 20,
+              decoration: BoxDecoration(
+                color: const Color(0xFF28261D),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: const Color(0xFF4B412C),
+                  width: 1.2,
+                ),
+              ),
+              padding: const EdgeInsets.all(2),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FractionallySizedBox(
+                    widthFactor: progressValue,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFFFE5E02),
+                            Color(0xFFD96519),
+                            Color(0xFFB85A1A),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -729,12 +712,14 @@ class _MissionProgressPanel extends StatelessWidget {
 class _MissionCard extends StatelessWidget {
   final CaseMission mission;
   final CaseStageProgress progress;
+  final bool replayMode;
   final bool isStarting;
   final VoidCallback onStartMission;
 
   const _MissionCard({
     required this.mission,
     required this.progress,
+    this.replayMode = false,
     required this.isStarting,
     required this.onStartMission,
   });
@@ -747,119 +732,96 @@ class _MissionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 512 / 529,
+      aspectRatio: 1122 / 1402,
       child: LayoutBuilder(
-        builder: (
-          BuildContext context,
-          BoxConstraints constraints,
-        ) {
+        builder: (context, constraints) {
           final double width = constraints.maxWidth;
-          final double height = constraints.maxHeight;
+          final double originalHeight = width * (1402 / 1122);
+
+          const double missionTextTopFactor = 0.57;
+          const double missionTextHeightFactor = 0.15;
+
+          final bool missionCompleted =
+              !replayMode &&
+              progress.correctCount >= mission.correctRequired;
+
+          final bool missionStarted =
+              !replayMode && hasStarted && !missionCompleted;
+
+          final String ctaAsset = missionCompleted
+              ? SecretsOfThePastMissionScreen._completedCtaAsset
+              : missionStarted
+                  ? SecretsOfThePastMissionScreen._inProgressCtaAsset
+                  : SecretsOfThePastMissionScreen._startMissionCtaAsset;
 
           return Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset(
-                SecretsOfThePastMissionScreen
-                    ._missionCardAsset,
-                fit: BoxFit.fill,
-                filterQuality: FilterQuality.high,
+              Positioned.fill(
+                child: Image.asset(
+                  SecretsOfThePastMissionScreen._missionCardAsset,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.topCenter,
+                  filterQuality: FilterQuality.high,
+                ),
               ),
 
-              // Dynamic mission objective.
-              // The artwork intentionally leaves
-              // this parchment area blank.
+              Positioned(
+                left: width * 0.33,
+                right: width * 0.33,
+                top: originalHeight * 0.17,
+                child: Image.asset(
+                  SecretsOfThePastMissionScreen._iconAsset,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                ),
+              ),
+
+              Positioned(
+                left: width * 0.18,
+                right: width * 0.18,
+                top: originalHeight * 0.40,
+                child: Image.asset(
+                  SecretsOfThePastMissionScreen._titleAsset,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                ),
+              ),
+
+              // Dynamic mission wording: white and positioned high enough
+              // to allow two lines without crowding the CTA.
               Positioned(
                 left: width * 0.08,
                 right: width * 0.08,
-                top: height * 0.715,
-                height: height * 0.140,
+                top: originalHeight * missionTextTopFactor,
+                height: originalHeight * missionTextHeightFactor,
                 child: Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: width * 0.80,
-                      ),
-                      child: Text(
-                        mission.missionText
-                            .toUpperCase(),
-                        maxLines: 2,
-                        overflow:
-                            TextOverflow.ellipsis,
-                        textAlign:
-                            TextAlign.center,
-                        style: AppTextStyles.category
-                            .copyWith(
-                          color:
-                              const Color(0xFF2E2117),
-                          fontSize: 20,
-                          fontWeight:
-                              FontWeight.w900,
-                          letterSpacing: 0.05,
-                          height: 1.08,
-                        ),
-                      ),
+                  child: Text(
+                    mission.missionText,
+                    maxLines: 3,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.category.copyWith(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.1,
+                      height: 1.22,
                     ),
                   ),
                 ),
               ),
 
-              // The orange CTA is baked into
-              // secrets_of_the_past_mission_card.webp.
-              // Flutter adds only its dynamic
-              // label and tap target.
               Positioned(
-                left: width * 0.075,
-                right: width * 0.075,
-                top: height * 0.865,
-                height: height * 0.125,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: isStarting
-                        ? null
-                        : onStartMission,
-                    borderRadius:
-                        BorderRadius.circular(18),
-                    child: Center(
-                      child: Transform.translate(
-                        offset: const Offset(0, -2),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            isStarting
-                                ? 'LOADING...'
-                                : hasStarted
-                                    ? 'CONTINUE MISSION'
-                                    : 'START MISSION',
-                            textAlign:
-                                TextAlign.center,
-                            style: AppTextStyles.category
-                                .copyWith(
-                              color: AppColors.white,
-                              fontSize: 21,
-                              fontWeight:
-                                  FontWeight.w900,
-                              letterSpacing: 0.3,
-                              height: 1,
-                              shadows: const [
-                                Shadow(
-                                  color:
-                                      Color(0x99000000),
-                                  blurRadius: 2,
-                                  offset:
-                                      Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                left: width * 0.08,
+                right: width * 0.08,
+                bottom: originalHeight * 0.045,
+                child: Image.asset(
+                  ctaAsset,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
                 ),
               ),
+
             ],
           );
         },

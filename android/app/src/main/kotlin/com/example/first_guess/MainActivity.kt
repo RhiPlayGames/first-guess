@@ -1,4 +1,4 @@
-package com.example.first_guess
+package com.rhiplaygames.firstguess
 
 import io.flutter.embedding.android.FlutterActivity
 

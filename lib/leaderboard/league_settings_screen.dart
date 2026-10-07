@@ -208,6 +208,9 @@ class _LeagueSettingsScreenState extends State<LeagueSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Scaffold(
       backgroundColor: _background,
       body: SafeArea(
@@ -216,32 +219,46 @@ class _LeagueSettingsScreenState extends State<LeagueSettingsScreen> {
             _buildHeader(context),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+                padding: EdgeInsets.fromLTRB(
+                  isDesktop ? 24 : 16,
+                  8,
+                  isDesktop ? 24 : 16,
+                  28,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth:
+                          isDesktop ? 900 : double.infinity,
+                    ),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.stretch,
+                      children: [
                     _buildLeagueSummary(),
-                    const SizedBox(height: 22),
+                    SizedBox(height: isDesktop ? 16 : 22),
                     _buildSectionTitle('LEAGUE NAME'),
                     const SizedBox(height: 10),
                     _buildNameField(),
-                    const SizedBox(height: 22),
+                    SizedBox(height: isDesktop ? 16 : 22),
                     _buildSectionTitle('LEAGUE BADGE'),
                     const SizedBox(height: 10),
                     _buildBadgeGrid(),
-                    const SizedBox(height: 22),
+                    SizedBox(height: isDesktop ? 16 : 22),
                     _buildSectionTitle('LEAGUE COLOR'),
                     const SizedBox(height: 12),
                     _buildColorSelector(),
-                    const SizedBox(height: 22),
+                    SizedBox(height: isDesktop ? 16 : 22),
                     _buildSectionTitle('MEMBERS'),
                     const SizedBox(height: 10),
                     _buildMembersCard(),
-                    const SizedBox(height: 22),
+                    SizedBox(height: isDesktop ? 16 : 22),
                     _buildSaveButton(),
                     const SizedBox(height: 26),
                     _buildDangerZone(),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -385,14 +402,17 @@ class _LeagueSettingsScreenState extends State<LeagueSettingsScreen> {
   }
 
   Widget _buildBadgeGrid() {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _badges.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 5,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isDesktop ? 8 : 5,
+        crossAxisSpacing: isDesktop ? 10 : 8,
+        mainAxisSpacing: isDesktop ? 10 : 8,
       ),
       itemBuilder: (context, index) {
         final bool selected = _badges[index] == _selectedBadgePath;
@@ -510,9 +530,15 @@ class _LeagueSettingsScreenState extends State<LeagueSettingsScreen> {
   }
 
   Widget _buildSaveButton() {
-    return SizedBox(
-      height: 54,
-      child: ElevatedButton.icon(
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
+    return Align(
+      alignment: Alignment.center,
+      child: SizedBox(
+        width: isDesktop ? 320 : double.infinity,
+        height: 54,
+        child: ElevatedButton.icon(
         onPressed: _saveChanges,
         icon: const Icon(Icons.save_rounded),
         label: const Text('SAVE CHANGES'),
@@ -527,12 +553,16 @@ class _LeagueSettingsScreenState extends State<LeagueSettingsScreen> {
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildDangerZone() {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -553,29 +583,63 @@ class _LeagueSettingsScreenState extends State<LeagueSettingsScreen> {
             ),
           ),
           const SizedBox(height: 11),
-          OutlinedButton.icon(
-            onPressed: () => _showTemporaryMessage(
-              'Leave League will be enabled with real membership data.',
+          if (isDesktop)
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showTemporaryMessage(
+                      'Leave League will be enabled with real membership data.',
+                    ),
+                    icon: const Icon(Icons.logout_rounded),
+                    label: const Text('LEAVE LEAGUE'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _red,
+                      side: const BorderSide(color: _red),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showTemporaryMessage(
+                      'Delete League will be available to the league owner.',
+                    ),
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    label: const Text('DELETE LEAGUE'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _red,
+                      side: const BorderSide(color: _red),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else ...[
+            OutlinedButton.icon(
+              onPressed: () => _showTemporaryMessage(
+                'Leave League will be enabled with real membership data.',
+              ),
+              icon: const Icon(Icons.logout_rounded),
+              label: const Text('LEAVE LEAGUE'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _red,
+                side: const BorderSide(color: _red),
+              ),
             ),
-            icon: const Icon(Icons.logout_rounded),
-            label: const Text('LEAVE LEAGUE'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: _red,
-              side: const BorderSide(color: _red),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => _showTemporaryMessage(
+                'Delete League will be available to the league owner.',
+              ),
+              icon: const Icon(Icons.delete_outline_rounded),
+              label: const Text('DELETE LEAGUE'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _red,
+                side: const BorderSide(color: _red),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: () => _showTemporaryMessage(
-              'Delete League will be available to the league owner.',
-            ),
-            icon: const Icon(Icons.delete_outline_rounded),
-            label: const Text('DELETE LEAGUE'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: _red,
-              side: const BorderSide(color: _red),
-            ),
-          ),
+          ],
         ],
       ),
     );

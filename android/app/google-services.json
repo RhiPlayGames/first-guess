@@ -12,7 +12,12 @@
           "package_name": "com.example.first_guess"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "752908982581-crvla2et0db2j8hckh3mbfj3eeasglgq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCQqWwxHYROijc_bRtIAEygkZ4m1JZGXNM"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "752908982581-crvla2et0db2j8hckh3mbfj3eeasglgq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "752908982581-9dju5676u3bk3igpm0pv27njniaaik85.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.rhiplaygames.firstguess"
+              }
+            }
+          ]
         }
       }
     },
@@ -31,7 +48,28 @@
           "package_name": "com.rhiplaygames.firstguess"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "752908982581-45d2ptchpq28si13mgjvva29mg0f2fmr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rhiplaygames.firstguess",
+            "certificate_hash": "48df1e63be36cdea09bd119a8b1cd9bff8451f3d"
+          }
+        },
+        {
+          "client_id": "752908982581-qb2j8vhdvisq2aqcdm083r6coh8sp74a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rhiplaygames.firstguess",
+            "certificate_hash": "7e121669dd534823ba0a81a92985216c67eb9abf"
+          }
+        },
+        {
+          "client_id": "752908982581-crvla2et0db2j8hckh3mbfj3eeasglgq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCQqWwxHYROijc_bRtIAEygkZ4m1JZGXNM"
@@ -39,7 +77,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "752908982581-crvla2et0db2j8hckh3mbfj3eeasglgq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "752908982581-9dju5676u3bk3igpm0pv27njniaaik85.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.rhiplaygames.firstguess"
+              }
+            }
+          ]
         }
       }
     }

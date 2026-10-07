@@ -2,7 +2,7 @@ name: first_guess
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ">=3.12.2 <4.0.0"
@@ -16,14 +16,30 @@ dependencies:
   auto_size_text: ^3.0.0
   cloud_firestore: ^6.8.0
   firebase_core: ^4.13.0
-  firebase_auth: ^6.2.0
+  firebase_auth: ^6.6.1
+  google_sign_in: ^7.2.0
   firebase_storage: ^13.4.6
+  games_services: ^5.3.0
+  firebase_analytics: ^12.6.0
+  firebase_crashlytics: ^5.4.0
+  firebase_performance: ^0.11.6
+  firebase_remote_config: ^6.7.0
+  integration_test:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/app_icon.png"
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+  adaptive_icon_background: "#000000"
 
 flutter:
   uses-material-design: true
@@ -40,6 +56,7 @@ flutter:
     - assets/images/categories/subcategories/countries/
     - assets/images/stats/
     - assets/images/daily_flash5/
+    - assets/images/daily_flash5/new/
     - assets/images/daily_flash5/challenges/planets/
     - assets/images/case_files/topics/
     - assets/images/case_paths/animal_kingdom/
@@ -48,8 +65,10 @@ flutter:
     - assets/images/leaderboard/
     - assets/images/leaderboard/league_badges/
     - assets/images/avatars/
+    - assets/images/avatars/Final/optimized/
     - assets/images/case_files/
-    - assets/images/categories/countries/currencies_languages/
+    - assets/images/case_files/New folder/
+    - assets/images/case_files/new/
     - assets/images/categories/animals/birds/
     - assets/images/ui/popups/
     - assets/images/categories/food_drink/icons/
@@ -61,14 +80,31 @@ flutter:
     - assets/images/categories/music/
     - assets/images/categories/sports/
     - assets/images/categories/watch_play/
+    - assets/images/categories/first_word/
     - assets/images/categories/creative_world/
     - assets/images/categories/science_nature/
     - assets/images/badges/
+    - assets/images/badges/final/game_badges/
+    - assets/images/badges/final/case_files/
+    - assets/images/badges/final/clue/
     - assets/images/case_files/
     - assets/images/case_paths/animal_kingdom/
     - assets/images/case_paths/round_the_world/
     - assets/images/case_paths/secrets_of_the_past/
     - assets/images/case_paths/taste_and_treats/
+    - assets/images/case_files/topics/
+    - assets/images/case_files/topics/new/
+    - assets/images/case_paths/new/
+    - assets/images/settings/
+    - assets/images/categories/first_word/
+    - assets/images/categories/first_connection/
+    - assets/images/categories/classic_firstguess/
+    - assets/images/categories/first_match/
+    - assets/images/categories/first_order/
+    - assets/images/categories/first_date/
+    - assets/images/categories/music/bands/
+    - assets/images/categories/category_headers/
+    
 
 
   fonts:

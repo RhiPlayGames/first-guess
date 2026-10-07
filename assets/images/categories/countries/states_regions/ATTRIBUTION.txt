@@ -1,0 +1,10 @@
+Mendoza Province boundary reference for image 0049
+
+Source: “Flag-map of Mendoza Province.svg” by Lucash, updated by Goldsztern
+https://commons.wikimedia.org/wiki/File:Flag-map_of_Mendoza_Province.svg
+
+License: Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+https://creativecommons.org/licenses/by-sa/3.0/
+
+Modification: The province outline was extracted as a solid black silhouette,
+resized to 512 × 512 pixels, and placed on an opaque white background.

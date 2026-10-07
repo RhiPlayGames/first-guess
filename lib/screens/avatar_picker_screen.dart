@@ -19,57 +19,36 @@ class AvatarPickerScreen extends StatefulWidget {
 
 class _AvatarPickerScreenState extends State<AvatarPickerScreen> {
   static const List<String> _avatarPaths = <String>[
-    'assets/images/avatars/01_default.webp',
-    'assets/images/avatars/02_detective_dog.webp',
-    'assets/images/avatars/03_cool_cat.webp',
-    'assets/images/avatars/04_fox.webp',
-    'assets/images/avatars/05_panda.webp',
-    'assets/images/avatars/06_robot.webp',
-    'assets/images/avatars/07_astronaut.webp',
-    'assets/images/avatars/08_ninja.webp',
-    'assets/images/avatars/09_owl.webp',
-    'assets/images/avatars/10_lion.webp',
-    'assets/images/avatars/11_penguin.webp',
-    'assets/images/avatars/12_dragon.webp',
-    'assets/images/avatars/13_knight.webp',
-    'assets/images/avatars/14_pirate.webp',
-    'assets/images/avatars/15_unicorn.webp',
-    'assets/images/avatars/16_wolf.webp',
-    'assets/images/avatars/17_bear.webp',
-    'assets/images/avatars/18_tiger.webp',
-    'assets/images/avatars/19_shark.webp',
-    'assets/images/avatars/20_alien.webp',
-    'assets/images/avatars/21_eagle.webp',
-    'assets/images/avatars/22_koala.webp',
-    'assets/images/avatars/23_hedgehog.webp',
-    'assets/images/avatars/24_rabbit.webp',
-    'assets/images/avatars/25_raccoon.webp',
-    'assets/images/avatars/26_sloth.webp',
-    'assets/images/avatars/27_chameleon.webp',
-    'assets/images/avatars/28_frog.webp',
-    'assets/images/avatars/29_zebra.webp',
-    'assets/images/avatars/30_giraffe.webp',
-    'assets/images/avatars/31_cow.webp',
-    'assets/images/avatars/32_pig.webp',
-    'assets/images/avatars/33_horse.webp',
-    'assets/images/avatars/34_elephant.webp',
-    'assets/images/avatars/35_monkey.webp',
-    'assets/images/avatars/36_fox_girl.webp',
-    'assets/images/avatars/37_cat_hoodie.webp',
-    'assets/images/avatars/38_husky.webp',
-    'assets/images/avatars/39_cheetah.webp',
-    'assets/images/avatars/40_hippo.webp',
-    'assets/images/avatars/41_dinosaur.webp',
-    'assets/images/avatars/42_phoenix.webp',
-    'assets/images/avatars/43_octopus.webp',
-    'assets/images/avatars/44_owl_wizard.webp',
-    'assets/images/avatars/45_wizard.webp',
-    'assets/images/avatars/46_cyborg.webp',
-    'assets/images/avatars/47_steampunk.webp',
-    'assets/images/avatars/48_viking.webp',
-    'assets/images/avatars/49_samurai.webp',
-    'assets/images/avatars/50_ace_pilot.webp',
-    'assets/images/avatars/51_otter.webp',
+    'assets/images/avatars/Final/optimized/default_avatar.webp',
+    'assets/images/avatars/Final/optimized/04_hedgehog.webp',
+    'assets/images/avatars/Final/optimized/05_pig.webp',
+    'assets/images/avatars/Final/optimized/06_hippo.webp',
+    'assets/images/avatars/Final/optimized/07_otter.webp',
+    'assets/images/avatars/Final/optimized/08_parrot.webp',
+    'assets/images/avatars/Final/optimized/09_octopus.webp',
+    'assets/images/avatars/Final/optimized/10_black_white_cat.webp',
+    'assets/images/avatars/Final/optimized/11_light_brown_dog.webp',
+    'assets/images/avatars/Final/optimized/12_zebra.webp',
+    'assets/images/avatars/Final/optimized/13_panda.webp',
+    'assets/images/avatars/Final/optimized/14_elephant.webp',
+    'assets/images/avatars/Final/optimized/15_fox.webp',
+    'assets/images/avatars/Final/optimized/16_giraffe.webp',
+    'assets/images/avatars/Final/optimized/18_unicorn.webp',
+    'assets/images/avatars/Final/optimized/21_astronaut.webp',
+    'assets/images/avatars/Final/optimized/owl.webp',
+    'assets/images/avatars/Final/optimized/alien.webp',
+    'assets/images/avatars/Final/optimized/wizard.webp',
+    'assets/images/avatars/Final/optimized/female_explorer.webp',
+    'assets/images/avatars/Final/optimized/knight.webp',
+    'assets/images/avatars/Final/optimized/pirate.webp',
+    'assets/images/avatars/Final/optimized/raccoon_blocky.webp',
+    'assets/images/avatars/Final/optimized/scientist.webp',
+    'assets/images/avatars/Final/optimized/bookworm.webp',
+    'assets/images/avatars/Final/optimized/detectivedog.webp',
+    'assets/images/avatars/Final/optimized/ghost.webp',
+    'assets/images/avatars/Final/optimized/jigsaw.webp',
+    'assets/images/avatars/Final/optimized/penguin.webp',
+    'assets/images/avatars/Final/optimized/robot.webp',
   ];
 
   int _selectedIndex = 0;
@@ -79,6 +58,7 @@ class _AvatarPickerScreenState extends State<AvatarPickerScreen> {
   @override
   void initState() {
     super.initState();
+
 
     final String? initialAvatarPath = widget.initialAvatarPath;
     if (initialAvatarPath != null) {
@@ -91,6 +71,9 @@ class _AvatarPickerScreenState extends State<AvatarPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -107,27 +90,39 @@ class _AvatarPickerScreenState extends State<AvatarPickerScreen> {
               ),
             ),
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                itemCount: _avatarPaths.length,
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1,
-                ),
-                itemBuilder: (BuildContext context, int index) {
-                  return _AvatarTile(
-                    imagePath: _avatarPaths[index],
-                    isSelected: index == _selectedIndex,
-                    onTap: () {
-                      setState(() {
-                        _selectedIndex = index;
-                      });
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: isDesktop ? 1080 : double.infinity,
+                  ),
+                  child: GridView.builder(
+                    padding: EdgeInsets.fromLTRB(
+                      isDesktop ? 8 : 16,
+                      0,
+                      isDesktop ? 8 : 16,
+                      16,
+                    ),
+                    itemCount: _avatarPaths.length,
+                    gridDelegate:
+                        SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: isDesktop ? 6 : 3,
+                      crossAxisSpacing: isDesktop ? 14 : 12,
+                      mainAxisSpacing: isDesktop ? 14 : 12,
+                      childAspectRatio: 1,
+                    ),
+                    itemBuilder: (BuildContext context, int index) {
+                      return _AvatarTile(
+                        imagePath: _avatarPaths[index],
+                        isSelected: index == _selectedIndex,
+                        onTap: () {
+                          setState(() {
+                            _selectedIndex = index;
+                          });
+                        },
+                      );
                     },
-                  );
-                },
+                  ),
+                ),
               ),
             ),
             _buildSaveButton(context),
@@ -167,21 +162,7 @@ class _AvatarPickerScreenState extends State<AvatarPickerScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'CHOOSE YOUR AVATAR',
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              style: AppTextStyles.category.copyWith(
-                color: AppColors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
+          const Spacer(),
           const FirstGuessHomeButton(),
         ],
       ),

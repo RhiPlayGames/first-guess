@@ -1,30 +1,24 @@
 ﻿import 'dart:async';
+
 import 'package:flutter/material.dart';
 
-import '../case_files/screens/case_files_home_screen.dart';
-import '../daily_flash/screens/daily_flash_loading_screen.dart';
-import '../daily_flash/services/daily_flash_progress_service.dart';
-import '../models/quiz_item.dart';
+import '../daily_flash/screens/daily_flash_home_screen.dart';
+import '../daily_flash/services/daily_flash_schedule_service.dart';
 import '../services/avatar_preferences_service.dart';
-import '../services/firebase_challenge_service.dart';
+import '../services/feature_flag_service.dart';
 import '../services/player_stats_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/stats_panel.dart';
-import 'game_screen.dart';
+import '../widgets/subcategory_status_badge.dart';
+import 'classic_first_guess_screen.dart';
+import 'first_connection_game_screen.dart';
+import 'first_date_game_screen.dart';
+import 'first_match_game_screen.dart';
+import 'first_order_game_screen.dart';
+import 'first_word_game_screen.dart';
 import 'profile_screen.dart';
-import 'subcategories/countries_subcategory_screen.dart';
-import 'subcategories/animals_subcategory_screen.dart';
-import 'subcategories/food_drink_subcategory_screen.dart';
-import 'subcategories/science_nature_subcategory_screen.dart';
-import 'subcategories/books_authors_subcategory_screen.dart';
-import 'subcategories/creative_world_subcategory_screen.dart';
-import 'subcategories/famous_people_subcategory_screen.dart';
-import 'subcategories/famous_words_subcategory_screen.dart';
-import 'subcategories/music_subcategory_screen.dart';
-import 'subcategories/sports_subcategory_screen.dart';
-import 'subcategories/past_present_subcategory_screen.dart';
-import 'subcategories/watch_play_subcategory_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,23 +30,33 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String? _selectedAvatarPath;
 
-  bool _dailyFlashComplete = false;
-  bool _surpriseMeLoading = false;
-
   PlayerStats _playerStats = const PlayerStats();
   bool _statsLoaded = false;
+  bool _firstConnectionEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _loadSelectedAvatar();
     _loadPlayerStats();
-    _loadDailyFlashStatus();
+    _loadFeatureFlags();
+  }
+
+  Future<void> _loadFeatureFlags() async {
+    final bool firstConnectionEnabled =
+        await FeatureFlagService.isFirstConnectionEnabled();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _firstConnectionEnabled = firstConnectionEnabled;
+    });
   }
 
   Future<void> _loadPlayerStats() async {
-    final PlayerStats savedStats =
-        await PlayerStatsService.loadStats();
+    final PlayerStats savedStats = await PlayerStatsService.loadStats();
 
     if (!mounted) {
       return;
@@ -77,33 +81,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _loadDailyFlashStatus() async {
-    try {
-      final DailyFlashProgress progress =
-          await DailyFlashProgressService.loadToday();
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _dailyFlashComplete = progress.allQuestionsAttempted;
-      });
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _dailyFlashComplete = false;
-      });
-    }
-  }
-
-  Future<void> _openCountriesSubcategories() async {
+  Future<void> _openClassicFirstGuess() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => const CountriesSubcategoryScreen(),
+        builder: (context) => const ClassicFirstGuessScreen(),
       ),
     );
 
@@ -112,10 +93,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _openAnimalsSubcategories() async {
+  Future<void> _openFirstConnection() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => const AnimalsSubcategoryScreen(),
+        builder: (context) => const FirstConnectionGameScreen(),
       ),
     );
 
@@ -124,10 +105,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _openFoodDrinkSubcategories() async {
+  Future<void> _openFirstDate() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => const FoodDrinkSubcategoryScreen(),
+        builder: (context) => const FirstDateGameScreen(),
       ),
     );
 
@@ -136,10 +117,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _openScienceNatureSubcategories() async {
+  Future<void> _openFirstMatch() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => const ScienceNatureSubcategoryScreen(),
+        builder: (context) => const FirstMatchGameScreen(),
       ),
     );
 
@@ -148,10 +129,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _openBooksAuthorsSubcategories() async {
+  Future<void> _openFirstOrder() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => const BooksAuthorsSubcategoryScreen(),
+        builder: (context) => const FirstOrderGameScreen(),
       ),
     );
 
@@ -160,10 +141,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _openCreativeWorldSubcategories() async {
+  Future<void> _openFirstWord() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => const CreativeWorldSubcategoryScreen(),
+        builder: (context) => const FirstWordGameScreen(),
       ),
     );
 
@@ -172,196 +153,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _openFamousWordsSubcategories() async {
+  Future<void> _openDailyFlashHub() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => const FamousWordsSubcategoryScreen(),
+        builder: (context) => const DailyFlashHomeScreen(),
       ),
     );
 
     if (mounted) {
       await _loadPlayerStats();
     }
-  }
-
-  Future<void> _openFamousPeopleSubcategories() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const FamousPeopleSubcategoryScreen(),
-      ),
-    );
-
-    if (mounted) {
-      await _loadPlayerStats();
-    }
-  }
-
-  Future<void> _openMusicSubcategories() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const MusicSubcategoryScreen(),
-      ),
-    );
-
-    if (mounted) {
-      await _loadPlayerStats();
-    }
-  }
-
-  Future<void> _openSportsSubcategories() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const SportsSubcategoryScreen(),
-      ),
-    );
-
-    if (mounted) {
-      await _loadPlayerStats();
-    }
-  }
-
-  Future<void> _openPastPresentSubcategories() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const PastPresentSubcategoryScreen(),
-      ),
-    );
-
-    if (mounted) {
-      await _loadPlayerStats();
-    }
-  }
-
-  Future<void> _openWatchPlaySubcategories() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const WatchPlaySubcategoryScreen(),
-      ),
-    );
-
-    if (mounted) {
-      await _loadPlayerStats();
-    }
-  }
-
-  Future<void> _openSurpriseGame() async {
-    if (_surpriseMeLoading) {
-      return;
-    }
-
-    setState(() {
-      _surpriseMeLoading = true;
-    });
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(
-          duration: Duration(seconds: 2),
-          content: Text(
-            'Picking your Surprise Me question...',
-          ),
-        ),
-      );
-
-    try {
-      final Set<String> playedIds =
-          await QuestionHistoryService.loadPlayedQuestionIds();
-
-      if (!mounted) {
-        return;
-      }
-
-      final FirebaseSurpriseSelection? selected =
-          await FirebaseChallengeService.loadRandomLiveSurpriseQuestion(
-        playedQuestionIds: playedIds,
-      );
-
-      if (!mounted) {
-        return;
-      }
-
-      if (selected == null) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Surprise Me could not find any live questions.',
-              ),
-            ),
-          );
-        return;
-      }
-
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (context) => GameScreen.firebaseDynamic(
-            items: <QuizItem>[selected.item],
-            initialItem: selected.item,
-            launchedFromSurpriseMe: true,
-            showSurpriseToast: true,
-          ),
-        ),
-      );
-
-      if (mounted) {
-        await _loadPlayerStats();
-      }
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Surprise Me could not load a live question.',
-            ),
-          ),
-        );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _surpriseMeLoading = false;
-        });
-      }
-    }
-  }
-
-  void _openCaseFiles() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const CaseFilesHomeScreen(),
-      ),
-    );
-  }
-
-  Future<void> _openDailyFlash() async {
-    if (_dailyFlashComplete) {
-      return;
-    }
-
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => DailyFlashLoadingScreen(
-          onChallengeFinished: _loadDailyFlashStatus,
-        ),
-      ),
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    await Future.wait([
-      _loadDailyFlashStatus(),
-      _loadPlayerStats(),
-    ]);
   }
 
   Future<void> _openProfile(BuildContext context) async {
@@ -377,102 +178,81 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const SettingsScreen(),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await Future.wait([
+      _loadSelectedAvatar(),
+      _loadPlayerStats(),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final List<_CategoryData> categories = <_CategoryData>[
+    final bool isDesktop = MediaQuery.sizeOf(context).width >= 1200;
+
+    final List<_CategoryData> modes = <_CategoryData>[
       _CategoryData(
-        title: 'Surprise Me',
-        subtitle: _surpriseMeLoading
-            ? 'Picking your surprise...'
-            : 'Let First Guess choose your challenge',
-        imagePath: 'assets/images/categories/surprise_me.webp',
+        title: 'Classic First Guess',
+        subtitle: 'Ten clues. One trivia test. Can you find the answer?',
+        imagePath:
+            'assets/images/categories/classic_firstguess/First Guessicon128.webp',
         isAvailable: true,
-        onPressed:
-            _surpriseMeLoading ? null : _openSurpriseGame,
+        onPressed: _openClassicFirstGuess,
+        ctaLabel: 'PLAY',
       ),
       _CategoryData(
-        title: 'Animals',
-        subtitle: 'Explore mammals, birds, wildlife and more',
-        imagePath: 'assets/images/categories/animals.webp',
+        title: 'First Date',
+        subtitle: 'Five events. One date. Can you piece it together?',
+        imagePath:
+            'assets/images/categories/first_date/firstdateicon128.webp',
         isAvailable: true,
-        onPressed: _openAnimalsSubcategories,
+        onPressed: _openFirstDate,
+        ctaLabel: 'PLAY',
       ),
       _CategoryData(
-        title: 'Books & Authors',
-        subtitle: 'Identify famous writers from portraits and clues',
-        imagePath: 'assets/images/categories/books_and_authors.webp',
+        title: 'First Match',
+        subtitle: 'Six pairs. One perfect board. Can you match them all?',
+        imagePath:
+            'assets/images/categories/first_match/firstmatch_icon128.webp',
         isAvailable: true,
-        onPressed: _openBooksAuthorsSubcategories,
+        onPressed: _openFirstMatch,
+        ctaLabel: 'PLAY',
       ),
       _CategoryData(
-        title: 'Countries',
-        subtitle: 'Guess countries from their outlines and clues',
-        imagePath: 'assets/images/categories/countries.webp',
+        title: 'First Order',
+        subtitle: 'Five choices. One correct order. Can you rank them all?',
+        imagePath:
+            'assets/images/categories/first_order/firstorder_icon128.webp',
         isAvailable: true,
-        onPressed: _openCountriesSubcategories,
+        onPressed: _openFirstOrder,
+        ctaLabel: 'PLAY',
       ),
       _CategoryData(
-        title: 'Creative World',
-        subtitle: 'Explore art, design, theatre and architecture',
-        imagePath: 'assets/images/categories/creative_world.webp',
+        title: 'First Word',
+        subtitle: 'Five clues. One hidden word. How soon can you uncover it?',
+        imagePath:
+            'assets/images/categories/first_word/firstword_128.webp',
         isAvailable: true,
-        onPressed: _openCreativeWorldSubcategories,
+        onPressed: _openFirstWord,
+        ctaLabel: 'PLAY',
       ),
       _CategoryData(
-        title: 'Famous Words',
-        subtitle: 'Identify famous words, quotations and speeches',
-        imagePath: 'assets/images/categories/famous_words/famous_words.webp',
-        isAvailable: true,
-        onPressed: _openFamousWordsSubcategories,
-      ),
-      _CategoryData(
-        title: 'Food & Drink',
-        subtitle: 'Explore dishes, ingredients, drinks and cuisines',
-        imagePath: 'assets/images/categories/food_and_drink.webp',
-        isAvailable: true,
-        onPressed: _openFoodDrinkSubcategories,
-      ),
-      _CategoryData(
-        title: 'Music',
-        subtitle: 'Guess artists, songs, albums and instruments',
-        imagePath: 'assets/images/categories/music.webp',
-        isAvailable: true,
-        onPressed: _openMusicSubcategories,
-      ),
-      _CategoryData(
-        title: 'Past & Present',
-        subtitle: 'Travel through history, events and changing times',
-        imagePath: 'assets/images/categories/past_and_present.webp',
-        isAvailable: true,
-        onPressed: _openPastPresentSubcategories,
-      ),
-      _CategoryData(
-        title: 'Science & Nature',
-        subtitle: 'Explore science, nature, space and inventions',
-        imagePath: 'assets/images/categories/science_and_nature.webp',
-        isAvailable: true,
-        onPressed: _openScienceNatureSubcategories,
-      ),
-      _CategoryData(
-        title: 'Sports',
-        subtitle: 'Identify teams, players, events and sporting moments',
-        imagePath: 'assets/images/categories/sports.webp',
-        isAvailable: true,
-        onPressed: _openSportsSubcategories,
-      ),
-      _CategoryData(
-        title: 'Watch & Play',
-        subtitle: 'Test your knowledge of film, television and games',
-        imagePath: 'assets/images/categories/watch_and_play.webp',
-        isAvailable: true,
-        onPressed: _openWatchPlaySubcategories,
-      ),
-      _CategoryData(
-        title: 'Who Am I?',
-        subtitle: 'Recognise notable people from around the world',
-        imagePath: 'assets/images/categories/famous_people.webp',
-        isAvailable: true,
-        onPressed: _openFamousPeopleSubcategories,
+        title: 'First Connection',
+        subtitle: 'Six clues. One hidden link. Can you find the connection?',
+        imagePath:
+            'assets/images/categories/first_connection/firstconnections_icon128.webp',
+        isAvailable: _firstConnectionEnabled,
+        onPressed: _openFirstConnection,
+        ctaLabel: 'PLAY',
       ),
     ];
 
@@ -480,45 +260,90 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _HomeHeader(
-                onProfilePressed: () => _openProfile(context),
-                selectedAvatarPath: _selectedAvatarPath,
+          padding: EdgeInsets.fromLTRB(
+            isDesktop ? 24 : 16,
+            14,
+            isDesktop ? 24 : 16,
+            28,
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: isDesktop ? 1360 : double.infinity,
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
-                child: StatsPanel(
-                  totalScore:
-                      _statsLoaded ? _playerStats.totalScore : 0,
-                  currentStreak:
-                      _statsLoaded ? _playerStats.currentStreak : 0,
-                  firstGuesses:
-                      _statsLoaded ? _playerStats.firstGuesses : 0,
-                  gamesPlayed:
-                      _statsLoaded ? _playerStats.gamesPlayed : 0,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _HomeHeader(
+                    onProfilePressed: () => _openProfile(context),
+                    onSettingsPressed: _openSettings,
+                    selectedAvatarPath: _selectedAvatarPath,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: isDesktop ? 6 : 0,
+                      bottom: isDesktop ? 18 : 10,
+                    ),
+                    child: StatsPanel(
+                      totalScore:
+                          _statsLoaded ? _playerStats.totalScore : 0,
+                      currentStreak:
+                          _statsLoaded ? _playerStats.currentStreak : 0,
+                      firstGuesses:
+                          _statsLoaded ? _playerStats.firstGuesses : 0,
+                      gamesPlayed:
+                          _statsLoaded ? _playerStats.gamesPlayed : 0,
+                    ),
+                  ),
+                  SizedBox(height: isDesktop ? 6 : 8),
+                  _DailyFlashHomeBanner(
+                    onPressed: _openDailyFlashHub,
+                  ),
+                  SizedBox(height: isDesktop ? 18 : 14),
+                  const _ChallengeHeading(),
+                  SizedBox(height: isDesktop ? 12 : 10),
+                  if (!isDesktop)
+                    Column(
+                      children: modes
+                          .map(
+                            (_CategoryData mode) => Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 12,
+                              ),
+                              child: _CategoryCard(
+                                category: mode,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    )
+                  else
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics:
+                          const NeverScrollableScrollPhysics(),
+                      itemCount: modes.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 14,
+                        mainAxisSpacing: 12,
+                        mainAxisExtent: 96,
+                      ),
+                      itemBuilder: (
+                        BuildContext context,
+                        int index,
+                      ) {
+                        return _CategoryCard(
+                          category: modes[index],
+                        );
+                      },
+                    ),
+                  SizedBox(height: isDesktop ? 16 : 4),
+                  const _AdSpace(),
+                ],
               ),
-              const SizedBox(height: 10),
-              _QuickPlayRow(
-                onCaseFilesPressed: _openCaseFiles,
-                onDailyFlashPressed: _openDailyFlash,
-                dailyFlashComplete: _dailyFlashComplete,
-              ),
-              const SizedBox(height: 10),
-              const _ChallengeHeading(),
-              const SizedBox(height: 10),
-              ...categories.map(
-                (_CategoryData category) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _CategoryCard(category: category),
-                ),
-              ),
-              const SizedBox(height: 4),
-              const _AdSpace(),
-            ],
+            ),
           ),
         ),
       ),
@@ -528,10 +353,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _HomeHeader extends StatelessWidget {
   final VoidCallback onProfilePressed;
+  final VoidCallback onSettingsPressed;
   final String? selectedAvatarPath;
 
   const _HomeHeader({
     required this.onProfilePressed,
+    required this.onSettingsPressed,
     required this.selectedAvatarPath,
   });
 
@@ -543,11 +370,17 @@ class _HomeHeader extends StatelessWidget {
         BoxConstraints constraints,
       ) {
         final bool isNarrow = constraints.maxWidth < 390;
+        final bool isDesktop = constraints.maxWidth >= 1200;
 
         final double logoWidth = isNarrow ? 58 : 68;
         final double logoHeight = isNarrow ? 66 : 76;
         final double titleHeight = isNarrow ? 48 : 56;
-        final double headerHeight = isNarrow ? 78 : 88;
+        final double headerHeight =
+            isDesktop ? 104 : (isNarrow ? 78 : 88);
+        final double avatarSize =
+            isDesktop ? 72 : (isNarrow ? 40 : 44);
+        final double settingsSize =
+            isDesktop ? 72 : (isNarrow ? 38 : 42);
 
         return SizedBox(
           height: headerHeight,
@@ -581,45 +414,57 @@ class _HomeHeader extends StatelessWidget {
               ),
               Align(
                 alignment: Alignment.centerRight,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: onProfilePressed,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: isNarrow ? 46 : 52,
-                            height: isNarrow ? 46 : 52,
-                            child: Image.asset(
-                              selectedAvatarPath ??
-                                  'assets/images/avatars/default_avatar.webp',
-                              fit: BoxFit.contain,
-                              filterQuality: FilterQuality.high,
-                            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.center,
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: onProfilePressed,
+                        borderRadius:
+                            BorderRadius.circular(12),
+                        child: SizedBox(
+                          width: avatarSize,
+                          height: avatarSize,
+                          child: Image.asset(
+                            selectedAvatarPath ??
+                                'assets/images/avatars/Final/optimized/default_avatar.webp',
+                            fit: BoxFit.contain,
+                            filterQuality:
+                                FilterQuality.high,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'MY PROFILE',
-                            maxLines: 1,
-                            style: AppTextStyles.label.copyWith(
-                              color: AppColors.white,
-                              fontSize: isNarrow ? 9.5 : 10.5,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.25,
-                              height: 1,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    SizedBox(
+                      width: isDesktop ? 16 : 14,
+                    ),
+                    Tooltip(
+                      message: 'Settings',
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: onSettingsPressed,
+                          borderRadius:
+                              BorderRadius.circular(
+                            settingsSize / 2,
+                          ),
+                          child: SizedBox(
+                            width: settingsSize,
+                            height: settingsSize,
+                            child: Icon(
+                              Icons.settings_rounded,
+                              color:
+                                  const Color(0xFFB8BCC2),
+                              size: settingsSize,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -630,16 +475,64 @@ class _HomeHeader extends StatelessWidget {
   }
 }
 
-class _QuickPlayRow extends StatelessWidget {
-  final VoidCallback onCaseFilesPressed;
-  final VoidCallback onDailyFlashPressed;
-  final bool dailyFlashComplete;
+class _DailyFlashHomeBanner extends StatefulWidget {
+  final VoidCallback onPressed;
 
-  const _QuickPlayRow({
-    required this.onCaseFilesPressed,
-    required this.onDailyFlashPressed,
-    required this.dailyFlashComplete,
+  const _DailyFlashHomeBanner({
+    required this.onPressed,
   });
+
+  @override
+  State<_DailyFlashHomeBanner> createState() =>
+      _DailyFlashHomeBannerState();
+}
+
+class _DailyFlashHomeBannerState
+    extends State<_DailyFlashHomeBanner> {
+  Timer? _countdownTimer;
+  Duration _timeRemaining = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateCountdown();
+    _countdownTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _updateCountdown(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _updateCountdown() {
+    final Duration remaining =
+        DailyFlashScheduleService.timeUntilNextRelease();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _timeRemaining =
+          remaining.isNegative ? Duration.zero : remaining;
+    });
+  }
+
+  String get _countdownText {
+    final int hours = _timeRemaining.inHours;
+    final int minutes =
+        _timeRemaining.inMinutes.remainder(60);
+    final int seconds =
+        _timeRemaining.inSeconds.remainder(60);
+
+    return '${hours.toString().padLeft(2, '0')}:'
+        '${minutes.toString().padLeft(2, '0')}:'
+        '${seconds.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -648,334 +541,90 @@ class _QuickPlayRow extends StatelessWidget {
         BuildContext context,
         BoxConstraints constraints,
       ) {
-        final bool isNarrow = constraints.maxWidth < 390;
-        final double gap = isNarrow ? 7 : 9;
+        final bool isDesktop = constraints.maxWidth >= 900;
 
-        return SizedBox(
-          height: isNarrow ? 158 : 166,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: 11,
-                child: _DailyFlashCard(
-                  onTap: onDailyFlashPressed,
-                  isNarrow: isNarrow,
-                  isComplete: dailyFlashComplete,
-                ),
-              ),
-              SizedBox(width: gap),
-              Expanded(
-                flex: 9,
-                child: _CaseFilesCard(
-                  onTap: onCaseFilesPressed,
-                  isNarrow: isNarrow,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
+        final String bannerAsset = isDesktop
+            ? 'assets/images/daily_flash5/new/dailyflashfive_homescreen_desktop.webp'
+            : 'assets/images/daily_flash5/new/dailyflashfive_homescreen_mobile.webp';
 
-class _CaseFilesCard extends StatelessWidget {
-  final VoidCallback onTap;
-  final bool isNarrow;
+        final double bannerHeight = isDesktop ? 132 : 56;
+        final double radius = isDesktop ? 18 : 14;
+        final double timerWidth =
+            constraints.maxWidth * (isDesktop ? 0.25 : 0.27);
 
-  const _CaseFilesCard({
-    required this.onTap,
-    required this.isNarrow,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.black,
-            alignment: Alignment.center,
-            child: Image.asset(
-              'assets/images/case_files/case_file_mainV2_image.webp',
+        return Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(radius),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: widget.onPressed,
+            borderRadius: BorderRadius.circular(radius),
+            child: SizedBox(
               width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.contain,
-              alignment: Alignment.center,
-              filterQuality: FilterQuality.high,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DailyFlashCard extends StatelessWidget {
-  final VoidCallback onTap;
-  final bool isNarrow;
-  final bool isComplete;
-
-  const _DailyFlashCard({
-    required this.onTap,
-    required this.isNarrow,
-    required this.isComplete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        onTap: isComplete ? null : onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          height: double.infinity,
-          padding: EdgeInsets.fromLTRB(
-            isNarrow ? 8 : 10,
-            8,
-            isNarrow ? 8 : 10,
-            10,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.panel,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: AppColors.orange,
-              width: 1.2,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x22FE5E02),
-                blurRadius: 8,
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              SizedBox(
-                height: isNarrow ? 48 : 52,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: isNarrow ? 38 : 44,
-                      height: double.infinity,
-                      child: Image.asset(
-                        'assets/images/orangeflashbolt_T_O.png',
-                        fit: BoxFit.contain,
-                        filterQuality: FilterQuality.high,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Center(
+              height: bannerHeight,
+              child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  Image.asset(
+                    bannerAsset,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    filterQuality: FilterQuality.high,
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: timerWidth,
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isDesktop ? 18 : 6,
+                        ),
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
-                          child: Text(
-                            'DAILY FLASH 5',
-                            maxLines: 1,
-                            style: AppTextStyles.category.copyWith(
-                              color: AppColors.white,
-                              fontSize: isNarrow ? 20 : 23,
-                              height: 1,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.1,
-                            ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Text(
+                                'ENDS IN',
+                                maxLines: 1,
+                                style: TextStyle(
+                                  fontFamily: 'Oswald',
+                                  color: AppColors.white,
+                                  fontSize: isDesktop ? 18 : 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                  height: 1.0,
+                                ),
+                              ),
+                              SizedBox(
+                                height: isDesktop ? 5 : 2,
+                              ),
+                              Text(
+                                _countdownText,
+                                maxLines: 1,
+                                style: TextStyle(
+                                  fontFamily: 'Oswald',
+                                  color: const Color(0xFFFFC94A),
+                                  fontSize: isDesktop ? 31 : 15.5,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.3,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(
-                      width: isNarrow ? 44 : 50,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 3),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isNarrow ? 10 : 12,
-                      vertical: isNarrow ? 5 : 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.orange,
-                      borderRadius: BorderRadius.circular(9),
-                    ),
-                    child: Text(
-                      '2× XP',
-                      style: AppTextStyles.label.copyWith(
-                        color: Colors.black,
-                        fontSize: isNarrow ? 12.5 : 14,
-                        fontWeight: FontWeight.w900,
-                        height: 1,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 7),
-                  const Flexible(
-                    child: _MidnightCountdown(),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                height: isNarrow ? 40 : 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isComplete ? AppColors.background : null,
-                  gradient: isComplete
-                      ? null
-                      : const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Color(0xFFFFA512),
-                            Color(0xFFFF7900),
-                            Color(0xFFFF4B00),
-                          ],
-                        ),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: isComplete
-                        ? AppColors.orange
-                        : const Color(0xFFFFB21A),
-                    width: 1,
-                  ),
-                  boxShadow: isComplete
-                      ? null
-                      : const [
-                          BoxShadow(
-                            color: Color(0x44FF6500),
-                            blurRadius: 7,
-                          ),
-                        ],
-                ),
-                child: Text(
-                  isComplete ? 'FLASH COMPLETE' : 'PLAY NOW',
-                  maxLines: 1,
-                  style: AppTextStyles.label.copyWith(
-                    color: isComplete
-                        ? AppColors.orange
-                        : AppColors.white,
-                    fontSize: isNarrow ? 14.5 : 16,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.15,
-                    height: 1,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MidnightCountdown extends StatefulWidget {
-  const _MidnightCountdown();
-
-  @override
-  State<_MidnightCountdown> createState() =>
-      _MidnightCountdownState();
-}
-
-class _MidnightCountdownState
-    extends State<_MidnightCountdown> {
-  Timer? _timer;
-  Duration _remaining = Duration.zero;
-
-  @override
-  void initState() {
-    super.initState();
-    _refresh();
-    _timer = Timer.periodic(
-      const Duration(minutes: 1),
-      (_) => _refresh(),
-    );
-  }
-
-  void _refresh() {
-    final DateTime now = DateTime.now();
-    final DateTime nextMidnight = DateTime(
-      now.year,
-      now.month,
-      now.day + 1,
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _remaining = nextMidnight.difference(now);
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final int hours = _remaining.inHours;
-    final int minutes =
-        _remaining.inMinutes.remainder(60);
-
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      alignment: Alignment.centerRight,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 8,
-          vertical: 5,
-        ),
-        decoration: BoxDecoration(
-          color: const Color(0x1FFE5E02),
-          borderRadius: BorderRadius.circular(11),
-          border: Border.all(
-            color: AppColors.orange,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.access_time_rounded,
-              color: AppColors.orange,
-              size: 15,
             ),
-            const SizedBox(width: 4),
-            Text(
-              'ENDS IN ${hours}HR ${minutes}M',
-              maxLines: 1,
-              style: AppTextStyles.label.copyWith(
-                color: AppColors.white,
-                fontSize: 11.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.1,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -985,91 +634,33 @@ class _ChallengeHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (
-        BuildContext context,
-        BoxConstraints constraints,
-      ) {
-        final bool isVeryNarrow =
-            constraints.maxWidth < 360;
-        final bool isNarrow =
-            constraints.maxWidth < 430;
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
 
-        final double sideGap =
-            isVeryNarrow ? 8 : 10;
-
-        return Row(
-          children: [
-            const Expanded(
-              child: _ChallengeLine(),
-            ),
-            SizedBox(width: sideGap),
-            SizedBox(
-              width: isVeryNarrow
-                  ? 214
-                  : (isNarrow ? 226 : 238),
-              child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-                children: [
-                  const _ChallengeShield(),
-                  SizedBox(
-                    width: isVeryNarrow ? 5 : 7,
-                  ),
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'PICK YOUR CHALLENGE',
-                        maxLines: 1,
-                        textAlign: TextAlign.center,
-                        style:
-                            AppTextStyles.category.copyWith(
-                          color: AppColors.white,
-                          fontSize: isVeryNarrow
-                              ? 16
-                              : (isNarrow ? 17 : 18),
-                          fontWeight:
-                              FontWeight.w600,
-                          letterSpacing: 0.45,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: sideGap),
-            const Expanded(
-              child: _ChallengeLine(),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _ChallengeShield extends StatelessWidget {
-  const _ChallengeShield();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
+    return Row(
       children: [
-        const Icon(
-          Icons.shield_rounded,
-          size: 21,
-          color: AppColors.orange,
+        const Expanded(
+          child: _ChallengeLine(),
+        ),
+        SizedBox(
+          width: isDesktop ? 16 : 10,
         ),
         Text(
-          '?',
-          style: AppTextStyles.label.copyWith(
+          'CHOOSE YOUR GAME',
+          textAlign: TextAlign.center,
+          style: AppTextStyles.category.copyWith(
             color: AppColors.white,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            height: 1,
+            fontSize: isDesktop ? 22 : 18,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
+        ),
+        SizedBox(
+          width: isDesktop ? 16 : 10,
+        ),
+        const Expanded(
+          child: _ChallengeLine(
+            reverse: true,
           ),
         ),
       ],
@@ -1078,20 +669,30 @@ class _ChallengeShield extends StatelessWidget {
 }
 
 class _ChallengeLine extends StatelessWidget {
-  const _ChallengeLine();
+  final bool reverse;
+
+  const _ChallengeLine({
+    this.reverse = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 1.5,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
+          begin: reverse
+              ? Alignment.centerRight
+              : Alignment.centerLeft,
+          end: reverse
+              ? Alignment.centerLeft
+              : Alignment.centerRight,
+          colors: const [
             Colors.transparent,
             AppColors.orange,
           ],
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Color(0x55FE5E02),
             blurRadius: 5,
@@ -1108,11 +709,13 @@ class _CategoryData {
   final String imagePath;
   final bool isAvailable;
   final VoidCallback? onPressed;
+  final String ctaLabel;
 
   const _CategoryData({
     required this.title,
     required this.subtitle,
     required this.imagePath,
+    required this.ctaLabel,
     this.onPressed,
     this.isAvailable = false,
   });
@@ -1127,34 +730,46 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isAvailable = category.isAvailable;
+    final bool isAvailable =
+        category.isAvailable;
+
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
+    final double radius =
+        isDesktop ? 16 : 22;
 
     return AnimatedOpacity(
-      duration: const Duration(milliseconds: 200),
+      duration:
+          const Duration(milliseconds: 200),
       opacity: isAvailable ? 1 : 0.52,
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius:
+            BorderRadius.circular(radius),
         child: InkWell(
-          onTap:
-              isAvailable ? category.onPressed : null,
+          onTap: isAvailable
+              ? category.onPressed
+              : null,
           borderRadius:
-              BorderRadius.circular(22),
+              BorderRadius.circular(radius),
           child: Ink(
             decoration: BoxDecoration(
               color: AppColors.panel,
               borderRadius:
-                  BorderRadius.circular(22),
+                  BorderRadius.circular(radius),
               border: Border.all(
                 color: isAvailable
                     ? AppColors.orange
                     : AppColors.darkGrey,
-                width: isAvailable ? 1.8 : 1.2,
+                width:
+                    isAvailable ? 1.8 : 1.2,
               ),
               boxShadow: isAvailable
                   ? const [
                       BoxShadow(
-                        color: Color(0x2BFE5E02),
+                        color:
+                            Color(0x2BFE5E02),
                         blurRadius: 12,
                         spreadRadius: 0.5,
                       ),
@@ -1163,36 +778,60 @@ class _CategoryCard extends StatelessWidget {
             ),
             child: Padding(
               padding:
-                  const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 14,
+                  EdgeInsets.symmetric(
+                horizontal:
+                    isDesktop ? 12 : 14,
+                vertical:
+                    isDesktop ? 10 : 14,
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 60,
-                    height: 60,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
+                    width:
+                        isDesktop ? 58 : 60,
+                    height:
+                        isDesktop ? 58 : 60,
+                    alignment:
+                        Alignment.center,
+                    decoration:
+                        BoxDecoration(
                       color:
                           AppColors.background,
                       borderRadius:
-                          BorderRadius.circular(17),
-                      border: Border.all(
+                          BorderRadius.circular(
+                        isDesktop ? 14 : 17,
+                      ),
+                      border:
+                          Border.all(
                         color: isAvailable
                             ? AppColors.orange
                             : AppColors.darkGrey,
                         width: 1.4,
                       ),
                     ),
-                    child: Image.asset(
-                      category.imagePath,
-                      fit: BoxFit.contain,
-                      filterQuality:
-                          FilterQuality.high,
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.all(
+                        4,
+                      ),
+                      child: ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(
+                          isDesktop ? 10 : 13,
+                        ),
+                        child: Image.asset(
+                          category.imagePath,
+                          fit: BoxFit.contain,
+                          filterQuality:
+                              FilterQuality.high,
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 15),
+                  SizedBox(
+                    width:
+                        isDesktop ? 12 : 15,
+                  ),
                   Expanded(
                     child: Column(
                       crossAxisAlignment:
@@ -1204,37 +843,63 @@ class _CategoryCard extends StatelessWidget {
                           maxLines: 1,
                           overflow:
                               TextOverflow.ellipsis,
-                          style: AppTextStyles
-                              .category
-                              .copyWith(
-                            color: isAvailable
-                                ? AppColors.white
-                                : AppColors.grey,
-                            fontSize: 17,
-                            letterSpacing: 0.15,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          category.subtitle,
-                          maxLines: 2,
-                          overflow:
-                              TextOverflow.ellipsis,
                           style:
-                              AppTextStyles.body.copyWith(
+                              AppTextStyles.category
+                                  .copyWith(
                             color: isAvailable
                                 ? AppColors.white
                                 : AppColors.grey,
-                            fontSize: 12,
-                            height: 1.25,
+                            fontSize:
+                                isDesktop
+                                    ? 20
+                                    : 17,
+                            letterSpacing:
+                                0.15,
                           ),
                         ),
+                        if (category
+                            .subtitle.isNotEmpty) ...[
+                          const SizedBox(
+                            height: 4,
+                          ),
+                          Text(
+                            category.subtitle,
+                            maxLines: 2,
+                            overflow:
+                                TextOverflow.ellipsis,
+                            style:
+                                AppTextStyles.body
+                                    .copyWith(
+                              color: isAvailable
+                                  ? AppColors.white
+                                  : AppColors.grey,
+                              fontSize:
+                                  isDesktop
+                                      ? 15.5
+                                      : 13.5,
+                              height: 1.25,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  if (isAvailable)
-                    const _AvailableCategoryStatus()
+                  SizedBox(
+                    width:
+                        isDesktop ? 12 : 10,
+                  ),
+                  if (isDesktop)
+                    _DesktopCategoryCta(
+                      text:
+                          category.ctaLabel,
+                      isAvailable:
+                          isAvailable,
+                    )
+                  else if (isAvailable)
+                    _AvailableCategoryStatus(
+                      text:
+                          category.ctaLabel,
+                    )
                   else
                     const _LockedCategoryStatus(),
                 ],
@@ -1247,32 +912,84 @@ class _CategoryCard extends StatelessWidget {
   }
 }
 
-class _AvailableCategoryStatus
+class _DesktopCategoryCta
     extends StatelessWidget {
-  const _AvailableCategoryStatus();
+  final String text;
+  final bool isAvailable;
+
+  const _DesktopCategoryCta({
+    required this.text,
+    required this.isAvailable,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final bool isCompleted =
+        text == 'COMPLETED';
+
     return Container(
-      width: 92,
-      height: 48,
+      width: 118,
+      height: 44,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: const Color(0xFFFE5E02),
+        color: isAvailable
+            ? (
+                isCompleted
+                    ? AppColors.darkGrey
+                    : AppColors.orange
+              )
+            : AppColors.background,
         borderRadius:
             BorderRadius.circular(12),
-      ),
-      child: Text(
-        'PLAY',
-        textAlign: TextAlign.center,
-        style: AppTextStyles.label.copyWith(
-          color: AppColors.white,
-          fontSize: 15,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.2,
-          height: 1,
+        border: Border.all(
+          color: isAvailable
+              ? (
+                  isCompleted
+                      ? AppColors.darkGrey
+                      : AppColors.orange
+                )
+              : AppColors.darkGrey,
+          width: 1.2,
         ),
       ),
+      child: Text(
+        isAvailable ? text : 'COMING SOON',
+        maxLines: 1,
+        textAlign: TextAlign.center,
+        overflow: TextOverflow.ellipsis,
+        style: AppTextStyles.label.copyWith(
+          color: isAvailable
+              ? AppColors.white
+              : AppColors.grey,
+          fontSize: 12.5,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.1,
+        ),
+      ),
+    );
+  }
+}
+
+class _AvailableCategoryStatus
+    extends StatelessWidget {
+  const _AvailableCategoryStatus({
+    required this.text,
+  });
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isCompleted =
+        text == 'COMPLETED';
+
+    return SubcategoryStatusBadge(
+      text: text,
+      color: isCompleted
+          ? AppColors.darkGrey
+          : AppColors.orange,
+      filled: true,
+      compact: true,
     );
   }
 }
@@ -1296,7 +1013,8 @@ class _LockedCategoryStatus
           const SizedBox(height: 6),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(
+            padding:
+                const EdgeInsets.symmetric(
               horizontal: 6,
               vertical: 6,
             ),

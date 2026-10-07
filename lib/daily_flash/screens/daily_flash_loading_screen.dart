@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
@@ -13,9 +14,8 @@ class DailyFlashLoadingScreen extends StatefulWidget {
 
   const DailyFlashLoadingScreen({
     super.key,
-    this.challengeName = 'PLANETS',
-    this.challengeImagePath =
-        'assets/images/daily_flash5/planets.png',
+    this.challengeName = 'DAILY FLASH 5',
+    this.challengeImagePath = '',
     this.onChallengeFinished,
   });
 
@@ -35,6 +35,9 @@ class _DailyFlashLoadingScreenState
 
   bool _hasOpenedGame = false;
   bool _hasTechnicalError = false;
+
+  String _challengeName = '';
+  String _challengeImagePath = '';
 
   @override
   void initState() {
@@ -72,6 +75,65 @@ class _DailyFlashLoadingScreenState
     _startLoadingSequence();
   }
 
+  String _compactDateKey(String value) =>
+      value.replaceAll('-', '');
+
+  Future<void> _loadTodayClassicMetadata() async {
+    final String dateKey =
+        DailyFlashProgressService.todayKey();
+    final String compact = _compactDateKey(dateKey);
+
+    final DocumentSnapshot<Map<String, dynamic>> snapshot =
+        await FirebaseFirestore.instance
+            .collection('daily_flash_questions')
+            .doc('df_classic_${compact}_01')
+            .get();
+
+    if (!snapshot.exists) {
+      throw StateError(
+        'Missing Classic Daily Flash metadata for $dateKey.',
+      );
+    }
+
+    final Map<String, dynamic>? data = snapshot.data();
+
+    if (data == null) {
+      throw StateError(
+        'Classic Daily Flash metadata is empty for $dateKey.',
+      );
+    }
+
+    final String title =
+        (data['dailyTitle'] ?? '').toString().trim();
+    final String imagePath =
+        (data['dailyImagePath'] ?? '').toString().trim();
+    final String gameKey =
+        (data['gameKey'] ?? '').toString().trim();
+    final String storedDate =
+        (data['date'] ?? '').toString().trim();
+    final String status =
+        (data['status'] ?? '').toString().trim();
+
+    if (gameKey != 'classic' ||
+        storedDate != dateKey ||
+        status != 'live' ||
+        title.isEmpty ||
+        imagePath.isEmpty) {
+      throw StateError(
+        'Invalid Classic Daily Flash metadata for $dateKey.',
+      );
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _challengeName = title;
+      _challengeImagePath = imagePath;
+    });
+  }
+
   Future<void> _startLoadingSequence() async {
     if (_hasOpenedGame) {
       return;
@@ -84,6 +146,8 @@ class _DailyFlashLoadingScreenState
     }
 
     try {
+      await _loadTodayClassicMetadata();
+
       final bool hasSeenLoadingToday =
           await DailyFlashProgressService
               .hasSeenLoadingToday();
@@ -208,7 +272,9 @@ class _DailyFlashLoadingScreenState
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            widget.challengeName
+                            (_challengeName.isNotEmpty
+                                    ? _challengeName
+                                    : widget.challengeName)
                                 .toUpperCase(),
                             maxLines: 1,
                             textAlign: TextAlign.center,
@@ -230,7 +296,9 @@ class _DailyFlashLoadingScreenState
                         ),
                         _ChallengeArtwork(
                           imagePath:
-                              widget.challengeImagePath,
+                              _challengeImagePath.isNotEmpty
+                                  ? _challengeImagePath
+                                  : widget.challengeImagePath,
                           pulseAnimation:
                               _pulseAnimation,
                           isSmall: isSmall,
@@ -368,13 +436,14 @@ class _ChallengeArtwork extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              imagePath,
-              fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
+          if (imagePath.isNotEmpty)
+            Positioned.fill(
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+              ),
             ),
-          ),
           ScaleTransition(
             scale: pulseAnimation,
             child: SizedBox(

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../services/league_service.dart';
 import 'invite_members_screen.dart';
 import 'league_settings_screen.dart';
 
@@ -11,11 +12,13 @@ class LeagueDetailScreen extends StatefulWidget {
     required this.leagueName,
     required this.badgePath,
     required this.memberCount,
+    required this.inviteCode,
   });
 
   final String leagueName;
   final String badgePath;
   final int memberCount;
+  final String inviteCode;
 
   @override
   State<LeagueDetailScreen> createState() =>
@@ -37,92 +40,290 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
   Timer? _countdownTimer;
   Duration _timeUntilReset = Duration.zero;
 
-  final List<_LeaguePlayer> _players = const [
-    _LeaguePlayer(
-      rank: 1,
-      name: 'QuizQueen',
-      score: 5420,
-      firstGuesses: 18,
-      movement: 2,
-      avatarPath:
-          'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaguePlayer(
-      rank: 2,
-      name: 'ClueMaster',
-      score: 4980,
-      firstGuesses: 16,
-      movement: 1,
-      avatarPath:
-          'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaguePlayer(
-      rank: 3,
-      name: 'Brainiac',
-      score: 4650,
-      firstGuesses: 14,
-      movement: -1,
-      avatarPath:
-          'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaguePlayer(
-      rank: 4,
-      name: 'WordWizard',
-      score: 4210,
-      firstGuesses: 13,
-      movement: 1,
-      avatarPath:
-          'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaguePlayer(
-      rank: 5,
-      name: 'TriviaTitan',
-      score: 3870,
-      firstGuesses: 11,
-      movement: -1,
-      avatarPath:
-          'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaguePlayer(
-      rank: 6,
-      name: 'GuessGenius',
-      score: 3510,
-      firstGuesses: 10,
-      movement: 2,
-      avatarPath:
-          'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaguePlayer(
-      rank: 7,
-      name: 'YOU',
-      score: 3240,
-      firstGuesses: 9,
-      movement: 1,
-      avatarPath:
-          'assets/images/leaderboard/default_profile.webp',
-      isCurrentPlayer: true,
-    ),
-    _LeaguePlayer(
-      rank: 8,
-      name: 'PuzzlePro',
-      score: 2980,
-      firstGuesses: 8,
-      movement: -2,
-      avatarPath:
-          'assets/images/leaderboard/default_profile.webp',
-    ),
-  ];
+  List<_LeaguePlayer> _players = <_LeaguePlayer>[];
+  List<_LeaguePlayer> _dailyPlayers = <_LeaguePlayer>[];
+  List<_LeaguePlayer> _monthlyPlayers = <_LeaguePlayer>[];
+  bool _isLoadingMembers = true;
+  String? _memberLoadError;
+  late int _memberCount;
+
 
   @override
   void initState() {
     super.initState();
 
+    _memberCount = widget.memberCount;
+    _loadMembers();
     _updateCountdown();
 
     _countdownTimer = Timer.periodic(
       const Duration(seconds: 1),
       (_) => _updateCountdown(),
     );
+  }
+
+  Future<void> _loadMembers() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingMembers = true;
+        _memberLoadError = null;
+      });
+    }
+
+    try {
+      final LeagueRecord? league =
+          await LeagueService.findLeagueByInviteCode(widget.inviteCode);
+
+      if (league == null) {
+        throw const LeagueServiceException(
+          'This league could not be loaded.',
+        );
+      }
+
+      final List<LeagueMemberRecord> members =
+          await LeagueService.loadMembers(league.id);
+
+      final Iterable<String> memberIds = members.map(
+        (LeagueMemberRecord member) => member.userId,
+      );
+
+      final List<Map<String, PublicLeaderboardStatsRecord>> periodStats =
+          await Future.wait(
+        <Future<Map<String, PublicLeaderboardStatsRecord>>>[
+          LeagueService.loadPublicLeaderboardStats(memberIds),
+          LeagueService.loadDailyLeaderboardStats(memberIds),
+          LeagueService.loadMonthlyLeaderboardStats(memberIds),
+        ],
+      );
+
+      final String? currentUserId = LeagueService.currentUserId;
+
+      final List<_LeaguePlayer> allTimePlayers = _buildRankedPlayers(
+        members: members,
+        stats: periodStats[0],
+        currentUserId: currentUserId,
+      );
+
+      final List<_LeaguePlayer> dailyPlayers = _buildRankedPlayers(
+        members: members,
+        stats: periodStats[1],
+        currentUserId: currentUserId,
+      );
+
+      final List<_LeaguePlayer> monthlyPlayers = _buildRankedPlayers(
+        members: members,
+        stats: periodStats[2],
+        currentUserId: currentUserId,
+      );
+
+      final LeagueRankSnapshotRecord previousAllTimeSnapshot =
+          await LeagueService.loadAllTimeRankSnapshot(league.id);
+
+      final LeagueRankSnapshotRecord previousDailySnapshot =
+          await LeagueService.loadDailyRankSnapshot(league.id);
+
+      final LeagueRankSnapshotRecord previousMonthlySnapshot =
+          await LeagueService.loadMonthlyRankSnapshot(league.id);
+
+      final Map<String, int> currentAllTimePositions =
+          _movementPositions(allTimePlayers);
+
+      final Map<String, int> currentDailyPositions =
+          _movementPositions(dailyPlayers);
+
+      final Map<String, int> currentMonthlyPositions =
+          _movementPositions(monthlyPlayers);
+
+      final Map<String, int> allTimeMovements = _movementValues(
+        previousPositions: previousAllTimeSnapshot.ranks,
+        previousMovements: previousAllTimeSnapshot.movements,
+        currentPositions: currentAllTimePositions,
+      );
+
+      final Map<String, int> dailyMovements = _movementValues(
+        previousPositions: previousDailySnapshot.ranks,
+        previousMovements: previousDailySnapshot.movements,
+        currentPositions: currentDailyPositions,
+      );
+
+      final Map<String, int> monthlyMovements = _movementValues(
+        previousPositions: previousMonthlySnapshot.ranks,
+        previousMovements: previousMonthlySnapshot.movements,
+        currentPositions: currentMonthlyPositions,
+      );
+
+      final List<_LeaguePlayer> allTimePlayersWithMovement =
+          _applyMovementValues(
+        allTimePlayers,
+        allTimeMovements,
+      );
+
+      final List<_LeaguePlayer> dailyPlayersWithMovement =
+          _applyMovementValues(
+        dailyPlayers,
+        dailyMovements,
+      );
+
+      final List<_LeaguePlayer> monthlyPlayersWithMovement =
+          _applyMovementValues(
+        monthlyPlayers,
+        monthlyMovements,
+      );
+
+      await Future.wait(<Future<void>>[
+        LeagueService.saveAllTimeRankSnapshot(
+          league.id,
+          ranks: currentAllTimePositions,
+          movements: allTimeMovements,
+        ),
+        LeagueService.saveDailyRankSnapshot(
+          league.id,
+          ranks: currentDailyPositions,
+          movements: dailyMovements,
+        ),
+        LeagueService.saveMonthlyRankSnapshot(
+          league.id,
+          ranks: currentMonthlyPositions,
+          movements: monthlyMovements,
+        ),
+      ]);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _players = allTimePlayersWithMovement;
+        _dailyPlayers = dailyPlayersWithMovement;
+        _monthlyPlayers = monthlyPlayersWithMovement;
+        _memberCount = members.length;
+        _isLoadingMembers = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _memberLoadError = 'League members could not be loaded.';
+        _isLoadingMembers = false;
+      });
+    }
+  }
+
+  List<_LeaguePlayer> _buildRankedPlayers({
+    required List<LeagueMemberRecord> members,
+    required Map<String, PublicLeaderboardStatsRecord> stats,
+    required String? currentUserId,
+  }) {
+    final List<_LeaguePlayer> players = members.map(
+      (LeagueMemberRecord member) {
+        final PublicLeaderboardStatsRecord? memberStats =
+            stats[member.userId];
+
+        return _LeaguePlayer(
+          userId: member.userId,
+          rank: 0,
+          name: member.displayName,
+          score: memberStats?.totalScore,
+          firstGuesses: memberStats?.firstGuesses,
+          movement: null,
+          avatarPath: member.avatarPath,
+          isCurrentPlayer: member.userId == currentUserId,
+        );
+      },
+    ).toList();
+
+    players.sort((_LeaguePlayer a, _LeaguePlayer b) {
+      final int? aScore = a.score;
+      final int? bScore = b.score;
+
+      if (aScore == null && bScore == null) {
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      }
+      if (aScore == null) {
+        return 1;
+      }
+      if (bScore == null) {
+        return -1;
+      }
+
+      final int scoreComparison = bScore.compareTo(aScore);
+      if (scoreComparison != 0) {
+        return scoreComparison;
+      }
+
+      final int firstGuessComparison =
+          (b.firstGuesses ?? 0).compareTo(a.firstGuesses ?? 0);
+      if (firstGuessComparison != 0) {
+        return firstGuessComparison;
+      }
+
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+
+    int nextRank = 1;
+
+    return players.map(
+      (_LeaguePlayer player) {
+        final int rank = player.score == null ? 0 : nextRank++;
+        return player.copyWith(rank: rank);
+      },
+    ).toList();
+  }
+
+  Map<String, int> _movementPositions(
+    List<_LeaguePlayer> players,
+  ) {
+    return <String, int>{
+      for (int index = 0; index < players.length; index++)
+        players[index].userId: index + 1,
+    };
+  }
+
+  Map<String, int> _movementValues({
+    required Map<String, int> previousPositions,
+    required Map<String, int> previousMovements,
+    required Map<String, int> currentPositions,
+  }) {
+    final Map<String, int> movements = <String, int>{};
+
+    currentPositions.forEach((String userId, int currentPosition) {
+      final int? previousPosition = previousPositions[userId];
+
+      if (previousPosition == null) {
+        final int? previousMovement = previousMovements[userId];
+        if (previousMovement != null) {
+          movements[userId] = previousMovement;
+        }
+        return;
+      }
+
+      final int difference = previousPosition - currentPosition;
+
+      if (difference != 0) {
+        movements[userId] = difference;
+        return;
+      }
+
+      final int? previousMovement = previousMovements[userId];
+      if (previousMovement != null && previousMovement != 0) {
+        movements[userId] = previousMovement;
+      }
+    });
+
+    return movements;
+  }
+
+  List<_LeaguePlayer> _applyMovementValues(
+    List<_LeaguePlayer> players,
+    Map<String, int> movements,
+  ) {
+    return players.map(
+      (_LeaguePlayer player) => player.copyWith(
+        movement: movements[player.userId],
+      ),
+    ).toList();
   }
 
   @override
@@ -201,6 +402,9 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Scaffold(
       backgroundColor: _background,
       body: SafeArea(
@@ -209,43 +413,62 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
             _buildHeader(context),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  14,
+                padding: EdgeInsets.fromLTRB(
+                  isDesktop ? 24 : 14,
                   8,
-                  14,
+                  isDesktop ? 24 : 14,
                   28,
                 ),
-                child: Column(
-                  children: [
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth:
+                          isDesktop ? 1200 : double.infinity,
+                    ),
+                    child: Column(
+                      children: [
                     _buildLeagueIdentity(),
-                    const SizedBox(height: 16),
+                    SizedBox(height: isDesktop ? 10 : 16),
                     _buildPeriodTabs(),
                     if (_periodTab != 0) ...[
-                      const SizedBox(height: 10),
+                      SizedBox(height: isDesktop ? 8 : 10),
                       _buildResetCountdown(),
                     ],
-                    const SizedBox(height: 18),
-                    _buildPodium(),
-                    const SizedBox(height: 12),
-                    _buildTableHeader(),
-                    const SizedBox(height: 6),
-                    ..._players.skip(3).map(
-                          (player) => Padding(
-                            padding:
-                                const EdgeInsets.only(
-                              bottom: 6,
-                            ),
-                            child:
-                                _buildPlayerRow(
-                              player,
-                            ),
+                    SizedBox(height: isDesktop ? 10 : 18),
+                    if (_isLoadingMembers)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 38),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: _orange,
                           ),
                         ),
-                    const SizedBox(height: 12),
-                    _buildInviteButton(context),
-                    const SizedBox(height: 12),
-                    _buildLegend(),
-                  ],
+                      )
+                    else if (_memberLoadError != null)
+                      _buildMemberLoadError()
+                    else if (_players.isEmpty)
+                      _buildEmptyMembers()
+                    else ...[
+                      if (_hasLiveScores) ...[
+                        _buildPodium(),
+                        SizedBox(height: isDesktop ? 8 : 12),
+                      ],
+                      _buildTableHeader(),
+                      const SizedBox(height: 6),
+                      ..._visiblePlayers.map(
+                        (player) => Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 6,
+                          ),
+                          child: _buildPlayerRow(
+                            player,
+                          ),
+                        ),
+                      ),
+                    ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -314,13 +537,16 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
   }
 
   Widget _buildLeagueIdentity() {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        14,
-        14,
-        14,
-        14,
+      padding: EdgeInsets.fromLTRB(
+        isDesktop ? 12 : 14,
+        isDesktop ? 10 : 14,
+        isDesktop ? 12 : 14,
+        isDesktop ? 10 : 14,
       ),
       decoration: BoxDecoration(
         color: const Color(0xFF0D0A09),
@@ -339,12 +565,14 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 122,
-            height: 122,
+            width: isDesktop ? 86 : 122,
+            height: isDesktop ? 86 : 122,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: Colors.black,
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(
+                isDesktop ? 20 : 26,
+              ),
               border: Border.all(
                 color: _orange,
                 width: 1.4,
@@ -362,7 +590,7 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
               filterQuality: FilterQuality.high,
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: isDesktop ? 12 : 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,27 +599,27 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
                   widget.leagueName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Oswald',
                     color: Colors.white,
-                    fontSize: 28,
+                    fontSize: isDesktop ? 24 : 28,
                     fontWeight: FontWeight.w600,
                     height: 1,
                     letterSpacing: 0.2,
                   ),
                 ),
-                const SizedBox(height: 5),
-                const Text(
+                SizedBox(height: isDesktop ? 3 : 5),
+                Text(
                   'LEAGUE',
                   style: TextStyle(
                     fontFamily: 'Oswald',
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: isDesktop ? 13 : 16,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 1.4,
                   ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: isDesktop ? 6 : 10),
                 Row(
                   children: [
                     const Icon(
@@ -401,7 +629,7 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '${widget.memberCount} MEMBERS',
+                      '$_memberCount ${_memberCount == 1 ? 'MEMBER' : 'MEMBERS'}',
                       style: const TextStyle(
                         fontFamily: 'Oswald',
                         color: Colors.white,
@@ -409,11 +637,43 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      height: 30,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _openInviteMembers(context),
+                        icon: const Icon(
+                          Icons.person_add_alt_1_rounded,
+                          size: 15,
+                        ),
+                        label: const Text('INVITE'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _orange,
+                          side: const BorderSide(
+                            color: _orange,
+                            width: 1.2,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 0,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          textStyle: const TextStyle(
+                            fontFamily: 'Oswald',
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.25,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: isDesktop ? 6 : 10),
                 const Text(
-                  'Better clues. Tougher guesses.\nA smarter pack.',
+                  'Better clues. Tougher guesses. A smarter pack.',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 11.5,
@@ -547,40 +807,64 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
     );
   }
 
+  List<_LeaguePlayer> get _playersForSelectedPeriod {
+    switch (_periodTab) {
+      case 1:
+        return _dailyPlayers;
+      case 2:
+        return _monthlyPlayers;
+      default:
+        return _players;
+    }
+  }
+
+  bool get _hasLiveScores =>
+      _playersForSelectedPeriod.length >= 3 &&
+      _playersForSelectedPeriod.take(3).every(
+        (_LeaguePlayer player) => player.score != null,
+      );
+
+  List<_LeaguePlayer> get _visiblePlayers => _hasLiveScores
+      ? _playersForSelectedPeriod.skip(3).toList()
+      : _playersForSelectedPeriod;
+
   Widget _buildPodium() {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return SizedBox(
-      height: 245,
+      height: isDesktop ? 258 : 245,
       child: Row(
         crossAxisAlignment:
             CrossAxisAlignment.end,
         children: [
           Expanded(
             child: _buildPodiumPlayer(
-              _players[1],
+              _playersForSelectedPeriod[1],
               position: 2,
               crownPath:
                   'assets/images/leaderboard/crown_silver.webp',
-              height: 214,
+              height: isDesktop ? 224 : 214,
               avatarSize: 62,
             ),
           ),
           Expanded(
             child: _buildPodiumPlayer(
-              _players[0],
+              _playersForSelectedPeriod[0],
               position: 1,
               crownPath:
                   'assets/images/leaderboard/crown_gold.webp',
-              height: 243,
+              height: isDesktop ? 253 : 243,
               avatarSize: 76,
             ),
           ),
           Expanded(
             child: _buildPodiumPlayer(
-              _players[2],
+              _playersForSelectedPeriod[2],
               position: 3,
               crownPath:
                   'assets/images/leaderboard/crown_bronze.webp',
-              height: 208,
+              height: isDesktop ? 218 : 208,
               avatarSize: 60,
             ),
           ),
@@ -694,7 +978,7 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
           const SizedBox(height: 2),
           Text(
             _formatScore(
-              player.score,
+              player.score ?? 0,
             ),
             style: TextStyle(
               fontFamily: 'Oswald',
@@ -719,7 +1003,7 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
               ),
               const SizedBox(width: 3),
               Text(
-                '${player.firstGuesses}',
+                '${player.firstGuesses ?? 0}',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 11.5,
@@ -829,7 +1113,7 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
           SizedBox(
             width: 28,
             child: Text(
-              '${player.rank}',
+              player.rank <= 0 || player.score == null ? '—' : '${player.rank}',
               textAlign:
                   TextAlign.center,
               style: TextStyle(
@@ -865,9 +1149,11 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
           SizedBox(
             width: 68,
             child: Text(
-              _formatScore(
-                player.score,
-              ),
+              player.score == null
+                  ? '—'
+                  : _formatScore(
+                      player.score!,
+                    ),
               textAlign:
                   TextAlign.right,
               style: const TextStyle(
@@ -892,7 +1178,9 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
                 ),
                 const SizedBox(width: 3),
                 Text(
-                  '${player.firstGuesses}',
+                  player.firstGuesses == null
+                      ? '—'
+                      : '${player.firstGuesses}',
                   style:
                       const TextStyle(
                     color: Colors.white,
@@ -939,8 +1227,19 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
   }
 
   Widget _buildMovement(
-    int movement,
+    int? movement,
   ) {
+    if (movement == null) {
+      return const Center(
+        child: Text(
+          '—',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+          ),
+        ),
+      );
+    }
     if (movement > 0) {
       return Row(
         mainAxisAlignment:
@@ -1000,77 +1299,92 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
     );
   }
 
-  Widget _buildInviteButton(
-    BuildContext context,
-  ) {
-    return SizedBox(
+  Widget _buildMemberLoadError() {
+    return Container(
       width: double.infinity,
-      height: 52,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (context) {
-                return InviteMembersScreen(
-                  leagueName: widget.leagueName,
-                  badgePath: widget.badgePath,
-                  memberCount: widget.memberCount,
-                );
-              },
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
+      decoration: BoxDecoration(
+        color: _panel,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: _border,
+        ),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            color: _orange,
+            size: 30,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _memberLoadError ?? 'League members could not be loaded.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12.5,
             ),
-          );
-        },
-        icon: const Icon(
-          Icons.person_add_alt_1_rounded,
-          size: 21,
-        ),
-        label: const Text(
-          'INVITE MEMBERS',
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _orange,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
           ),
-          textStyle: const TextStyle(
-            fontFamily: 'Oswald',
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.25,
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: _loadMembers,
+            icon: const Icon(
+              Icons.refresh_rounded,
+              size: 18,
+            ),
+            label: const Text('TRY AGAIN'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: const BorderSide(
+                color: _orange,
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildLegend() {
+  Widget _buildEmptyMembers() {
     return Container(
       width: double.infinity,
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
       decoration: BoxDecoration(
         color: _panel,
-        borderRadius:
-            BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: _border,
         ),
       ),
       child: const Text(
-        '⭐ First Guess = answered correctly on the first clue   •   ↑↓ Change = leaderboard places moved',
+        'No league members found.',
         textAlign: TextAlign.center,
         style: TextStyle(
           color: Colors.white,
-          fontSize: 10.5,
-          height: 1.4,
+          fontSize: 12.5,
         ),
       ),
     );
   }
+
+  void _openInviteMembers(
+    BuildContext context,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) {
+          return InviteMembersScreen(
+            leagueName: widget.leagueName,
+            badgePath: widget.badgePath,
+            memberCount: _memberCount,
+            inviteCode: widget.inviteCode,
+          );
+        },
+      ),
+    );
+  }
+
 
   String _formatScore(
     int value,
@@ -1099,8 +1413,11 @@ class _LeagueDetailScreenState extends State<LeagueDetailScreen> {
   }
 }
 
+const Object _unsetLeaguePlayerValue = Object();
+
 class _LeaguePlayer {
   const _LeaguePlayer({
+    required this.userId,
     required this.rank,
     required this.name,
     required this.score,
@@ -1110,11 +1427,45 @@ class _LeaguePlayer {
     this.isCurrentPlayer = false,
   });
 
+
+  _LeaguePlayer copyWith({
+    String? userId,
+    int? rank,
+    String? name,
+    Object? score = _unsetLeaguePlayerValue,
+    Object? firstGuesses = _unsetLeaguePlayerValue,
+    Object? movement = _unsetLeaguePlayerValue,
+    String? avatarPath,
+    bool? isCurrentPlayer,
+  }) {
+    return _LeaguePlayer(
+      userId: userId ?? this.userId,
+      rank: rank ?? this.rank,
+      name: name ?? this.name,
+      score: identical(score, _unsetLeaguePlayerValue)
+          ? this.score
+          : score as int?,
+      firstGuesses: identical(
+        firstGuesses,
+        _unsetLeaguePlayerValue,
+      )
+          ? this.firstGuesses
+          : firstGuesses as int?,
+      movement: identical(movement, _unsetLeaguePlayerValue)
+          ? this.movement
+          : movement as int?,
+      avatarPath: avatarPath ?? this.avatarPath,
+      isCurrentPlayer:
+          isCurrentPlayer ?? this.isCurrentPlayer,
+    );
+  }
+
+  final String userId;
   final int rank;
   final String name;
-  final int score;
-  final int firstGuesses;
-  final int movement;
+  final int? score;
+  final int? firstGuesses;
+  final int? movement;
   final String avatarPath;
   final bool isCurrentPlayer;
 }

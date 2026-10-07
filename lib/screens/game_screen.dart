@@ -8,6 +8,9 @@ import '../case_files/models/gameplay_result_event.dart';
 import '../case_files/services/case_path_service.dart';
 import '../models/quiz_item.dart';
 import '../services/firebase_challenge_service.dart';
+import '../services/achievement_service.dart';
+import '../services/analytics_service.dart';
+import '../services/content_consumption_service.dart';
 import '../services/player_stats_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/clue_panel.dart';
@@ -15,6 +18,7 @@ import '../widgets/game_dialogs.dart';
 import '../widgets/app_home_button.dart';
 import '../widgets/guess_panel.dart';
 import '../widgets/lives_display.dart';
+import '../widgets/milestone_reached_dialog.dart';
 import '../widgets/reveal_image_panel.dart';
 import '../widgets/silhouette_panel.dart';
 import '../widgets/stats_panel.dart';
@@ -44,6 +48,8 @@ class GameScreen extends StatefulWidget {
   final bool launchedFromSurpriseMe;
   final bool showSurpriseToast;
   final bool launchedFromCaseFile;
+  final bool caseFileReplay;
+  final String? subcategoryTitle;
 
   const GameScreen.capitalCities({
     super.key,
@@ -52,7 +58,9 @@ class GameScreen extends StatefulWidget {
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
-  }) : gameType = QuizGameType.capitalCities;
+    this.caseFileReplay = false,
+  }) : gameType = QuizGameType.capitalCities,
+       subcategoryTitle = null;
 
   const GameScreen.countrySilhouettes({
     super.key,
@@ -61,7 +69,9 @@ class GameScreen extends StatefulWidget {
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
-  }) : gameType = QuizGameType.countrySilhouettes;
+    this.caseFileReplay = false,
+  }) : gameType = QuizGameType.countrySilhouettes,
+       subcategoryTitle = null;
 
   const GameScreen.currencies({
     super.key,
@@ -70,7 +80,9 @@ class GameScreen extends StatefulWidget {
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
-  }) : gameType = QuizGameType.currencies;
+    this.caseFileReplay = false,
+  }) : gameType = QuizGameType.currencies,
+       subcategoryTitle = null;
 
   const GameScreen.majorCities({
     super.key,
@@ -79,7 +91,9 @@ class GameScreen extends StatefulWidget {
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
-  }) : gameType = QuizGameType.majorCities;
+    this.caseFileReplay = false,
+  }) : gameType = QuizGameType.majorCities,
+       subcategoryTitle = null;
 
   const GameScreen.birds({
     super.key,
@@ -88,7 +102,9 @@ class GameScreen extends StatefulWidget {
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
-  }) : gameType = QuizGameType.birds;
+    this.caseFileReplay = false,
+  }) : gameType = QuizGameType.birds,
+       subcategoryTitle = null;
 
   const GameScreen.dinosaurs({
     super.key,
@@ -97,7 +113,9 @@ class GameScreen extends StatefulWidget {
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
-  }) : gameType = QuizGameType.dinosaurs;
+    this.caseFileReplay = false,
+  }) : gameType = QuizGameType.dinosaurs,
+       subcategoryTitle = null;
 
   const GameScreen.breakfastFoods({
     super.key,
@@ -106,7 +124,9 @@ class GameScreen extends StatefulWidget {
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
-  }) : gameType = QuizGameType.breakfastFoods;
+    this.caseFileReplay = false,
+  }) : gameType = QuizGameType.breakfastFoods,
+       subcategoryTitle = null;
 
   const GameScreen.dessertsCakesSweets({
     super.key,
@@ -115,7 +135,9 @@ class GameScreen extends StatefulWidget {
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
-  }) : gameType = QuizGameType.dessertsCakesSweets;
+    this.caseFileReplay = false,
+  }) : gameType = QuizGameType.dessertsCakesSweets,
+       subcategoryTitle = null;
 
 
   const GameScreen.firebaseDynamic({
@@ -125,6 +147,8 @@ class GameScreen extends StatefulWidget {
     this.launchedFromSurpriseMe = false,
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
+    this.caseFileReplay = false,
+    this.subcategoryTitle,
   }) : gameType = QuizGameType.firebaseDynamic;
 
   bool get isFlagGame =>
@@ -206,6 +230,11 @@ class GameScreen extends StatefulWidget {
       case QuizGameType.firebaseDynamic:
         if (launchedFromSurpriseMe) {
           return 'SURPRISE ME';
+        }
+
+        final String? explicitTitle = subcategoryTitle?.trim();
+        if (explicitTitle != null && explicitTitle.isNotEmpty) {
+          return explicitTitle.toUpperCase();
         }
 
         final String id = _representativeQuestionId;
@@ -384,7 +413,6 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   static const int clueDurationMilliseconds = 14000;
-  static const int timerUpdateMilliseconds = 100;
   static const int maximumLives = 3;
 
   static const Duration surpriseToastDisplayDuration =
@@ -441,11 +469,6 @@ class _GameScreenState extends State<GameScreen> {
 
   bool get isLastClue =>
       currentClueIndex >= currentItem.clues.length - 1;
-
-  double get timerProgress {
-    return (millisecondsRemaining / clueDurationMilliseconds)
-        .clamp(0.0, 1.0);
-  }
 
   int get roundPlayTimeSeconds {
     return DateTime.now()

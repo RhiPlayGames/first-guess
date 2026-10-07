@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/quiz_item.dart';
 
@@ -33,6 +34,54 @@ class FirebaseSurpriseSelection {
 
 class FirebaseChallengeService {
   FirebaseChallengeService._();
+
+  static final Map<String, Future<String>> _imageUrlCache =
+      <String, Future<String>>{};
+
+  static final Map<
+      String,
+      Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>>
+      _liveCategoryDocumentCache =
+      <String, Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>>{};
+
+  static final Map<String, Future<List<QuizItem>>> _liveSubcategoryItemsCache =
+      <String, Future<List<QuizItem>>>{};
+
+  static Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
+      loadLiveCategoryDocuments({
+    required String category,
+    bool forceRefresh = false,
+  }) {
+    if (forceRefresh) {
+      _liveCategoryDocumentCache.remove(category);
+    }
+
+    return _liveCategoryDocumentCache.putIfAbsent(
+      category,
+      () async {
+        try {
+          final QuerySnapshot<Map<String, dynamic>> snapshot =
+              await FirebaseFirestore.instance
+                  .collection('challenges')
+                  .where('category', isEqualTo: category)
+                  .where('status', isEqualTo: 'live')
+                  .get();
+
+          return List<QueryDocumentSnapshot<Map<String, dynamic>>>.unmodifiable(
+            snapshot.docs,
+          );
+        } catch (_) {
+          _liveCategoryDocumentCache.remove(category);
+          rethrow;
+        }
+      },
+    );
+  }
+
+  static void clearSessionChallengeCache() {
+    _liveCategoryDocumentCache.clear();
+    _liveSubcategoryItemsCache.clear();
+  }
 
   static const Set<String> _surpriseExcludedCategories = <String>{
     'daily_flash',
@@ -99,9 +148,7 @@ class FirebaseChallengeService {
     }).toList();
 
     if (candidates.isEmpty) {
-      candidates = List<QueryDocumentSnapshot<Map<String, dynamic>>>.from(
-        eligible,
-      );
+      return null;
     }
 
     if (previousGroupKey != null && candidates.length > 1) {
@@ -140,6 +187,79 @@ class FirebaseChallengeService {
     return FirebaseSurpriseSelection(
       category: category,
       subcategory: subcategory,
+      item: item,
+    );
+  }
+
+  static Future<FirebaseSurpriseSelection?>
+      loadRandomLiveCategorySurpriseQuestion({
+    required String category,
+    required Set<String> playedQuestionIds,
+  }) async {
+    if (_surpriseExcludedCategories.contains(category)) {
+      return null;
+    }
+
+    final List<QueryDocumentSnapshot<Map<String, dynamic>>> documents =
+        await loadLiveCategoryDocuments(
+      category: category,
+    );
+
+    if (documents.isEmpty) {
+      return null;
+    }
+
+    final List<QueryDocumentSnapshot<Map<String, dynamic>>> eligible =
+        documents.where((document) {
+      final Map<String, dynamic> data = document.data();
+      final String? documentCategory = _readString(data['category']);
+      final String? subcategory = _readString(data['subcategory']);
+      final String questionId =
+          _readString(data['questionId']) ?? document.id;
+
+      return documentCategory == category &&
+          subcategory != null &&
+          questionId.isNotEmpty;
+    }).toList(growable: false);
+
+    if (eligible.isEmpty) {
+      return null;
+    }
+
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> candidates =
+        eligible.where((document) {
+      final Map<String, dynamic> data = document.data();
+      final String questionId =
+          _readString(data['questionId']) ?? document.id;
+
+      return !playedQuestionIds.contains(questionId);
+    }).toList();
+
+    if (candidates.isEmpty) {
+      candidates =
+          List<QueryDocumentSnapshot<Map<String, dynamic>>>.from(eligible);
+    }
+
+    final Random random = Random();
+    final QueryDocumentSnapshot<Map<String, dynamic>> selectedDocument =
+        candidates[random.nextInt(candidates.length)];
+
+    final Map<String, dynamic> selectedData = selectedDocument.data();
+    final String? selectedCategory =
+        _readString(selectedData['category']);
+    final String? selectedSubcategory =
+        _readString(selectedData['subcategory']);
+
+    if (selectedCategory == null || selectedSubcategory == null) {
+      return null;
+    }
+
+    final QuizItem item =
+        await _quizItemFromDocument(selectedDocument);
+
+    return FirebaseSurpriseSelection(
+      category: selectedCategory,
+      subcategory: selectedSubcategory,
       item: item,
     );
   }
@@ -185,9 +305,12 @@ class FirebaseChallengeService {
         in documentsBySubcategory.entries) {
       final List<String> keyParts = entry.key.split('::');
 
-      final List<QuizItem> items = await Future.wait(
-        entry.value.map(_quizItemFromDocument),
+      final List<QuizItem?> loadedItems = await Future.wait(
+        entry.value.map(_safeQuizItemFromDocument),
       );
+
+      final List<QuizItem> items =
+          loadedItems.whereType<QuizItem>().toList();
 
       items.sort(
         (QuizItem first, QuizItem second) {
@@ -233,29 +356,81 @@ class FirebaseChallengeService {
   static Future<List<QuizItem>> loadLiveSubcategory({
     required String category,
     required String subcategory,
-  }) async {
-    final QuerySnapshot<Map<String, dynamic>> snapshot =
-        await FirebaseFirestore.instance
-            .collection('challenges')
-            .where('category', isEqualTo: category)
-            .where('subcategory', isEqualTo: subcategory)
-            .where('status', isEqualTo: 'live')
-            .get();
+    bool forceRefresh = false,
+  }) {
+    final String cacheKey = '$category::$subcategory';
 
-    final List<QuizItem> items = await Future.wait(
-      snapshot.docs.map(_quizItemFromDocument),
-    );
+    if (forceRefresh) {
+      _liveSubcategoryItemsCache.remove(cacheKey);
+    }
 
-    items.sort(
-      (QuizItem first, QuizItem second) {
-        final String firstId = first.id ?? '';
-        final String secondId = second.id ?? '';
+    return _liveSubcategoryItemsCache.putIfAbsent(
+      cacheKey,
+      () async {
+        try {
+          final List<QueryDocumentSnapshot<Map<String, dynamic>>> docs;
 
-        return firstId.compareTo(secondId);
+          final Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>?
+              cachedCategoryFuture = _liveCategoryDocumentCache[category];
+
+          if (cachedCategoryFuture != null) {
+            final List<QueryDocumentSnapshot<Map<String, dynamic>>> categoryDocs =
+                await cachedCategoryFuture;
+
+            docs = categoryDocs.where((document) {
+              final String? documentSubcategory =
+                  _readString(document.data()['subcategory']);
+              return documentSubcategory == subcategory;
+            }).toList(growable: false);
+          } else {
+            final QuerySnapshot<Map<String, dynamic>> snapshot =
+                await FirebaseFirestore.instance
+                    .collection('challenges')
+                    .where('category', isEqualTo: category)
+                    .where('subcategory', isEqualTo: subcategory)
+                    .where('status', isEqualTo: 'live')
+                    .get();
+
+            docs = snapshot.docs;
+          }
+
+          final List<QuizItem?> loadedItems = await Future.wait(
+            docs.map(_safeQuizItemFromDocument),
+          );
+
+          final List<QuizItem> items =
+              loadedItems.whereType<QuizItem>().toList();
+
+          items.sort(
+            (QuizItem first, QuizItem second) {
+              final String firstId = first.id ?? '';
+              final String secondId = second.id ?? '';
+
+              return firstId.compareTo(secondId);
+            },
+          );
+
+          return List<QuizItem>.unmodifiable(items);
+        } catch (_) {
+          _liveSubcategoryItemsCache.remove(cacheKey);
+          rethrow;
+        }
       },
     );
+  }
 
-    return items;
+  static Future<QuizItem?> _safeQuizItemFromDocument(
+    QueryDocumentSnapshot<Map<String, dynamic>> document,
+  ) async {
+    try {
+      return await _quizItemFromDocument(document);
+    } catch (error, stackTrace) {
+      debugPrint(
+        'SKIPPING INVALID FIREBASE CHALLENGE ${document.id}: $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      return null;
+    }
   }
 
   static Future<QuizItem> _quizItemFromDocument(
@@ -316,24 +491,29 @@ class FirebaseChallengeService {
 
   static Future<String> _resolveImagePath(
     String imagePath,
-  ) async {
+  ) {
     final Uri? uri = Uri.tryParse(imagePath);
 
     if (uri != null &&
         (uri.scheme == 'http' || uri.scheme == 'https')) {
-      return imagePath;
+      return Future<String>.value(imagePath);
     }
 
-    if (imagePath.startsWith('gs://')) {
-      return FirebaseStorage.instance
-          .refFromURL(imagePath)
-          .getDownloadURL();
-    }
+    return _imageUrlCache.putIfAbsent(
+      imagePath,
+      () {
+        if (imagePath.startsWith('gs://')) {
+          return FirebaseStorage.instance
+              .refFromURL(imagePath)
+              .getDownloadURL();
+        }
 
-    return FirebaseStorage.instance
-        .ref()
-        .child(imagePath)
-        .getDownloadURL();
+        return FirebaseStorage.instance
+            .ref()
+            .child(imagePath)
+            .getDownloadURL();
+      },
+    );
   }
 
   static String? _readString(dynamic value) {

@@ -9,11 +9,13 @@ class InviteMembersScreen extends StatelessWidget {
     required this.leagueName,
     required this.badgePath,
     required this.memberCount,
+    required this.inviteCode,
   });
 
   final String leagueName;
   final String badgePath;
   final int memberCount;
+  final String inviteCode;
 
   static const Color _orange = Color(0xFFFE5E02);
   static const Color _background = Color(0xFF050505);
@@ -21,20 +23,8 @@ class InviteMembersScreen extends StatelessWidget {
   static const Color _panelLight = Color(0xFF181818);
   static const Color _border = Color(0xFF343434);
 
-  String get _inviteCode {
-    final String cleaned = leagueName
-        .toUpperCase()
-        .replaceAll(RegExp(r'[^A-Z0-9]'), '');
-
-    final String prefix = cleaned.isEmpty
-        ? 'LEAGUE'
-        : (cleaned.length > 7 ? cleaned.substring(0, 7) : cleaned);
-
-    return '${prefix}24';
-  }
-
   String get _inviteLink =>
-      'https://rhiplaygames.github.io/first-guess/join/$_inviteCode';
+      'https://rhiplaygames.github.io/first-guess/join/$inviteCode';
 
   Future<void> _copyText(
     BuildContext context,
@@ -239,7 +229,7 @@ class InviteMembersScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 5),
                     Text(
-                      '$memberCount MEMBERS',
+                      '$memberCount ${memberCount == 1 ? 'MEMBER' : 'MEMBERS'}',
                       style: const TextStyle(
                         fontFamily: 'Oswald',
                         color: Colors.white,
@@ -312,7 +302,7 @@ class InviteMembersScreen extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              _inviteCode,
+              inviteCode,
               style: const TextStyle(
                 fontFamily: 'Oswald',
                 color: Colors.white,
@@ -329,7 +319,7 @@ class InviteMembersScreen extends StatelessWidget {
             onPressed: () {
               _copyText(
                 context,
-                _inviteCode,
+                inviteCode,
                 'Invite code copied.',
               );
             },
@@ -454,7 +444,7 @@ class InviteMembersScreen extends StatelessWidget {
           SizedBox(width: 9),
           Expanded(
             child: Text(
-              'Only players with your invite code or invite link can join this private league. Real codes and links will be generated when Firebase is connected.',
+              'Only players with your invite code or invite link can join this private league.',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 11.5,

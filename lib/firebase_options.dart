@@ -60,13 +60,14 @@ class DefaultFirebaseOptions {
     projectId: 'first-guess-a18b1',
     storageBucket: 'first-guess-a18b1.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDTqa8h_7RmQXLrlUfzqRprmPer5zcryaU',
     appId: '1:752908982581:ios:8935ad68ae6e131def547c',
     messagingSenderId: '752908982581',
     projectId: 'first-guess-a18b1',
     storageBucket: 'first-guess-a18b1.firebasestorage.app',
+    androidClientId: '752908982581-45d2ptchpq28si13mgjvva29mg0f2fmr.apps.googleusercontent.com',
+    iosClientId: '752908982581-klhove7ulg15i9hvgtt0usb3fj35c1nd.apps.googleusercontent.com',
     iosBundleId: 'com.example.firstGuess',
   );
 

@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 
+import '../../services/analytics_service.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_home_button.dart';
 import '../models/case_progress.dart';
@@ -8,6 +9,9 @@ import 'animal_kingdom_case_path_screen.dart';
 import 'round_the_world_case_path_screen.dart';
 import 'secrets_of_the_past_case_path_screen.dart';
 import 'taste_and_treats_case_path_screen.dart';
+import 'nature_of_discovery_case_path_screen.dart';
+import 'the_written_word_case_path_screen.dart';
+import 'the_creative_code_case_path_screen.dart';
 
 class CaseFilesHomeScreen extends StatefulWidget {
   const CaseFilesHomeScreen({super.key});
@@ -23,6 +27,9 @@ class _CaseFilesHomeScreenState
   CaseProgress? _roundTheWorldProgress;
   CaseProgress? _secretsOfThePastProgress;
   CaseProgress? _tasteAndTreatsProgress;
+  CaseProgress? _natureOfDiscoveryProgress;
+  CaseProgress? _theWrittenWordProgress;
+  CaseProgress? _theCreativeCodeProgress;
 
   @override
   void initState() {
@@ -31,6 +38,9 @@ class _CaseFilesHomeScreenState
     _loadRoundTheWorldProgress();
     _loadSecretsOfThePastProgress();
     _loadTasteAndTreatsProgress();
+    _loadNatureOfDiscoveryProgress();
+    _loadTheWrittenWordProgress();
+    _loadTheCreativeCodeProgress();
   }
 
   Future<void> _loadAnimalKingdomProgress() async {
@@ -150,6 +160,16 @@ class _CaseFilesHomeScreenState
   }
 
   Future<void> _openRoundTheWorldCase() async {
+    await AnalyticsService.logCaseFileStarted(
+      caseKey: 'around_the_world',
+      caseName: 'Around the World',
+      resume: _roundTheWorldStarted,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) =>
@@ -165,6 +185,16 @@ class _CaseFilesHomeScreenState
   }
 
   Future<void> _openAnimalKingdomCase() async {
+    await AnalyticsService.logCaseFileStarted(
+      caseKey: 'animal_kingdom',
+      caseName: 'Animal Kingdom',
+      resume: _animalKingdomStarted,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) =>
@@ -238,6 +268,16 @@ class _CaseFilesHomeScreenState
   }
 
   Future<void> _openSecretsOfThePastCase() async {
+    await AnalyticsService.logCaseFileStarted(
+      caseKey: 'secrets_of_the_past',
+      caseName: 'Secrets of the Past',
+      resume: _secretsOfThePastStarted,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) =>
@@ -311,6 +351,16 @@ class _CaseFilesHomeScreenState
   }
 
   Future<void> _openTasteAndTreatsCase() async {
+    await AnalyticsService.logCaseFileStarted(
+      caseKey: 'taste_and_treats',
+      caseName: 'Tastes & Treats',
+      resume: _tasteAndTreatsStarted,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) =>
@@ -325,87 +375,441 @@ class _CaseFilesHomeScreenState
     await _loadTasteAndTreatsProgress();
   }
 
+  Future<void> _loadNatureOfDiscoveryProgress() async {
+    try {
+      final CaseProgress progress =
+          await CasePathService.loadNatureOfDiscoveryProgress();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _natureOfDiscoveryProgress = progress;
+      });
+    } catch (_) {
+      // Keep the card usable if progress cannot be loaded.
+    }
+  }
+
+  bool get _natureOfDiscoveryStarted {
+    final CaseProgress? progress = _natureOfDiscoveryProgress;
+
+    if (progress == null) {
+      return false;
+    }
+
+    final stage = progress.currentStageProgress;
+
+    return progress.completedStageCount > 0 ||
+        stage.correctCount > 0 ||
+        stage.clueThresholdCount > 0 ||
+        stage.firstGuessCount > 0;
+  }
+
+  String get _natureOfDiscoveryStatus {
+    final CaseProgress? progress = _natureOfDiscoveryProgress;
+
+    if (progress == null) {
+      return 'CASE 1';
+    }
+
+    if (progress.isCompleted) {
+      return '';
+    }
+
+    return 'CASE ${progress.currentStage}';
+  }
+
+  String get _natureOfDiscoveryButtonLabel {
+    final CaseProgress? progress = _natureOfDiscoveryProgress;
+
+    if (progress?.isCompleted ?? false) {
+      return 'COMPLETED';
+    }
+
+    return _natureOfDiscoveryStarted
+        ? 'IN PROGRESS'
+        : 'VIEW CASE';
+  }
+
+  Future<void> _openNatureOfDiscoveryCase() async {
+    await AnalyticsService.logCaseFileStarted(
+      caseKey: 'nature_of_discovery',
+      caseName: 'Nature of Discovery',
+      resume: _natureOfDiscoveryStarted,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            const NatureOfDiscoveryCasePathScreen(),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadNatureOfDiscoveryProgress();
+  }
+
+  Future<void> _loadTheWrittenWordProgress() async {
+    try {
+      final CaseProgress progress =
+          await CasePathService.loadTheWrittenWordProgress();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _theWrittenWordProgress = progress;
+      });
+    } catch (_) {
+      // Keep the card usable if progress cannot be loaded.
+    }
+  }
+
+  bool get _theWrittenWordStarted {
+    final CaseProgress? progress = _theWrittenWordProgress;
+
+    if (progress == null) {
+      return false;
+    }
+
+    final stage = progress.currentStageProgress;
+
+    return progress.completedStageCount > 0 ||
+        stage.correctCount > 0 ||
+        stage.clueThresholdCount > 0 ||
+        stage.firstGuessCount > 0;
+  }
+
+  String get _theWrittenWordStatus {
+    final CaseProgress? progress = _theWrittenWordProgress;
+
+    if (progress == null) {
+      return 'CASE 1';
+    }
+
+    if (progress.isCompleted) {
+      return '';
+    }
+
+    return 'CASE ${progress.currentStage}';
+  }
+
+  String get _theWrittenWordButtonLabel {
+    final CaseProgress? progress = _theWrittenWordProgress;
+
+    if (progress?.isCompleted ?? false) {
+      return 'COMPLETED';
+    }
+
+    return _theWrittenWordStarted
+        ? 'IN PROGRESS'
+        : 'VIEW CASE';
+  }
+
+  Future<void> _openTheWrittenWordCase() async {
+    await AnalyticsService.logCaseFileStarted(
+      caseKey: 'the_written_word',
+      caseName: 'The Written Word',
+      resume: _theWrittenWordStarted,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            const TheWrittenWordCasePathScreen(),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadTheWrittenWordProgress();
+  }
+
+  Future<void> _loadTheCreativeCodeProgress() async {
+    try {
+      final CaseProgress progress =
+          await CasePathService.loadTheCreativeCodeProgress();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _theCreativeCodeProgress = progress;
+      });
+    } catch (_) {
+      // Keep the card usable if progress cannot be loaded.
+    }
+  }
+
+  bool get _theCreativeCodeStarted {
+    final CaseProgress? progress = _theCreativeCodeProgress;
+
+    if (progress == null) {
+      return false;
+    }
+
+    final stage = progress.currentStageProgress;
+
+    return progress.completedStageCount > 0 ||
+        stage.correctCount > 0 ||
+        stage.clueThresholdCount > 0 ||
+        stage.firstGuessCount > 0;
+  }
+
+  String get _theCreativeCodeStatus {
+    final CaseProgress? progress = _theCreativeCodeProgress;
+
+    if (progress == null) {
+      return 'CASE 1';
+    }
+
+    if (progress.isCompleted) {
+      return '';
+    }
+
+    return 'CASE ${progress.currentStage}';
+  }
+
+  String get _theCreativeCodeButtonLabel {
+    final CaseProgress? progress = _theCreativeCodeProgress;
+
+    if (progress?.isCompleted ?? false) {
+      return 'COMPLETED';
+    }
+
+    return _theCreativeCodeStarted
+        ? 'IN PROGRESS'
+        : 'VIEW CASE';
+  }
+
+  Future<void> _openTheCreativeCodeCase() async {
+    await AnalyticsService.logCaseFileStarted(
+      caseKey: 'the_creative_code',
+      caseName: 'The Creative Code',
+      resume: _theCreativeCodeStarted,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            const TheCreativeCodeCasePathScreen(),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadTheCreativeCodeProgress();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
+    final Widget animalKingdomCard = _CaseFileCard(
+      imagePath:
+          (_animalKingdomProgress?.isCompleted ?? false)
+              ? 'assets/images/case_files/New folder/animalkingdom_completed.webp'
+              : _animalKingdomStarted
+                  ? 'assets/images/case_files/New folder/animalkingdom_inprogress.webp'
+                  : 'assets/images/case_files/New folder/animalkingdom_start.webp',
+      status: _animalKingdomStatus,
+      buttonLabel: _animalKingdomButtonLabel,
+      onTap: _openAnimalKingdomCase,
+    );
+
+    final Widget roundTheWorldCard = _CaseFileCard(
+      imagePath:
+          (_roundTheWorldProgress?.isCompleted ?? false)
+              ? 'assets/images/case_files/New folder/aroundtheworld_completed.webp'
+              : _roundTheWorldStarted
+                  ? 'assets/images/case_files/New folder/aroundtheworld_progress.webp'
+                  : 'assets/images/case_files/New folder/aroundtheworld_start.webp',
+      status: _roundTheWorldStatus,
+      buttonLabel: _roundTheWorldButtonLabel,
+      onTap: _openRoundTheWorldCase,
+    );
+
+    final Widget secretsOfThePastCard = _CaseFileCard(
+      imagePath:
+          (_secretsOfThePastProgress?.isCompleted ?? false)
+              ? 'assets/images/case_files/New folder/tasteofmysterycompleted.webp'
+              : _secretsOfThePastStarted
+                  ? 'assets/images/case_files/New folder/tasteofmysteryprogress.webp'
+                  : 'assets/images/case_files/New folder/tasteofmysterystart.webp',
+      status: _secretsOfThePastStatus,
+      buttonLabel: _secretsOfThePastButtonLabel,
+      onTap: _openSecretsOfThePastCase,
+    );
+
+    final Widget tasteAndTreatsCard = _CaseFileCard(
+      imagePath:
+          (_tasteAndTreatsProgress?.isCompleted ?? false)
+              ? 'assets/images/case_files/New folder/tasteofmystery_completed.webp'
+              : _tasteAndTreatsStarted
+                  ? 'assets/images/case_files/New folder/tasteofmystery_progress.webp'
+                  : 'assets/images/case_files/New folder/tasteofmystery_start.webp',
+      status: _tasteAndTreatsStatus,
+      buttonLabel: _tasteAndTreatsButtonLabel,
+      onTap: _openTasteAndTreatsCase,
+      imageScale: 0.95,
+    );
+
+    final Widget natureOfDiscoveryCard = _CaseFileCard(
+      imagePath:
+          (_natureOfDiscoveryProgress?.isCompleted ?? false)
+              ? 'assets/images/case_files/New folder/the_nature_of_discovery_completed_transparent.webp'
+              : _natureOfDiscoveryStarted
+                  ? 'assets/images/case_files/New folder/the_nature_of_discovery_in_progress_transparent.webp'
+                  : 'assets/images/case_files/New folder/the_nature_of_discovery_start_transparent.webp',
+      status: _natureOfDiscoveryStatus,
+      buttonLabel: _natureOfDiscoveryButtonLabel,
+      onTap: _openNatureOfDiscoveryCase,
+    );
+
+    final Widget theWrittenWordCard = _CaseFileCard(
+      imagePath:
+          (_theWrittenWordProgress?.isCompleted ?? false)
+              ? 'assets/images/case_files/New folder/the_written_word_completed_transparent.webp'
+              : _theWrittenWordStarted
+                  ? 'assets/images/case_files/New folder/the_written_word_in_progress_transparent.webp'
+                  : 'assets/images/case_files/New folder/the_written_word_start_transparent.webp',
+      status: _theWrittenWordStatus,
+      buttonLabel: _theWrittenWordButtonLabel,
+      onTap: _openTheWrittenWordCase,
+    );
+
+    final Widget theCreativeCodeCard = _CaseFileCard(
+      imagePath:
+          (_theCreativeCodeProgress?.isCompleted ?? false)
+              ? 'assets/images/case_files/New folder/creativecode_completed.webp'
+              : _theCreativeCodeStarted
+                  ? 'assets/images/case_files/New folder/creativecode_inprogress.webp'
+                  : 'assets/images/case_files/New folder/creativecode_start.webp',
+      status: _theCreativeCodeStatus,
+      buttonLabel: _theCreativeCodeButtonLabel,
+      onTap: _openTheCreativeCodeCase,
+    );
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(6, 8, 6, 18),
+          padding: EdgeInsets.fromLTRB(
+            isDesktop ? 24 : 6,
+            8,
+            isDesktop ? 24 : 6,
+            18,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _CaseFilesHeader(
                 onBackPressed: () => Navigator.of(context).pop(),
               ),
-              const SizedBox(height: 3),
-              const _CaseFilesHero(),
-              const SizedBox(height: 10),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _CaseFileCard(
-                      imagePath:
-                          (_animalKingdomProgress?.isCompleted ?? false)
-                              ? 'assets/images/case_files/topics/animal_world_completed.webp'
-                              : _animalKingdomStarted
-                                  ? 'assets/images/case_files/topics/animal_world_inprogress.webp'
-                                  : 'assets/images/case_files/topics/animal_world_final.webp',
-                      status: _animalKingdomStatus,
-                      buttonLabel: _animalKingdomButtonLabel,
-                      onTap: _openAnimalKingdomCase,
+              SizedBox(height: isDesktop ? 18 : 8),
+              if (isDesktop)
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: 1400,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: animalKingdomCard),
+                            const SizedBox(width: 18),
+                            Expanded(child: roundTheWorldCard),
+                            const SizedBox(width: 18),
+                            Expanded(child: secretsOfThePastCard),
+                            const SizedBox(width: 18),
+                            Expanded(child: tasteAndTreatsCard),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: (1400 - (18 * 3)) / 4,
+                              child: natureOfDiscoveryCard,
+                            ),
+                            const SizedBox(width: 18),
+                            SizedBox(
+                              width: (1400 - (18 * 3)) / 4,
+                              child: theWrittenWordCard,
+                            ),
+                            const SizedBox(width: 18),
+                            SizedBox(
+                              width: (1400 - (18 * 3)) / 4,
+                              child: theCreativeCodeCard,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: _CaseFileCard(
-                      imagePath:
-                          (_roundTheWorldProgress?.isCompleted ?? false)
-                              ? 'assets/images/case_files/topics/amazing_world_complete.webp'
-                              : _roundTheWorldStarted
-                                  ? 'assets/images/case_files/topics/amazing_world_inprogress.webp'
-                                  : 'assets/images/case_files/topics/amazing_world_final.webp',
-                      status: _roundTheWorldStatus,
-                      buttonLabel: _roundTheWorldButtonLabel,
-                      onTap: _openRoundTheWorldCase,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 0),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _CaseFileCard(
-                      imagePath:
-                          (_secretsOfThePastProgress?.isCompleted ?? false)
-                              ? 'assets/images/case_files/topics/mysteries_legends_complete.webp'
-                              : _secretsOfThePastStarted
-                                  ? 'assets/images/case_files/topics/mysteries_legends_inprogress.webp'
-                                  : 'assets/images/case_files/topics/mysteries_legends_final.webp',
-                      status: _secretsOfThePastStatus,
-                      buttonLabel: _secretsOfThePastButtonLabel,
-                      onTap: _openSecretsOfThePastCase,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: _CaseFileCard(
-                      imagePath:
-                          (_tasteAndTreatsProgress?.isCompleted ?? false)
-                              ? 'assets/images/case_files/topics/tastes_and_treats_complete.webp'
-                              : _tasteAndTreatsStarted
-                                  ? 'assets/images/case_files/topics/tastes_and_treats_inprogress.webp'
-                                  : 'assets/images/case_files/topics/tastes_and_treats_final.webp',
-                      status: _tasteAndTreatsStatus,
-                      buttonLabel: _tasteAndTreatsButtonLabel,
-                      onTap: _openTasteAndTreatsCase,
-                    ),
-                  ),
-                ],
-              ),
+                )
+              else ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: animalKingdomCard),
+                    const SizedBox(width: 6),
+                    Expanded(child: roundTheWorldCard),
+                  ],
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: secretsOfThePastCard),
+                    const SizedBox(width: 6),
+                    Expanded(child: tasteAndTreatsCard),
+                  ],
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: natureOfDiscoveryCard),
+                    const SizedBox(width: 6),
+                    Expanded(child: theWrittenWordCard),
+                  ],
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: theCreativeCodeCard),
+                    const SizedBox(width: 6),
+                    const Expanded(child: SizedBox.shrink()),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
@@ -445,9 +849,10 @@ class _CaseFilesHeader extends StatelessWidget {
               horizontal: 64,
             ),
             child: Image.asset(
-              'assets/images/first_guess_header.png',
-              height: 52,
+              'assets/images/categories/category_headers/classic_first_guess_logo.webp',
+              height: 64,
               fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
             ),
           ),
           const Align(
@@ -460,55 +865,46 @@ class _CaseFilesHeader extends StatelessWidget {
   }
 }
 
-class _CaseFilesHero extends StatelessWidget {
-  const _CaseFilesHero();
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: Image.asset(
-        'assets/images/case_files/case_file_explore_discover_solve.webp',
-        width: double.infinity,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.high,
-      ),
-    );
-  }
-}
-
 class _CaseFileCard extends StatelessWidget {
   final String imagePath;
   final String status;
   final String buttonLabel;
   final VoidCallback? onTap;
+  final double imageScale;
 
   const _CaseFileCard({
     required this.imagePath,
     required this.status,
     this.buttonLabel = 'VIEW CASE',
     this.onTap,
+    this.imageScale = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: AspectRatio(
-          aspectRatio: 4 / 5,
+          aspectRatio: isDesktop ? 0.92 : 1,
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset(
-                imagePath,
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.contain,
-                alignment: Alignment.center,
-                filterQuality: FilterQuality.high,
+              Transform.scale(
+                scale: imageScale,
+                child: Image.asset(
+                  imagePath,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.center,
+                  filterQuality: FilterQuality.high,
+                ),
               ),
             ],
           ),

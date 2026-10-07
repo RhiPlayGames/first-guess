@@ -1,6 +1,11 @@
 part of 'game_screen.dart';
 
 extension _GameScreenView on _GameScreenState {
+  bool _useDesktopWebsiteLayout(BuildContext context) {
+    const bool isWeb = bool.fromEnvironment('dart.library.js_interop');
+    return isWeb && MediaQuery.sizeOf(context).width >= 1200;
+  }
+
   Future<void> confirmLeaveGame() async {
     const String hideLeaveWarningPreferenceKey =
         'standard_game_hide_leave_warning_v1';
@@ -80,7 +85,7 @@ extension _GameScreenView on _GameScreenState {
           ),
           title: null,
           content: const Text(
-            'Your progress in this game will be lost.',
+            'Your progress on this question will be lost.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Inter',
@@ -265,7 +270,7 @@ extension _GameScreenView on _GameScreenState {
           ),
           title: null,
           content: const Text(
-            'Your progress in this game will be lost.',
+            'Your progress on this question will be lost.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Inter',
@@ -370,6 +375,21 @@ extension _GameScreenView on _GameScreenState {
               representativeCaseQuestionId,
             ) !=
             null;
+    final bool isNatureOfDiscoveryCase =
+        _scienceNatureSubcategoryFromQuestionId(
+              representativeCaseQuestionId,
+            ) !=
+            null;
+    final bool isTheWrittenWordCase =
+        _booksAuthorsSubcategoryFromQuestionId(
+              representativeCaseQuestionId,
+            ) !=
+            null;
+    final bool isTheCreativeCodeCase =
+        _creativeWorldSubcategoryFromQuestionId(
+              representativeCaseQuestionId,
+            ) !=
+            null;
 
     final mission = activeCaseStage == null
         ? null
@@ -385,26 +405,48 @@ extension _GameScreenView on _GameScreenState {
                     ? CasePathService.tasteAndTreatsMissionForStage(
                         activeCaseStage!,
                       )
-                    : CasePathService.animalKingdomMissionForStage(
-                        activeCaseStage!,
-                      );
+                    : isNatureOfDiscoveryCase
+                        ? CasePathService.natureOfDiscoveryMissionForStage(
+                            activeCaseStage!,
+                          )
+                        : isTheWrittenWordCase
+                            ? CasePathService.theWrittenWordMissionForStage(
+                                activeCaseStage!,
+                              )
+                            : isTheCreativeCodeCase
+                                ? CasePathService.theCreativeCodeMissionForStage(
+                                    activeCaseStage!,
+                                  )
+                                : CasePathService.animalKingdomMissionForStage(
+                                    activeCaseStage!,
+                                  );
 
     final String activeCaseName = isRoundTheWorldCase
         ? 'AROUND THE WORLD'
         : isSecretsOfThePastCase
             ? 'SECRETS OF THE PAST'
             : isTasteAndTreatsCase
-                ? 'TASTES & TREATS'
-                : 'ANIMAL KINGDOM';
+                ? 'A TASTE OF MYSTERY'
+                : isNatureOfDiscoveryCase
+                    ? 'NATURE OF DISCOVERY'
+                    : isTheWrittenWordCase
+                        ? 'THE WRITTEN WORD'
+                        : isTheCreativeCodeCase
+                            ? 'THE CREATIVE CODE'
+                            : 'ANIMAL KINGDOM';
 
     final double caseToolbarHeight = 56;
+    final bool useDesktopWebsiteLayout =
+        _useDesktopWebsiteLayout(context);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         toolbarHeight: widget.launchedFromCaseFile
             ? caseToolbarHeight
-            : 102,
+            : useDesktopWebsiteLayout
+                ? 70
+                : 92,
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.white,
         elevation: 0,
@@ -472,35 +514,74 @@ extension _GameScreenView on _GameScreenState {
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                18,
+              padding: EdgeInsets.fromLTRB(
+                useDesktopWebsiteLayout ? 28 : 18,
                 8,
-                18,
+                useDesktopWebsiteLayout ? 28 : 18,
                 28,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 4),
-                  StatsPanel(
-                    totalScore:
-                        statsLoaded ? playerStats.totalScore : 0,
-                    currentStreak:
-                        statsLoaded ? playerStats.currentStreak : 0,
-                    firstGuesses:
-                        statsLoaded ? playerStats.firstGuesses : 0,
-                    gamesPlayed:
-                        statsLoaded ? playerStats.gamesPlayed : 0,
-                  ),
-                  const SizedBox(height: 12),
-                  buildGamePanel(),
-                ],
-              ),
+              child: useDesktopWebsiteLayout
+                  ? Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: 1440,
+                        ),
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: 0),
+                            StatsPanel(
+                              totalScore: statsLoaded
+                                  ? playerStats.totalScore
+                                  : 0,
+                              currentStreak: statsLoaded
+                                  ? playerStats.currentStreak
+                                  : 0,
+                              firstGuesses: statsLoaded
+                                  ? playerStats.firstGuesses
+                                  : 0,
+                              gamesPlayed: statsLoaded
+                                  ? playerStats.gamesPlayed
+                                  : 0,
+                            ),
+                            const SizedBox(height: 12),
+                            buildDesktopWebsiteGamePanel(),
+                          ],
+                        ),
+                      ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 4),
+                        StatsPanel(
+                          totalScore: statsLoaded
+                              ? playerStats.totalScore
+                              : 0,
+                          currentStreak: statsLoaded
+                              ? playerStats.currentStreak
+                              : 0,
+                          firstGuesses: statsLoaded
+                              ? playerStats.firstGuesses
+                              : 0,
+                          gamesPlayed: statsLoaded
+                              ? playerStats.gamesPlayed
+                              : 0,
+                        ),
+                        const SizedBox(height: 12),
+                        buildGamePanel(),
+                      ],
+                    ),
             ),
             Positioned(
               top: 8,
-              left: 10,
-              right: 10,
+              left: useDesktopWebsiteLayout
+                  ? ((MediaQuery.sizeOf(context).width - 1440) / 2)
+                      .clamp(28.0, double.infinity)
+                  : 10,
+              right: useDesktopWebsiteLayout ? null : 10,
+              width: useDesktopWebsiteLayout ? 560 : null,
               child: IgnorePointer(
                 child: AnimatedSlide(
                   offset: showSurpriseToast
@@ -516,6 +597,8 @@ extension _GameScreenView on _GameScreenState {
                         _GameScreenState.surpriseToastFadeDuration,
                     child: _SurpriseChallengeBanner(
                       categoryName: widget.categoryName,
+                      questionId: currentItem.id ?? '',
+                      alignLeft: useDesktopWebsiteLayout,
                     ),
                   ),
                 ),
@@ -674,6 +757,126 @@ extension _GameScreenView on _GameScreenState {
                 onGiveUp: giveUpRound,
               ),
             ],
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: Center(
+              child: AnimatedOpacity(
+                opacity: showTimeUpOverlay ? 1 : 0,
+                duration: const Duration(
+                  milliseconds: 180,
+                ),
+                child: AnimatedScale(
+                  scale: showTimeUpOverlay ? 1 : 0.9,
+                  duration: const Duration(
+                    milliseconds: 180,
+                  ),
+                  child: const SmallTimeUpOverlay(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget buildDesktopWebsiteGamePanel() {
+    return Stack(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: AppColors.border,
+              width: 1.3,
+            ),
+          ),
+          child: LayoutBuilder(
+            builder: (
+              BuildContext context,
+              BoxConstraints constraints,
+            ) {
+              final double viewportHeight =
+                  MediaQuery.sizeOf(context).height;
+              final double widthBasedVisual =
+                  constraints.maxWidth * 0.54;
+              final double heightBasedVisual =
+                  viewportHeight - 245;
+              final double visualWidth =
+                  (widthBasedVisual < heightBasedVisual
+                          ? widthBasedVisual
+                          : heightBasedVisual)
+                      .clamp(520.0, 680.0);
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: visualWidth,
+                    child: KeyedSubtree(
+                      key: ValueKey(
+                        'desktop-${widget.gameType.name}-'
+                        '${currentItem.imagePath}',
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: buildVisualPanel(),
+                            ),
+                            if (isPracticeModeActive &&
+                                !widget.launchedFromCaseFile)
+                              const Positioned(
+                                top: 12,
+                                right: 12,
+                                child: _PracticeModeRibbon(),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        buildClueHeaderBlock(),
+                        const SizedBox(height: 10),
+                        CluePanel(
+                          clue: currentItem.clues[currentClueIndex],
+                        ),
+                        buildGameMessage(),
+                        const SizedBox(height: 22),
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: 660,
+                            ),
+                            child: GuessPanel(
+                              controller: guessController,
+                              focusNode: guessFocusNode,
+                              enabled: !roundFinished &&
+                                  !showSurpriseToast &&
+                                  imageReady,
+                              isLastClue: isLastClue,
+                              onGuess: submitGuess,
+                              onNextClue: showNextClue,
+                              onGiveUp: giveUpRound,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
         Positioned.fill(
@@ -907,8 +1110,6 @@ extension _GameScreenView on _GameScreenState {
           ),
           const SizedBox(height: 7),
           buildClueProgressSegments(),
-          const SizedBox(height: 5),
-          buildTimerSegments(),
         ],
       ),
     );
@@ -944,26 +1145,6 @@ extension _GameScreenView on _GameScreenState {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget buildTimerSegments() {
-    final double safeProgress =
-        timerProgress.clamp(0.0, 1.0);
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(3),
-      child: Container(
-        height: 5,
-        color: const Color(0xFF2C2C2C),
-        alignment: Alignment.centerLeft,
-        child: FractionallySizedBox(
-          widthFactor: safeProgress,
-          child: Container(
-            color: AppColors.orange,
-          ),
-        ),
       ),
     );
   }
@@ -1043,10 +1224,176 @@ class _PracticeModeRibbon extends StatelessWidget {
 
 class _SurpriseChallengeBanner extends StatelessWidget {
   final String categoryName;
+  final String questionId;
+  final bool alignLeft;
 
   const _SurpriseChallengeBanner({
     required this.categoryName,
+    required this.questionId,
+    this.alignLeft = false,
   });
+
+  String get nowPlayingName {
+    if (categoryName != 'SURPRISE ME') {
+      return categoryName;
+    }
+
+    String id = questionId.toLowerCase().trim();
+
+    const List<String> categoryPrefixes = <String>[
+      'country_',
+      'countries_',
+      'animals_',
+      'science_nature_',
+      'watch_play_',
+      'music_',
+      'sports_',
+      'who_am_i_',
+      'famous_people_',
+      'books_authors_',
+      'past_present_',
+      'food_drink_',
+      'creative_world_',
+    ];
+
+    for (final String prefix in categoryPrefixes) {
+      if (id.startsWith(prefix)) {
+        id = id.substring(prefix.length);
+        break;
+      }
+    }
+
+    id = id.replaceFirst(RegExp(r'_\d+$'), '');
+    id = id.replaceFirst(RegExp(r'\s+\d+$'), '');
+
+    const Map<String, String> friendlyLabels = <String, String>{
+      'actors_directors': 'ACTORS & DIRECTORS',
+      'ancient_civilisations_empires': 'ANCIENT CIVILISATIONS & EMPIRES',
+      'animation_cartoons_anime': 'ANIMATION, CARTOONS & ANIME',
+      'architecture_architects': 'ARCHITECTURE & ARCHITECTS',
+      'artists': 'ARTISTS',
+      'athletes_sports': 'ATHLETES & SPORTS STARS',
+      'authors_poets_playwrights': 'AUTHORS, POETS & PLAYWRIGHTS',
+      'authors_writers': 'AUTHORS, POETS & PLAYWRIGHTS',
+      'bands_1960_1969': 'BANDS: 1960-1969',
+      'bands_1970_1979': 'BANDS: 1970-1979',
+      'bands_1980_1989': 'BANDS: 1980-1989',
+      'bands_1990_1999': 'BANDS: 1990-1999',
+      'bands_2000_2009': 'BANDS: 2000-2009',
+      'bands_2010_2019': 'BANDS: 2010-2019',
+      'bands_2020_2026': 'BANDS: 2020-2026',
+      'bands_pre_1960': 'BANDS: PRE-1960',
+      'battles_wars': 'BATTLES & WARS',
+      'biology': 'BIOLOGY',
+      'birds': 'BIRDS',
+      'book_series': 'BOOK SERIES',
+      'books_literature': 'BOOKS & LITERATURE',
+      'books_novels': 'BOOKS & NOVELS',
+      'breakfast': 'BREAKFAST FOODS',
+      'campaigners_humanitarians': 'CAMPAIGNERS & HUMANITARIANS',
+      'capitals': 'CAPITAL CITIES',
+      'castles_ruins': 'CASTLES & RUINS',
+      'chemistry': 'CHEMISTRY',
+      'childrens_books': 'CHILDREN’S BOOKS',
+      'club_teams': 'CLUB TEAMS',
+      'composers': 'COMPOSERS',
+      'computers_internet': 'COMPUTERS & THE INTERNET',
+      'consoles_gaming_franchises': 'CONSOLES & GAMING FRANCHISES',
+      'country_silhouettes': 'COUNTRY SILHOUETTES',
+      'crafts_pottery_ceramics': 'CRAFTS, POTTERY & CERAMICS',
+      'currencies': 'CURRENCIES',
+      'desserts_cakes_sweets': 'DESSERTS, CAKES & SWEETS',
+      'dinosaurs': 'DINOSAURS',
+      'dishes_world_cuisine': 'DISHES & WORLD CUISINES',
+      'drinks': 'WORLD DRINKS',
+      'english_football': 'ENGLISH FOOTBALL',
+      'entrepreneurs_business': 'ENTREPRENEURS & BUSINESS LEADERS',
+      'explorers_adventurers': 'EXPLORERS & ADVENTURERS',
+      'famous_people': 'FAMOUS PEOPLE',
+      'fashion': 'FASHION',
+      'fictional_literary_locations': 'FICTIONAL LITERARY LOCATIONS',
+      'fictional_screen_locations': 'FICTIONAL SCREEN LOCATIONS',
+      'flags': 'FLAGS',
+      'folk_tales_fairy_tales': 'FOLK TALES & FAIRY TALES',
+      'football_world_cups': 'FOOTBALL WORLD CUPS',
+      'footballers': 'FOOTBALLERS',
+      'fruit_vegs': 'FRUIT & VEGETABLES',
+      'furniture_jewellery': 'FURNITURE & JEWELLERY',
+      'graphic_novels_comics': 'GRAPHIC NOVELS & COMICS',
+      'habitats_animal_groups': 'HABITATS & ANIMAL GROUPS',
+      'herbs_spices': 'HERBS & SPICES',
+      'historic_objects': 'HISTORICAL OBJECTS',
+      'historical_events': 'HISTORICAL EVENTS',
+      'historical_objects': 'HISTORICAL OBJECTS',
+      'history_speeches': 'HISTORY & SPEECHES',
+      'human_body': 'THE HUMAN BODY',
+      'insects_spiders': 'INSECTS & SPIDERS',
+      'instruments': 'INSTRUMENTS',
+      'inventions': 'INVENTIONS',
+      'jungle_safari_animals': 'JUNGLE & SAFARI ANIMALS',
+      'literary_genres': 'LITERARY GENRES',
+      'major_cities': 'MAJOR CITIES',
+      'mammals': 'MAMMALS',
+      'movie_monsters_villains': 'MOVIE MONSTERS & VILLAINS',
+      'movies_film_franchises': 'MOVIES & MOVIES FRANCHISES',
+      'movies_television': 'MOVIES & TELEVISION',
+      'museums_galleries': 'MUSEUMS & GALLERIES',
+      'music_genres': 'MUSIC GENRES',
+      'musicians_singers': 'MUSICIANS & SINGERS',
+      'myths_legends': 'MYTHS & LEGENDS',
+      'national_symbols': 'NATIONAL SYMBOLS',
+      'natural_wonders_landscapes': 'NATURAL WONDERS & LANDSCAPES',
+      'non_english_football': 'NON-ENGLISH FOOTBALL',
+      'olympic_sports': 'OLYMPIC SPORTS',
+      'opening_lines_quotations': 'OPENING LINES & QUOTATIONS',
+      'paintings_sculptures': 'PAINTINGS & SCULPTURES',
+      'periodic_table': 'PERIODIC TABLE',
+      'physics': 'PHYSICS',
+      'pioneers_records': 'PIONEERS & RECORD BREAKERS',
+      'plants_trees': 'PLANTS & TREES',
+      'plays': 'PLAYS',
+      'poems': 'POEMS',
+      'public_internet': 'PUBLIC & INTERNET PERSONALITIES',
+      'records_achievements': 'RECORDS & ACHIEVEMENTS',
+      'reptiles_amphibians': 'REPTILES & AMPHIBIANS',
+      'rocks_minerals_volcanoes': 'ROCKS, MINERALS & VOLCANOES',
+      'royalty_leaders': 'ROYALTY & POLITICAL LEADERS',
+      'scientific_discoveries_experiments_theories': 'SCIENTIFIC DISCOVERIES, EXPERIMENTS & THEORIES',
+      'scientists_inventors': 'SCIENTISTS & INVENTORS',
+      'screen_characters': 'SCREEN CHARACTERS',
+      'sea_creatures': 'SEA CREATURES',
+      'snacks_street_food': 'SNACKS',
+      'solo_artists_1960_1969': 'SOLO ARTISTS: 1960-1969',
+      'solo_artists_1970_1979': 'SOLO ARTISTS: 1970-1979',
+      'solo_artists_1980_1989': 'SOLO ARTISTS: 1980-1989',
+      'solo_artists_1990_1999': 'SOLO ARTISTS: 1990-1999',
+      'solo_artists_2000_2009': 'SOLO ARTISTS: 2000-2009',
+      'solo_artists_2010_2019': 'SOLO ARTISTS: 2010-2019',
+      'solo_artists_2020_2026': 'SOLO ARTISTS: 2020-2026',
+      'solo_artists_pre_1960': 'SOLO ARTISTS: PRE-1960',
+      'space_astronomy': 'SPACE & ASTRONOMY',
+      'sporting_events': 'SPORTING EVENTS',
+      'stadiums_venues': 'STADIUMS & VENUES',
+      'states_regions': 'STATES & REGIONS',
+      'television_streaming_programmes': 'TELEVISION & STREAMING PROGRAMMES',
+      'theatre': 'THEATRE',
+      'toys_games': 'TOYS & GAMES',
+      'toys_traditional_games': 'TOYS & GAMES',
+      'tracks_footprints': 'TRACKS & FOOTPRINTS',
+      'video_games_gaming_characters': 'GAMING CHARACTERS',
+    };
+
+    final String? friendly = friendlyLabels[id];
+    if (friendly != null) {
+      return friendly;
+    }
+
+    if (id.isEmpty) {
+      return 'SURPRISE ME';
+    }
+
+    return id.replaceAll('_', ' ').toUpperCase();
+  }
 
   String get categoryImagePath {
     switch (categoryName) {
@@ -1062,7 +1409,11 @@ class _SurpriseChallengeBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
+    return Align(
+      alignment: alignLeft ? Alignment.centerLeft : Alignment.center,
       child: ConstrainedBox(
         constraints: const BoxConstraints(
           maxWidth: 560,
@@ -1208,35 +1559,17 @@ class _SurpriseChallengeBanner extends StatelessWidget {
                             crossAxisAlignment:
                                 CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'NOW PLAYING',
-                                maxLines: 1,
-                                overflow:
-                                    TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  color:
-                                      AppColors.white,
-                                  fontSize: 9,
-                                  fontWeight:
-                                      FontWeight.w500,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 1),
                               Text(
-                                categoryName,
-                                maxLines: 1,
-                                overflow:
-                                    TextOverflow.ellipsis,
-                                style: const TextStyle(
+                                nowPlayingName,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
                                   fontFamily: 'Oswald',
-                                  color:
-                                      AppColors.white,
-                                  fontSize: 14,
-                                  fontWeight:
-                                      FontWeight.w500,
-                                  letterSpacing: 0.3,
+                                  color: AppColors.white,
+                                  fontSize: isDesktop ? 24 : 16,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.0,
+                                  letterSpacing: 0.2,
                                 ),
                               ),
                             ],

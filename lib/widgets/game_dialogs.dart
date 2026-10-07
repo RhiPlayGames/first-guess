@@ -21,60 +21,11 @@ Future<void> showGameResultDialog({
   String? primaryButtonLabel,
   String? secondaryButtonLabel,
 }) {
-  final bool isAnimalKingdomComplete =
-      title == 'ANIMAL KINGDOM COMPLETE!';
-
-  if (isAnimalKingdomComplete) {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black87,
-      builder: (dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 18,
-          ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final double width =
-                  constraints.maxWidth.clamp(280.0, 560.0);
-              final double height = width * (1092 / 1365);
-
-              return SizedBox(
-                width: width,
-                height: height,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.asset(
-                      'assets/images/case_files/animal_kingdom_complete.webp',
-                      fit: BoxFit.contain,
-                      filterQuality: FilterQuality.high,
-                    ),
-                    Positioned(
-                      left: width * 0.22,
-                      right: width * 0.22,
-                      top: height * 0.79,
-                      height: height * 0.12,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: onPlayAgain,
-                          borderRadius: BorderRadius.circular(22),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
+  final bool isFinalCaseComplete =
+      title == 'AROUND THE WORLD COMPLETE!' ||
+      title == 'ANIMAL KINGDOM COMPLETE!' ||
+      title == 'SECRETS OF THE PAST COMPLETE!' ||
+      title == 'A TASTE OF MYSTERY COMPLETE!';
 
   final bool isGameOver = title == 'GAME OVER';
   final bool isCorrect = title == 'CORRECT!';
@@ -154,8 +105,8 @@ Future<void> showGameResultDialog({
               )
             : imageAsset != null
                 ? SizedBox(
-                    width: 96,
-                    height: 96,
+                    width: isFinalCaseComplete ? 150 : 96,
+                    height: isFinalCaseComplete ? 150 : 96,
                     child: Image.asset(
                       imageAsset,
                       fit: BoxFit.contain,
@@ -274,10 +225,10 @@ Future<void> showGameResultDialog({
                 : Text(
                     message,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Oswald',
                       color: AppColors.white,
-                      fontSize: 18,
+                      fontSize: isFinalCaseComplete ? 20 : 18,
                       fontWeight: FontWeight.w500,
                       height: 1.35,
                     ),
@@ -360,7 +311,19 @@ Future<bool?> showPracticeModeDialog({
     context: context,
     barrierDismissible: false,
     builder: (dialogContext) {
+      final double screenWidth =
+          MediaQuery.sizeOf(dialogContext).width;
+      final double dialogWidth =
+          screenWidth < 460 ? screenWidth - 32 : 400;
+
       return AlertDialog(
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 24,
+        ),
+        constraints: BoxConstraints.tightFor(
+          width: dialogWidth,
+        ),
         backgroundColor: AppColors.panel,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(22),
@@ -473,135 +436,377 @@ Future<bool?> showPracticeModeDialog({
 
 
 
+
+const Color _rankProgressOrange = Color(0xFFFE5E02);
+const Color _rankProgressGold = Color(0xFFD6A83B);
+const Color _rankProgressBrightGold = Color(0xFFFFD65A);
+
+String _formatRankXp(int value) {
+  final String digits = value.abs().toString();
+  final StringBuffer buffer = StringBuffer();
+
+  for (int index = 0; index < digits.length; index++) {
+    if (index > 0 && (digits.length - index) % 3 == 0) {
+      buffer.write(',');
+    }
+    buffer.write(digits[index]);
+  }
+
+  return value < 0 ? '-$buffer' : buffer.toString();
+}
+
+TextStyle _rankProgressTextStyle({
+  required double size,
+  Color color = Colors.white,
+  double letterSpacing = 0,
+  FontWeight fontWeight = FontWeight.w600,
+  double height = 1.05,
+}) {
+  return TextStyle(
+    fontFamily: 'Oswald',
+    fontSize: size,
+    fontWeight: fontWeight,
+    color: color,
+    letterSpacing: letterSpacing,
+    height: height,
+  );
+}
+
+Widget _rankProgressInfoCard({
+  required String assetPath,
+  required String title,
+  required String value,
+  String? detail,
+}) {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(
+      horizontal: 14,
+      vertical: 12,
+    ),
+    decoration: BoxDecoration(
+      color: Colors.black.withValues(alpha: 0.18),
+      borderRadius: BorderRadius.circular(15),
+      border: Border.all(
+        color: Colors.white24,
+      ),
+    ),
+    child: Row(
+      children: <Widget>[
+        SizedBox(
+          width: 46,
+          height: 46,
+          child: Image.asset(
+            assetPath,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                title,
+                style: _rankProgressTextStyle(
+                  size: 14,
+                  color: Colors.white,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: _rankProgressTextStyle(
+                  size: 18,
+                  color: _rankProgressOrange,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              if (detail != null) ...<Widget>[
+                const SizedBox(height: 2),
+                Text(
+                  detail,
+                  style: _rankProgressTextStyle(
+                    size: 14,
+                    color: Colors.white,
+                    letterSpacing: 0.2,
+                    fontWeight: FontWeight.w500,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 Future<void> showRankProgressDialog({
   required BuildContext context,
   required PlayerRankProgress previous,
   required PlayerRankProgress current,
   required int xpEarned,
 }) {
-  final bool isPromotion = current.isPromotionFrom(previous);
+  final bool isPromotion =
+      current.isPromotionFrom(previous);
+
+  final bool isMaximumLevel = current.isMaximumLevel;
+
+  final String nextLevelName = isMaximumLevel
+      ? 'MAX LEVEL'
+      : current.nextFullTitle;
+
+  final String nextLevelDetail = isMaximumLevel
+      ? 'YOU REACHED THE HIGHEST LEVEL'
+      : '${_formatRankXp(current.nextLevelStartXp)} TOTAL XP NEEDED';
+
+  final bool earnedStarterBadge =
+      previous.isBeforeFirstMilestone &&
+      !current.isBeforeFirstMilestone;
+
+  final String imageAsset;
+  if (earnedStarterBadge) {
+    imageAsset = 'assets/images/badges/clue_starter.webp';
+  } else if (isPromotion) {
+    if (current.tierName == 'Advanced Tier') {
+      imageAsset = 'assets/images/badges/clue_advanced.webp';
+    } else if (current.tierName == 'Expert Tier') {
+      imageAsset = 'assets/images/badges/clue_expert.webp';
+    } else if (current.tierName == 'Master Tier') {
+      imageAsset = 'assets/images/badges/clue_master.webp';
+    } else if (current.tierName == 'Elite Tier') {
+      imageAsset = 'assets/images/badges/clue_elite.webp';
+    } else {
+      imageAsset = 'assets/images/ui/popups/levelup_crown.webp';
+    }
+  } else {
+    imageAsset = 'assets/images/ui/popups/levelup_star.webp';
+  }
 
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
+    barrierColor: Colors.black54,
     builder: (dialogContext) {
-      return AlertDialog(
-        backgroundColor: AppColors.panel,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
-          side: const BorderSide(
-            color: AppColors.orange,
-            width: 2,
-          ),
+      final Size screenSize = MediaQuery.sizeOf(dialogContext);
+      final double maxDialogHeight = screenSize.height * 0.90;
+
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
         ),
-        icon: isPromotion
-            ? null
-            : SizedBox(
-                width: 96,
-                height: 96,
-                child: Image.asset(
-                  'assets/images/stats/level_up.png',
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 410,
+            maxHeight: maxDialogHeight,
+          ),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(
+              18,
+              16,
+              18,
+              18,
+            ),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: <Color>[
+                  Color(0xFF11100C),
+                  Color(0xFF090909),
+                ],
               ),
-        title: Text(
-          isPromotion ? 'PROMOTION!' : 'LEVEL UP!',
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: AppColors.orange,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  'assets/images/stats/puzzle_piece.png',
-                  width: 24,
-                  height: 24,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                ),
-                const SizedBox(width: 7),
-                Text(
-                  previous.fullTitle,
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: _rankProgressBrightGold,
+                width: 2,
+              ),
+              boxShadow: const <BoxShadow>[
+                BoxShadow(
+                  color: Color(0x554D3707),
+                  blurRadius: 24,
+                  spreadRadius: 2,
                 ),
               ],
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Icon(
-                Icons.arrow_downward_rounded,
-                color: AppColors.orange,
-                size: 28,
-              ),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  'assets/images/stats/puzzle_piece.png',
-                  width: 32,
-                  height: 32,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  current.fullTitle,
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 21,
-                    fontWeight: FontWeight.w900,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Stack(
+                    alignment: Alignment.center,
+                    children: <Widget>[
+                      const SizedBox(
+                        width: double.infinity,
+                        height: 74,
+                      ),
+                      SizedBox(
+                        width: earnedStarterBadge || isPromotion ? 74 : 64,
+                        height: earnedStarterBadge || isPromotion ? 74 : 64,
+                        child: Image.asset(
+                          imageAsset,
+                          fit: BoxFit.contain,
+                          filterQuality: FilterQuality.high,
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Material(
+                          color: AppColors.orange,
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.of(dialogContext).pop();
+                            },
+                            customBorder: const CircleBorder(),
+                            child: const SizedBox(
+                              width: 44,
+                              height: 44,
+                              child: Icon(
+                                Icons.close_rounded,
+                                color: Colors.white,
+                                size: 29,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '+$xpEarned XP',
-              style: const TextStyle(
-                color: AppColors.orange,
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          FilledButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.orange,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            child: const Text(
-              'CONTINUE',
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
+                  const SizedBox(height: 8),
+                  Text(
+                    isPromotion ? 'PROMOTION!' : 'LEVEL UP!',
+                    textAlign: TextAlign.center,
+                    style: _rankProgressTextStyle(
+                      size: 27,
+                      color: _rankProgressBrightGold,
+                      letterSpacing: 0.7,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (isPromotion) ...<Widget>[
+                    const SizedBox(height: 4),
+                    Text(
+                      'NEW TIER UNLOCKED',
+                      textAlign: TextAlign.center,
+                      style: _rankProgressTextStyle(
+                        size: 16,
+                        color: Colors.white,
+                        letterSpacing: 0.35,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 14),
+                  Container(
+                    width: 260,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.30),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _rankProgressGold,
+                        width: 1.6,
+                      ),
+                      boxShadow: const <BoxShadow>[
+                        BoxShadow(
+                          color: Color(0x334F3907),
+                          blurRadius: 14,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: <Widget>[
+                        Text(
+                          isPromotion
+                              ? current.tierName
+                              : current.fullTitle,
+                          textAlign: TextAlign.center,
+                          style: _rankProgressTextStyle(
+                            size: 27,
+                            color: _rankProgressBrightGold,
+                            letterSpacing: 0.25,
+                            fontWeight: FontWeight.w700,
+                            height: 1.1,
+                          ),
+                        ),
+                        if (isPromotion) ...<Widget>[
+                          const SizedBox(height: 5),
+                          Text(
+                            current.fullTitle,
+                            textAlign: TextAlign.center,
+                            style: _rankProgressTextStyle(
+                              size: 17,
+                              color: Colors.white,
+                              letterSpacing: 0.2,
+                              fontWeight: FontWeight.w500,
+                              height: 1.15,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _rankProgressInfoCard(
+                    assetPath: 'assets/images/stats/gold_lightning_bolt_badge.png',
+                    title: 'BONUS',
+                    value: '+${_formatRankXp(xpEarned)} XP',
+                  ),
+                  const SizedBox(height: 10),
+                  _rankProgressInfoCard(
+                    assetPath: 'assets/images/stats/level_up.png',
+                    title: isMaximumLevel ? 'ACHIEVEMENT' : 'NEXT LEVEL',
+                    value: nextLevelName,
+                    detail: nextLevelDetail,
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: SizedBox(
+                      width: 290,
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop();
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.orange,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          'CONTINUE',
+                          style: _rankProgressTextStyle(
+                            size: 18,
+                            color: Colors.white,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       );
     },
   );
 }
+
 
 class SmallTimeUpOverlay extends StatelessWidget {
   const SmallTimeUpOverlay({super.key});

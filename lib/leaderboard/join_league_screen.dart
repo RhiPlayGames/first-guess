@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/league_service.dart';
 import '../widgets/app_home_button.dart';
 
 class JoinLeagueScreen extends StatefulWidget {
@@ -23,6 +24,9 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
       TextEditingController();
 
   bool _showPreview = false;
+  bool _isFindingLeague = false;
+  bool _isJoiningLeague = false;
+  LeagueRecord? _foundLeague;
 
   @override
   void dispose() {
@@ -30,7 +34,11 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
     super.dispose();
   }
 
-  void _findLeague() {
+  Future<void> _findLeague() async {
+    if (_isFindingLeague || _isJoiningLeague) {
+      return;
+    }
+
     final String code = _codeController.text.trim();
 
     if (code.isEmpty) {
@@ -49,27 +57,177 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
     }
 
     setState(() {
-      _showPreview = true;
+      _isFindingLeague = true;
+      _showPreview = false;
+      _foundLeague = null;
     });
+
+    try {
+      final LeagueRecord? league =
+          await LeagueService.findLeagueByInviteCode(code);
+
+      if (!mounted) {
+        return;
+      }
+
+      if (league == null) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              backgroundColor: Color(0xFF111111),
+              content: Text(
+                'No league was found for that invite code.',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          );
+
+        return;
+      }
+
+      setState(() {
+        _foundLeague = league;
+        _showPreview = true;
+      });
+    } on LeagueServiceException catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFF111111),
+            content: Text(
+              error.message,
+              style: const TextStyle(
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            backgroundColor: Color(0xFF111111),
+            content: Text(
+              'The league could not be found. Please try again.',
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFindingLeague = false;
+        });
+      }
+    }
   }
 
-  void _joinLeague() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: Color(0xFF111111),
-        content: Text(
-          'Join League is ready to connect to Firebase later.',
-          style: TextStyle(
-            color: Colors.white,
+  Future<void> _joinLeague() async {
+    if (_isJoiningLeague || _isFindingLeague) {
+      return;
+    }
+
+    final LeagueRecord? league = _foundLeague;
+
+    if (league == null) {
+      return;
+    }
+
+    setState(() {
+      _isJoiningLeague = true;
+    });
+
+    try {
+      final LeagueRecord joinedLeague =
+          await LeagueService.joinLeagueByInviteCode(
+        league.inviteCode,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFF111111),
+            content: Text(
+              'You joined ${joinedLeague.name}.',
+              style: const TextStyle(
+                color: Colors.white,
+              ),
+            ),
+            duration: const Duration(seconds: 2),
           ),
-        ),
-        duration: Duration(seconds: 2),
-      ),
-    );
+        );
+
+      Navigator.of(context).pop(true);
+    } on LeagueServiceException catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFF111111),
+            content: Text(
+              error.message,
+              style: const TextStyle(
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            backgroundColor: Color(0xFF111111),
+            content: Text(
+              'The league could not be joined. Please try again.',
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isJoiningLeague = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Scaffold(
       backgroundColor: _background,
       body: SafeArea(
@@ -78,16 +236,22 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
             _buildHeader(context),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  16,
+                padding: EdgeInsets.fromLTRB(
+                  isDesktop ? 24 : 16,
                   8,
-                  16,
+                  isDesktop ? 24 : 16,
                   28,
                 ),
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.stretch,
-                  children: [
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth:
+                          isDesktop ? 720 : double.infinity,
+                    ),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.stretch,
+                      children: [
                     const Text(
                       'Enter an invite code to find a private league.',
                       textAlign: TextAlign.center,
@@ -120,7 +284,9 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
                       _buildJoinButton(),
                     ] else
                       _buildHelpPanel(),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -221,9 +387,10 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
       textCapitalization:
           TextCapitalization.characters,
       onChanged: (_) {
-        if (_showPreview) {
+        if (_showPreview || _foundLeague != null) {
           setState(() {
             _showPreview = false;
+            _foundLeague = null;
           });
         }
       },
@@ -234,7 +401,7 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
         fontWeight: FontWeight.w700,
       ),
       decoration: InputDecoration(
-        hintText: 'e.g. SCRAPPY24',
+        hintText: 'e.g. AB12CD34',
         hintStyle: const TextStyle(
           color: Color(0xFF777777),
           letterSpacing: 1,
@@ -274,12 +441,23 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
     return SizedBox(
       height: 52,
       child: OutlinedButton.icon(
-        onPressed: _findLeague,
-        icon: const Icon(
-          Icons.search_rounded,
-        ),
-        label: const Text(
-          'FIND LEAGUE',
+        onPressed: _isFindingLeague || _isJoiningLeague
+            ? null
+            : _findLeague,
+        icon: _isFindingLeague
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.1,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(
+                Icons.search_rounded,
+              ),
+        label: Text(
+          _isFindingLeague ? 'FINDING LEAGUE...' : 'FIND LEAGUE',
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
@@ -303,24 +481,24 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
   }
 
   Widget _buildLeaguePreview() {
+    final LeagueRecord league = _foundLeague!;
+    final Color leagueColor = Color(league.accentColorValue);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: _panelLight,
-        borderRadius:
-            BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: _border,
         ),
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding:
-                const EdgeInsets.fromLTRB(
+            padding: const EdgeInsets.fromLTRB(
               12,
               12,
               12,
@@ -328,17 +506,18 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
             ),
             decoration: BoxDecoration(
               color: const Color(0xFF0A0A0A),
-              borderRadius:
-                  BorderRadius.circular(
+              borderRadius: BorderRadius.circular(
                 14,
               ),
               border: Border.all(
-                color: _orange,
+                color: leagueColor,
                 width: 1.3,
               ),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x2BFE5E02),
+                  color: leagueColor.withValues(
+                    alpha: 0.18,
+                  ),
                   blurRadius: 10,
                 ),
               ],
@@ -349,83 +528,66 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
                   width: 96,
                   height: 96,
                   child: Image.asset(
-                    'assets/images/leaderboard/league_badges/league_dog.webp',
+                    league.badgePath,
                     fit: BoxFit.contain,
-                    filterQuality:
-                        FilterQuality.high,
+                    filterQuality: FilterQuality.high,
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Scrappy',
-                        style: TextStyle(
-                          fontFamily:
-                              'Oswald',
-                          color:
-                              Colors.white,
+                        league.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Oswald',
+                          color: Colors.white,
                           fontSize: 22,
-                          fontWeight:
-                              FontWeight
-                                  .w600,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      SizedBox(height: 4),
-                      Text(
+                      const SizedBox(height: 4),
+                      const Text(
                         'LEAGUE',
                         style: TextStyle(
-                          fontFamily:
-                              'Oswald',
+                          fontFamily: 'Oswald',
                           color: Colors.white,
                           fontSize: 13,
-                          letterSpacing:
-                              1.1,
+                          letterSpacing: 1.1,
                         ),
                       ),
-                      SizedBox(height: 9),
+                      const SizedBox(height: 9),
                       Row(
                         children: [
                           Icon(
-                            Icons
-                                .people_alt_rounded,
-                            color:
-                                _orange,
+                            Icons.people_alt_rounded,
+                            color: leagueColor,
                             size: 17,
                           ),
-                          SizedBox(
+                          const SizedBox(
                             width: 5,
                           ),
                           Text(
-                            '12 MEMBERS',
-                            style:
-                                TextStyle(
-                              fontFamily:
-                                  'Oswald',
-                              color:
-                                  Colors.white,
-                              fontSize:
-                                  12,
-                              fontWeight:
-                                  FontWeight
-                                      .w500,
+                            '${league.memberCount} ${league.memberCount == 1 ? 'MEMBER' : 'MEMBERS'}',
+                            style: const TextStyle(
+                              fontFamily: 'Oswald',
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         'Play. Guess. Win. Together.',
-                        style:
-                            TextStyle(
-                          color: _orange,
+                        style: TextStyle(
+                          color: leagueColor,
                           fontSize: 11.5,
-                          fontWeight:
-                              FontWeight
-                                  .w600,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -460,26 +622,48 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
   }
 
   Widget _buildJoinButton() {
+    final LeagueRecord league = _foundLeague!;
+    final Color leagueColor = Color(league.accentColorValue);
+
     return SizedBox(
       height: 56,
       child: ElevatedButton.icon(
-        onPressed: _joinLeague,
-        icon: const Icon(
-          Icons.group_add_rounded,
-          size: 22,
-        ),
-        label: const Text(
-          'JOIN SCRAPPY',
+        onPressed: _isJoiningLeague || _isFindingLeague
+            ? null
+            : _joinLeague,
+        icon: _isJoiningLeague
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(
+                Icons.group_add_rounded,
+                size: 22,
+              ),
+        label: Text(
+          _isJoiningLeague
+              ? 'JOINING LEAGUE...'
+              : 'JOIN ${league.name.toUpperCase()}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: _orange,
+          backgroundColor: leagueColor,
           foregroundColor: Colors.white,
+          disabledBackgroundColor: leagueColor.withValues(
+            alpha: 0.55,
+          ),
+          disabledForegroundColor: Colors.white,
           elevation: 5,
-          shadowColor:
-              const Color(0x55FE5E02),
+          shadowColor: leagueColor.withValues(
+            alpha: 0.35,
+          ),
           shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(18),
           ),
           textStyle: const TextStyle(
             fontFamily: 'Oswald',
@@ -519,7 +703,7 @@ class _JoinLeagueScreenState extends State<JoinLeagueScreen> {
           SizedBox(width: 9),
           Expanded(
             child: Text(
-              'Ask the league owner for their invite code. Invite links will also be supported when Firebase is connected.',
+              'Ask the league owner for their invite code. Invite links will be supported in a later update.',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 11.5,

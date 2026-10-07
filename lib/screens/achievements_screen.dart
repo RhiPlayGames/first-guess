@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../case_files/models/case_progress.dart';
-import '../case_files/services/case_path_service.dart';
 import '../services/achievement_service.dart';
+import '../services/feature_flag_service.dart';
 import '../services/player_stats_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/app_home_button.dart';
 
 class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
@@ -17,12 +17,8 @@ class AchievementsScreen extends StatefulWidget {
 class _AchievementsScreenState extends State<AchievementsScreen> {
   PlayerStats _stats = const PlayerStats();
   int _dailyFlashCompleted = 0;
-  int _dailyFlashPerfect5s = 0;
-  CaseProgress? _animalKingdomProgress;
-  CaseProgress? _roundTheWorldProgress;
-  CaseProgress? _secretsOfThePastProgress;
-  CaseProgress? _tasteAndTreatsProgress;
   bool _isLoading = true;
+  bool _firstConnectionEnabled = false;
   _FilterData? _selectedFilter;
 
   @override
@@ -32,39 +28,15 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   }
 
   Future<void> _loadStats() async {
-    final PlayerStats savedStats =
-        await PlayerStatsService.loadStats();
+    // Load the core player stats first so the Achievements screen can
+    // render quickly instead of waiting for every secondary source.
+    final List<dynamic> results = await Future.wait<dynamic>(<Future<dynamic>>[
+      PlayerStatsService.loadStats(),
+      FeatureFlagService.isFirstConnectionEnabled(),
+    ]);
 
-    final int dailyFlashCompleted =
-        await DailyFlashMilestoneService
-            .loadLifetimeCompletions();
-
-    final int dailyFlashPerfect5s =
-        await DailyFlashMilestoneService
-            .loadPerfect5s();
-
-    CaseProgress? animalKingdomProgress;
-    CaseProgress? roundTheWorldProgress;
-    CaseProgress? secretsOfThePastProgress;
-    CaseProgress? tasteAndTreatsProgress;
-
-    try {
-      animalKingdomProgress =
-          await CasePathService.loadAnimalKingdomProgress();
-    } catch (_) {
-      // Achievements still load even if Case Files is unavailable.
-    }
-
-    try {
-      roundTheWorldProgress =
-          await CasePathService.loadRoundTheWorldProgress();
-      secretsOfThePastProgress =
-          await CasePathService.loadSecretsOfThePastProgress();
-      tasteAndTreatsProgress =
-          await CasePathService.loadTasteAndTreatsProgress();
-    } catch (_) {
-      // Achievements still load even if Case Files is unavailable.
-    }
+    final PlayerStats savedStats = results[0] as PlayerStats;
+    final bool firstConnectionEnabled = results[1] as bool;
 
     if (!mounted) {
       return;
@@ -72,13 +44,20 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 
     setState(() {
       _stats = savedStats;
-      _dailyFlashCompleted = dailyFlashCompleted;
-      _dailyFlashPerfect5s = dailyFlashPerfect5s;
-      _animalKingdomProgress = animalKingdomProgress;
-      _roundTheWorldProgress = roundTheWorldProgress;
-      _secretsOfThePastProgress = secretsOfThePastProgress;
-      _tasteAndTreatsProgress = tasteAndTreatsProgress;
+      _firstConnectionEnabled = firstConnectionEnabled;
       _isLoading = false;
+    });
+
+    // Load Daily Flash achievement progress after the main stats.
+    final int dailyFlashCompleted =
+        await DailyFlashMilestoneService.loadLifetimeCompletions();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _dailyFlashCompleted = dailyFlashCompleted;
     });
   }
 
@@ -93,74 +72,68 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
         rarity: AchievementRarity.bronze,
         category: AchievementCategory.dailyFlash,
         target: 1,
-        achievementPoints: 20,
+        achievementPoints: 0,
         progressSelector: (_) => _dailyFlashCompleted,
       ),
       Achievement(
         id: 'daily_flash_10',
         title: 'Flash Regular',
         description: 'Complete 10 Daily Flash 5 challenges.',
-        rarity: AchievementRarity.silver,
+        rarity: AchievementRarity.bronze,
         category: AchievementCategory.dailyFlash,
         target: 10,
-        achievementPoints: 60,
+        achievementPoints: 0,
         progressSelector: (_) => _dailyFlashCompleted,
       ),
       Achievement(
         id: 'daily_flash_50',
         title: 'Flash Veteran',
         description: 'Complete 50 Daily Flash 5 challenges.',
-        rarity: AchievementRarity.gold,
+        rarity: AchievementRarity.silver,
         category: AchievementCategory.dailyFlash,
         target: 50,
-        achievementPoints: 125,
+        achievementPoints: 0,
         progressSelector: (_) => _dailyFlashCompleted,
       ),
       Achievement(
         id: 'daily_flash_100',
         title: 'Flash Legend',
         description: 'Complete 100 Daily Flash 5 challenges.',
-        rarity: AchievementRarity.diamond,
+        rarity: AchievementRarity.gold,
         category: AchievementCategory.dailyFlash,
         target: 100,
-        achievementPoints: 300,
+        achievementPoints: 0,
         progressSelector: (_) => _dailyFlashCompleted,
       ),
       Achievement(
-        id: 'daily_flash_perfect_1',
-        title: 'Perfect Flash',
-        description: 'Score a perfect 5 out of 5 in Daily Flash 5.',
-        rarity: AchievementRarity.bronze,
+        id: 'daily_flash_250',
+        title: 'Flash Master',
+        description: 'Complete 250 Daily Flash 5 challenges.',
+        rarity: AchievementRarity.diamond,
         category: AchievementCategory.dailyFlash,
-        target: 1,
-        achievementPoints: 30,
-        progressSelector: (_) => _dailyFlashPerfect5s,
+        target: 250,
+        achievementPoints: 0,
+        progressSelector: (_) => _dailyFlashCompleted,
       ),
       Achievement(
-        id: 'daily_flash_perfect_5',
-        title: 'Perfect Five',
-        description: 'Score 5 perfect Daily Flash 5s.',
-        rarity: AchievementRarity.silver,
+        id: 'daily_flash_365',
+        title: 'Year of Flash',
+        description: 'Complete 365 Daily Flash 5 challenges.',
+        rarity: AchievementRarity.diamond,
         category: AchievementCategory.dailyFlash,
-        target: 5,
-        achievementPoints: 75,
-        progressSelector: (_) => _dailyFlashPerfect5s,
-      ),
-      Achievement(
-        id: 'daily_flash_perfect_25',
-        title: 'Flash Perfectionist',
-        description: 'Score 25 perfect Daily Flash 5s.',
-        rarity: AchievementRarity.gold,
-        category: AchievementCategory.dailyFlash,
-        target: 25,
-        achievementPoints: 150,
-        progressSelector: (_) => _dailyFlashPerfect5s,
+        target: 365,
+        achievementPoints: 0,
+        progressSelector: (_) => _dailyFlashCompleted,
       ),
     ];
 
     if (_selectedFilter == null || _selectedFilter!.categories == null) {
       achievements = <Achievement>[
-        ...AchievementService.achievements,
+        ...AchievementService.achievements.where(
+          (achievement) =>
+              _firstConnectionEnabled ||
+              achievement.category != AchievementCategory.firstConnection,
+        ),
         ...dailyFlashAchievements,
       ];
     } else {
@@ -170,6 +143,8 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       achievements = <Achievement>[
         ...AchievementService.achievements.where(
           (achievement) =>
+              (_firstConnectionEnabled ||
+                  achievement.category != AchievementCategory.firstConnection) &&
               selectedCategories.contains(achievement.category),
         ),
         if (selectedCategories.contains(AchievementCategory.dailyFlash))
@@ -193,6 +168,13 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth =
+        MediaQuery.sizeOf(context).width;
+    final bool isDesktop = screenWidth >= 1200;
+    final double horizontalPadding = isDesktop
+        ? ((screenWidth - 1100) / 2).clamp(24.0, double.infinity)
+        : 18.0;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -208,6 +190,15 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
             letterSpacing: 0.6,
           ),
         ),
+        actions: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: FirstGuessHomeButton(
+              onPressed: () =>
+                  Navigator.of(context).popUntil((route) => route.isFirst),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: _isLoading
@@ -225,36 +216,18 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                       const AlwaysScrollableScrollPhysics(),
                   slivers: [
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                        18,
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
                         12,
-                        18,
+                        horizontalPadding,
                         18,
                       ),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate(
                           [
-                            _AchievementSummary(
-                              animalKingdomBadgeEarned:
-                                  _animalKingdomProgress
-                                          ?.isCompleted ??
-                                      false,
-                              roundTheWorldBadgeEarned:
-                                  _roundTheWorldProgress
-                                          ?.isCompleted ??
-                                      false,
-                              secretsOfThePastBadgeEarned:
-                                  _secretsOfThePastProgress
-                                          ?.isCompleted ??
-                                      false,
-                              tasteAndTreatsBadgeEarned:
-                                  _tasteAndTreatsProgress
-                                          ?.isCompleted ??
-                                      false,
-                            ),
-                            const SizedBox(height: 20),
                             _CategoryFilters(
                               selectedFilter: _selectedFilter,
+                              firstConnectionEnabled: _firstConnectionEnabled,
                               onFilterSelected: (filter) {
                                 setState(() {
                                   _selectedFilter = filter;
@@ -269,27 +242,51 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                       ),
                     ),
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                        18,
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
                         0,
-                        18,
+                        horizontalPadding,
                         32,
                       ),
-                      sliver: SliverList.separated(
-                        itemCount: _visibleAchievements.length,
-                        separatorBuilder: (context, index) {
-                          return const SizedBox(height: 12);
-                        },
-                        itemBuilder: (context, index) {
-                          final Achievement achievement =
-                              _visibleAchievements[index];
+                      sliver: isDesktop
+                          ? SliverGrid(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 14,
+                                mainAxisSpacing: 14,
+                                mainAxisExtent: 150,
+                              ),
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final Achievement achievement =
+                                      _visibleAchievements[index];
 
-                          return _AchievementCard(
-                            achievement: achievement,
-                            stats: _stats,
-                          );
-                        },
-                      ),
+                                  return _AchievementCard(
+                                    achievement: achievement,
+                                    stats: _stats,
+                                  );
+                                },
+                                childCount:
+                                    _visibleAchievements.length,
+                              ),
+                            )
+                          : SliverList.separated(
+                              itemCount:
+                                  _visibleAchievements.length,
+                              separatorBuilder: (context, index) {
+                                return const SizedBox(height: 12);
+                              },
+                              itemBuilder: (context, index) {
+                                final Achievement achievement =
+                                    _visibleAchievements[index];
+
+                                return _AchievementCard(
+                                  achievement: achievement,
+                                  stats: _stats,
+                                );
+                              },
+                            ),
                     ),
                   ],
                 ),
@@ -298,135 +295,6 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
     );
   }
 
-}
-
-class _AchievementSummary extends StatelessWidget {
-  final bool animalKingdomBadgeEarned;
-  final bool roundTheWorldBadgeEarned;
-  final bool secretsOfThePastBadgeEarned;
-  final bool tasteAndTreatsBadgeEarned;
-
-  const _AchievementSummary({
-    required this.animalKingdomBadgeEarned,
-    required this.roundTheWorldBadgeEarned,
-    required this.secretsOfThePastBadgeEarned,
-    required this.tasteAndTreatsBadgeEarned,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
-      decoration: BoxDecoration(
-        color: AppColors.panel,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'BADGES',
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.6,
-            ),
-          ),
-          const SizedBox(height: 12),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              const double gap = 10;
-              final double badgeWidth =
-                  (constraints.maxWidth - (gap * 3)) / 4;
-
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _CaseFileBadge(
-                    imagePath:
-                        'assets/images/badges/animal_kingdom_case_file_badge.webp',
-                    tooltip: animalKingdomBadgeEarned
-                        ? 'Animal Kingdom Case Badge'
-                        : 'Animal Kingdom Case Badge — not yet earned',
-                    earned: animalKingdomBadgeEarned,
-                    width: badgeWidth,
-                  ),
-                  const SizedBox(width: gap),
-                  _CaseFileBadge(
-                    imagePath:
-                        'assets/images/badges/amazing_world_case_file_badge.webp',
-                    tooltip: roundTheWorldBadgeEarned
-                        ? 'Around the World Case Badge'
-                        : 'Around the World Case Badge — not yet earned',
-                    earned: roundTheWorldBadgeEarned,
-                    width: badgeWidth,
-                  ),
-                  const SizedBox(width: gap),
-                  _CaseFileBadge(
-                    imagePath:
-                        'assets/images/badges/mysteries_legends_case_file_badge.webp',
-                    tooltip: secretsOfThePastBadgeEarned
-                        ? 'Secrets of the Past Case Badge'
-                        : 'Secrets of the Past Case Badge — not yet earned',
-                    earned: secretsOfThePastBadgeEarned,
-                    width: badgeWidth,
-                  ),
-                  const SizedBox(width: gap),
-                  _CaseFileBadge(
-                    imagePath:
-                        'assets/images/badges/tastes_treats_case_file_badge.webp',
-                    tooltip: tasteAndTreatsBadgeEarned
-                        ? 'Tastes & Treats Case Badge'
-                        : 'Tastes & Treats Case Badge — not yet earned',
-                    earned: tasteAndTreatsBadgeEarned,
-                    width: badgeWidth,
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CaseFileBadge extends StatelessWidget {
-  final String imagePath;
-  final String tooltip;
-  final bool earned;
-  final double width;
-
-  const _CaseFileBadge({
-    required this.imagePath,
-    required this.tooltip,
-    required this.earned,
-    required this.width,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: Opacity(
-        opacity: earned ? 1 : 0.28,
-        child: SizedBox(
-          width: width,
-          child: AspectRatio(
-            aspectRatio: 1,
-            child: Image.asset(
-              imagePath,
-              fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _AchievementDivider extends StatelessWidget {
@@ -466,97 +334,113 @@ class _AchievementDivider extends StatelessWidget {
 
 class _CategoryFilters extends StatelessWidget {
   final _FilterData? selectedFilter;
+  final bool firstConnectionEnabled;
   final ValueChanged<_FilterData?> onFilterSelected;
 
   const _CategoryFilters({
     required this.selectedFilter,
+    required this.firstConnectionEnabled,
     required this.onFilterSelected,
   });
 
+  static const Set<AchievementCategory> _classicCategories =
+      <AchievementCategory>{
+    AchievementCategory.firstGuess,
+    AchievementCategory.animals,
+    AchievementCategory.booksAuthors,
+    AchievementCategory.countries,
+    AchievementCategory.creativeWorld,
+    AchievementCategory.famousWords,
+    AchievementCategory.foodDrink,
+    AchievementCategory.music,
+    AchievementCategory.pastPresent,
+    AchievementCategory.scienceNature,
+    AchievementCategory.sports,
+    AchievementCategory.watchPlay,
+    AchievementCategory.whoAmI,
+  };
+
+  static const List<_FilterData> _baseFilters = <_FilterData>[
+    _FilterData(label: 'ALL', categories: null),
+    _FilterData(
+      label: 'DAILY FLASH 5',
+      categories: <AchievementCategory>{AchievementCategory.dailyFlash},
+    ),
+    _FilterData(
+      label: 'GAMES PLAYED',
+      categories: <AchievementCategory>{AchievementCategory.general},
+    ),
+    _FilterData(
+      label: 'STREAK',
+      categories: <AchievementCategory>{AchievementCategory.streak},
+    ),
+    _FilterData(
+      label: 'XP',
+      categories: <AchievementCategory>{AchievementCategory.xp},
+    ),
+    _FilterData(
+      label: 'CLASSIC FIRST GUESS',
+      categories: _classicCategories,
+    ),
+    _FilterData(
+      label: 'FIRST DATE',
+      categories: <AchievementCategory>{AchievementCategory.firstDate},
+    ),
+    _FilterData(
+      label: 'FIRST MATCH',
+      categories: <AchievementCategory>{AchievementCategory.firstMatch},
+    ),
+    _FilterData(
+      label: 'FIRST ORDER',
+      categories: <AchievementCategory>{AchievementCategory.firstOrder},
+    ),
+    _FilterData(
+      label: 'FIRST WORD',
+      categories: <AchievementCategory>{AchievementCategory.firstWord},
+    ),
+  ];
+
+  Widget _buildChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 9),
+      child: ChoiceChip(
+        selected: isSelected,
+        onSelected: (_) => onTap(),
+        label: Text(label),
+        labelStyle: TextStyle(
+          fontFamily: 'Inter',
+          color: isSelected ? Colors.black : AppColors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
+        selectedColor: AppColors.orange,
+        backgroundColor: AppColors.panel,
+        side: BorderSide(
+          color: isSelected ? AppColors.orange : AppColors.border,
+        ),
+        showCheckmark: false,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    const List<_FilterData> filters = [
-      _FilterData(
-        label: 'ALL',
-        categories: null,
-      ),
-      _FilterData(
-        label: 'XP',
-        categories: <AchievementCategory>{
-          AchievementCategory.xp,
-        },
-      ),
-      _FilterData(
-        label: 'SCORE',
-        categories: <AchievementCategory>{
-          AchievementCategory.score,
-        },
-      ),
-      _FilterData(
-        label: 'STREAK',
-        categories: <AchievementCategory>{
-          AchievementCategory.streak,
-        },
-      ),
-      _FilterData(
-        label: 'FIRST GUESS',
-        categories: <AchievementCategory>{
-          AchievementCategory.firstGuess,
-        },
-      ),
-      _FilterData(
-        label: 'DAILY FLASH 5',
-        categories: <AchievementCategory>{
-          AchievementCategory.dailyFlash,
-        },
-      ),
-      _FilterData(
-        label: 'BOOKS & AUTHORS',
-        categories: <AchievementCategory>{
-          AchievementCategory.books,
-        },
-      ),
-      _FilterData(
-        label: 'COUNTRIES',
-        categories: <AchievementCategory>{
-          AchievementCategory.countries,
-          AchievementCategory.flags,
-        },
-      ),
-      _FilterData(
-        label: 'CREATIVE WORLD',
-        categories: <AchievementCategory>{},
-      ),
-      _FilterData(
-        label: 'FAMOUS PEOPLE',
-        categories: <AchievementCategory>{},
-      ),
-      _FilterData(
-        label: 'MUSIC',
-        categories: <AchievementCategory>{},
-      ),
-      _FilterData(
-        label: 'PAST & PRESENT',
-        categories: <AchievementCategory>{},
-      ),
-      _FilterData(
-        label: 'SCIENCE & DISCOVERY',
-        categories: <AchievementCategory>{
-          AchievementCategory.animals,
-        },
-      ),
-      _FilterData(
-        label: 'SPORTS',
-        categories: <AchievementCategory>{
-          AchievementCategory.footballTeams,
-        },
-      ),
-      _FilterData(
-        label: 'WATCH & PLAY',
-        categories: <AchievementCategory>{
-          AchievementCategory.movies,
-        },
-      ),
+    final List<_FilterData> filters = <_FilterData>[
+      ..._baseFilters,
+      if (firstConnectionEnabled)
+        const _FilterData(
+          label: 'FIRST CONNECTION',
+          categories: <AchievementCategory>{
+            AchievementCategory.firstConnection,
+          },
+        ),
     ];
 
     return SingleChildScrollView(
@@ -565,38 +449,13 @@ class _CategoryFilters extends StatelessWidget {
         children: filters.map((filter) {
           final bool isAll = filter.categories == null;
           final bool isSelected = isAll
-              ? selectedFilter == null ||
-                  selectedFilter?.categories == null
+              ? selectedFilter == null || selectedFilter?.categories == null
               : selectedFilter?.label == filter.label;
 
-          return Padding(
-            padding: const EdgeInsets.only(right: 9),
-            child: ChoiceChip(
-              selected: isSelected,
-              onSelected: (_) {
-                onFilterSelected(isAll ? null : filter);
-              },
-              label: Text(filter.label),
-              labelStyle: TextStyle(
-                fontFamily: 'Inter',
-                color: isSelected
-                    ? Colors.black
-                    : AppColors.white,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-              selectedColor: AppColors.orange,
-              backgroundColor: AppColors.panel,
-              side: BorderSide(
-                color: isSelected
-                    ? AppColors.orange
-                    : AppColors.border,
-              ),
-              showCheckmark: false,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-            ),
+          return _buildChip(
+            label: filter.label,
+            isSelected: isSelected,
+            onTap: () => onFilterSelected(isAll ? null : filter),
           );
         }).toList(),
       ),
@@ -625,6 +484,20 @@ class _AchievementCard extends StatelessWidget {
 
   static const Color _completedGreen = Color(0xFF79D44C);
 
+  String _formatNumber(int value) {
+    final String digits = value.abs().toString();
+    final StringBuffer buffer = StringBuffer();
+
+    for (int index = 0; index < digits.length; index++) {
+      if (index > 0 && (digits.length - index) % 3 == 0) {
+        buffer.write(',');
+      }
+      buffer.write(digits[index]);
+    }
+
+    return value < 0 ? '-$buffer' : buffer.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     final int currentProgress = achievement.progress(stats);
@@ -636,6 +509,18 @@ class _AchievementCard extends StatelessWidget {
         : isInProgress
             ? _AchievementDisplayStatus.inProgress
             : _AchievementDisplayStatus.notStarted;
+
+    final int cappedProgress = currentProgress.clamp(
+      0,
+      achievement.target,
+    );
+    final double progressFraction =
+        achievement.target <= 0
+            ? 1
+            : (cappedProgress / achievement.target)
+                .clamp(0.0, 1.0);
+    final int progressPercent =
+        (progressFraction * 100).round();
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -658,55 +543,101 @@ class _AchievementCard extends StatelessWidget {
               ]
             : null,
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _AchievementIcon(
-            achievement: achievement,
-            isCompleted: isCompleted,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _AchievementIcon(
+                achievement: achievement,
+                isCompleted: isCompleted,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      achievement.title.toUpperCase(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Oswald',
+                        color: isCompleted || isInProgress
+                            ? AppColors.white
+                            : AppColors.grey,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.4,
+                        height: 1.05,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      achievement.description,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        color: isCompleted || isInProgress
+                            ? AppColors.white
+                            : AppColors.grey,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              _AchievementStatusPill(
+                status: status,
+                completedGreen: _completedGreen,
+              ),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  achievement.title.toUpperCase(),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Oswald',
-                    color: isCompleted
-                        ? AppColors.white
-                        : AppColors.grey,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.4,
-                    height: 1.05,
-                  ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                '${_formatNumber(cappedProgress)} / '
+                '${_formatNumber(achievement.target)}',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  color: isCompleted || isInProgress
+                      ? AppColors.white
+                      : AppColors.grey,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  achievement.description,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    color: isCompleted
-                        ? AppColors.white
-                        : AppColors.grey,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    height: 1.3,
-                  ),
+              ),
+              const Spacer(),
+              Text(
+                '$progressPercent%',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  color: isCompleted || isInProgress
+                      ? AppColors.white
+                      : AppColors.grey,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
                 ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progressFraction,
+              minHeight: 6,
+              backgroundColor: AppColors.darkGrey,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.orange,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          _AchievementStatusPill(
-            status: status,
-            completedGreen: _completedGreen,
           ),
         ],
       ),
@@ -732,7 +663,6 @@ class _AchievementStatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String label;
-    final IconData icon;
     final Color backgroundColor;
     final Color foregroundColor;
     final Color borderColor;
@@ -740,25 +670,22 @@ class _AchievementStatusPill extends StatelessWidget {
     switch (status) {
       case _AchievementDisplayStatus.notStarted:
         label = 'NOT STARTED';
-        icon = Icons.more_horiz_rounded;
         backgroundColor = const Color(0xFF242424);
-        foregroundColor = AppColors.grey;
-        borderColor = AppColors.darkGrey;
+        foregroundColor = AppColors.white;
+        borderColor = AppColors.white;
         break;
 
       case _AchievementDisplayStatus.inProgress:
         label = 'IN PROGRESS';
-        icon = Icons.hourglass_bottom_rounded;
-        backgroundColor = AppColors.orange;
-        foregroundColor = Colors.black;
+        backgroundColor = const Color(0xFF242424);
+        foregroundColor = AppColors.orange;
         borderColor = AppColors.orange;
         break;
 
       case _AchievementDisplayStatus.completed:
         label = 'COMPLETED';
-        icon = Icons.check_circle_rounded;
-        backgroundColor = completedGreen;
-        foregroundColor = Colors.black;
+        backgroundColor = const Color(0xFF242424);
+        foregroundColor = completedGreen;
         borderColor = completedGreen;
         break;
     }
@@ -773,39 +700,25 @@ class _AchievementStatusPill extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: borderColor,
           width: 1.2,
         ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: foregroundColor,
-            size: 17,
-          ),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.fade,
-              softWrap: false,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Oswald',
-                color: foregroundColor,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.25,
-              ),
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.fade,
+        softWrap: false,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontFamily: 'Inter',
+          color: foregroundColor,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0,
+        ),
       ),
     );
   }
@@ -825,40 +738,68 @@ class _AchievementIcon extends StatelessWidget {
       case AchievementCategory.general:
         return 'assets/images/stats/my_stats/games_played.webp';
 
-      case AchievementCategory.countries:
-        return 'assets/images/categories/subcategories/countries/countries_globe.webp';
-
       case AchievementCategory.firstGuess:
         return 'assets/images/stats/my_stats/first_guesses.webp';
 
       case AchievementCategory.streak:
-        return 'assets/images/stats/my_stats/achievements.webp';
-
-      case AchievementCategory.score:
-        return 'assets/images/stats/my_stats/highest_score.webp';
+        return 'assets/images/stats/stat_streak.png';
 
       case AchievementCategory.xp:
         return 'assets/images/stats/my_stats/xp.webp';
 
       case AchievementCategory.dailyFlash:
-        return achievement.id.contains('perfect')
-            ? 'assets/images/stats/my_stats/daily_flash_perfect.webp'
-            : 'assets/images/stats/my_stats/daily_flash_completed.webp';
+        return 'assets/images/stats/my_stats/daily_flash_completed.webp';
 
-      case AchievementCategory.flags:
-        return 'assets/images/categories/subcategories/countries/countries_globe.webp';
+      case AchievementCategory.firstConnection:
+        return 'assets/images/categories/first_connection/firstconnections_icon128.webp';
 
-      case AchievementCategory.movies:
-        return 'assets/images/categories/watch_and_play.png';
+      case AchievementCategory.firstDate:
+        return 'assets/images/categories/first_date/firstdateicon128.webp';
 
-      case AchievementCategory.books:
-        return 'assets/images/categories/books_and_authors.png';
+      case AchievementCategory.firstMatch:
+        return 'assets/images/categories/first_match/firstmatch_icon128.webp';
+
+      case AchievementCategory.firstOrder:
+        return 'assets/images/categories/first_order/firstorder_icon128.webp';
+
+      case AchievementCategory.firstWord:
+        return 'assets/images/categories/first_word/firstword_128.webp';
+
+      case AchievementCategory.countries:
+        return 'assets/images/categories/countries.webp';
+
+      case AchievementCategory.scienceNature:
+        return 'assets/images/categories/science_and_nature.webp';
 
       case AchievementCategory.animals:
-        return 'assets/images/stats/my_stats/achievements.webp';
+        return 'assets/images/categories/animals.webp';
 
-      case AchievementCategory.footballTeams:
-        return 'assets/images/categories/sports.png';
+      case AchievementCategory.watchPlay:
+        return 'assets/images/categories/watch_and_play.webp';
+
+      case AchievementCategory.music:
+        return 'assets/images/categories/music.webp';
+
+      case AchievementCategory.booksAuthors:
+        return 'assets/images/categories/books_and_authors.webp';
+
+      case AchievementCategory.sports:
+        return 'assets/images/categories/sports.webp';
+
+      case AchievementCategory.whoAmI:
+        return 'assets/images/categories/famous_people.webp';
+
+      case AchievementCategory.pastPresent:
+        return 'assets/images/categories/past_and_present.webp';
+
+      case AchievementCategory.foodDrink:
+        return 'assets/images/categories/food_and_drink.webp';
+
+      case AchievementCategory.creativeWorld:
+        return 'assets/images/categories/creative_world.webp';
+
+      case AchievementCategory.famousWords:
+        return 'assets/images/categories/famous_words/famous_words.webp';
     }
   }
 
@@ -882,6 +823,13 @@ class _AchievementIcon extends StatelessWidget {
           _imagePath,
           fit: BoxFit.contain,
           filterQuality: FilterQuality.high,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(
+              Icons.emoji_events_rounded,
+              color: AppColors.orange,
+              size: 30,
+            );
+          },
         ),
       ),
     );

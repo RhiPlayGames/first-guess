@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/league_service.dart';
 import '../widgets/app_home_button.dart';
 
 class CreateLeagueScreen extends StatefulWidget {
@@ -18,13 +19,13 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
   static const Color _panel = Color(0xFF111111);
   static const Color _panelLight = Color(0xFF181818);
   static const Color _border = Color(0xFF343434);
-  static const Color _grey = Color(0xFFAAAAAA);
 
   final TextEditingController _nameController =
       TextEditingController();
 
   int _selectedBadgeIndex = 6;
   int _selectedColorIndex = 0;
+  bool _isCreatingLeague = false;
 
   static const List<_LeagueBadgeOption> _badges = [
     _LeagueBadgeOption(
@@ -304,7 +305,11 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
     return true;
   }
 
-  void _createLeague() {
+  Future<void> _createLeague() async {
+    if (_isCreatingLeague) {
+      return;
+    }
+
     final String name = _nameController.text.trim();
 
     if (name.isEmpty) {
@@ -326,22 +331,87 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: const Color(0xFF111111),
-        content: Text(
-          '$name is ready to connect to Firebase later.',
-          style: const TextStyle(
-            color: Colors.white,
+    setState(() {
+      _isCreatingLeague = true;
+    });
+
+    try {
+      final LeagueRecord league = await LeagueService.createLeague(
+        name: name,
+        badgePath: _selectedBadge.path,
+        accentColorValue: _selectedColor.toARGB32(),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFF111111),
+            content: Text(
+              '${league.name} created. Invite code: ${league.inviteCode}',
+              style: const TextStyle(
+                color: Colors.white,
+              ),
+            ),
+            duration: const Duration(seconds: 3),
           ),
-        ),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+        );
+
+      Navigator.of(context).pop(true);
+    } on LeagueServiceException catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFF111111),
+            content: Text(
+              error.message,
+              style: const TextStyle(
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            backgroundColor: Color(0xFF111111),
+            content: Text(
+              'The league could not be created. Please try again.',
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCreatingLeague = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Scaffold(
       backgroundColor: _background,
       body: SafeArea(
@@ -350,22 +420,29 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
             _buildHeader(context),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  16,
+                padding: EdgeInsets.fromLTRB(
+                  isDesktop ? 24 : 16,
                   8,
-                  16,
+                  isDesktop ? 24 : 16,
                   28,
                 ),
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.stretch,
-                  children: [
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth:
+                          isDesktop ? 1120 : double.infinity,
+                    ),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.stretch,
+                      children: [
                     const Text(
                       'Build your league. Invite your people.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 13,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                         height: 1.3,
                       ),
                     ),
@@ -376,36 +453,16 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
                     ),
                     const SizedBox(height: 10),
                     _buildNameField(),
-                    const SizedBox(height: 7),
-                    const Text(
-                      'Choose a name that represents your league.',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11.5,
-                      ),
-                    ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 18),
                     _buildSectionDivider(),
                     const SizedBox(height: 18),
                     _buildSectionTitle(
                       number: 2,
-                      title: 'CHOOSE A BADGE',
+                      title: 'CHOOSE A LEAGUE BADGE',
                     ),
                     const SizedBox(height: 12),
                     _buildBadgeGrid(),
-                    const SizedBox(height: 9),
-                    const Center(
-                      child: Text(
-                        '25 BADGES TO CHOOSE FROM',
-                        style: TextStyle(
-                          fontFamily: 'Oswald',
-                          color: Colors.white,
-                          fontSize: 11.5,
-                          letterSpacing: 0.7,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 14),
                     _buildSectionDivider(),
                     const SizedBox(height: 18),
                     _buildSectionTitle(
@@ -414,19 +471,13 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
                     ),
                     const SizedBox(height: 13),
                     _buildColorSelector(),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'This color will be used for your league accents.',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11.5,
-                      ),
-                    ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 18),
                     _buildPreviewPanel(),
                     const SizedBox(height: 18),
                     _buildCreateButton(),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -569,16 +620,19 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
   }
 
   Widget _buildBadgeGrid() {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return GridView.builder(
       shrinkWrap: true,
       physics:
           const NeverScrollableScrollPhysics(),
       itemCount: _badges.length,
       gridDelegate:
-          const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 5,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+          SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isDesktop ? 8 : 5,
+        crossAxisSpacing: isDesktop ? 10 : 8,
+        mainAxisSpacing: isDesktop ? 10 : 8,
         childAspectRatio: 1,
       ),
       itemBuilder: (
@@ -751,16 +805,6 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
-          const Text(
-            'THIS IS HOW YOUR LEAGUE WILL LOOK',
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              color: Colors.white,
-              fontSize: 11,
-              letterSpacing: 0.55,
-            ),
-          ),
-          const SizedBox(height: 10),
           Container(
             width: double.infinity,
             padding:
@@ -831,44 +875,24 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
                       ),
                       Row(
                         children: [
-                          Icon(
-                            Icons
-                                .people_alt_rounded,
-                            color:
-                                _selectedColor,
-                            size: 17,
+                          const Icon(
+                            Icons.people_alt_rounded,
+                            color: Colors.white,
+                            size: 22,
                           ),
                           const SizedBox(
                             width: 5,
                           ),
                           const Text(
                             '1 MEMBER',
-                            style:
-                                TextStyle(
-                              fontFamily:
-                                  'Oswald',
-                              color:
-                                  _grey,
-                              fontSize:
-                                  11.5,
+                            style: TextStyle(
+                              fontFamily: 'Oswald',
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
-                      ),
-                      const SizedBox(
-                        height: 7,
-                      ),
-                      Text(
-                        'Play. Guess. Win. Together.',
-                        style:
-                            TextStyle(
-                          color:
-                              _selectedColor,
-                          fontSize: 11.5,
-                          fontWeight:
-                              FontWeight
-                                  .w600,
-                        ),
                       ),
                     ],
                   ),
@@ -892,13 +916,22 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
     return SizedBox(
       height: 56,
       child: ElevatedButton.icon(
-        onPressed: _createLeague,
-        icon: const Icon(
-          Icons.person_add_alt_1_rounded,
-          size: 22,
-        ),
-        label: const Text(
-          'CREATE LEAGUE',
+        onPressed: _isCreatingLeague ? null : _createLeague,
+        icon: _isCreatingLeague
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(
+                Icons.person_add_alt_1_rounded,
+                size: 22,
+              ),
+        label: Text(
+          _isCreatingLeague ? 'CREATING LEAGUE...' : 'CREATE LEAGUE',
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor:

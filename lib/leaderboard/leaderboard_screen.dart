@@ -1,7 +1,11 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/avatar_preferences_service.dart';
+import '../services/player_profile_service.dart';
 import '../widgets/app_home_button.dart';
 import 'my_leagues_screen.dart';
 
@@ -28,105 +32,38 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Timer? _countdownTimer;
   Duration _timeUntilReset = Duration.zero;
 
-  final List<_LeaderboardPlayer> _players = const [
-    _LeaderboardPlayer(
-      rank: 1,
-      name: 'QuizQueen',
-      score: 15230,
-      firstGuesses: 24,
-      movement: 2,
-      avatarPath: 'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaderboardPlayer(
-      rank: 2,
-      name: 'ClueMaster',
-      score: 12450,
-      firstGuesses: 18,
-      movement: 1,
-      avatarPath: 'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaderboardPlayer(
-      rank: 3,
-      name: 'Brainiac',
-      score: 11200,
-      firstGuesses: 17,
-      movement: -1,
-      avatarPath: 'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaderboardPlayer(
-      rank: 4,
-      name: 'WordWizard',
-      score: 9850,
-      firstGuesses: 16,
-      movement: 2,
-      avatarPath: 'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaderboardPlayer(
-      rank: 5,
-      name: 'TriviaTitan',
-      score: 8920,
-      firstGuesses: 14,
-      movement: -1,
-      avatarPath: 'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaderboardPlayer(
-      rank: 6,
-      name: 'GuessGenius',
-      score: 8410,
-      firstGuesses: 13,
-      movement: 3,
-      avatarPath: 'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaderboardPlayer(
-      rank: 7,
-      name: 'LogicLion',
-      score: 7620,
-      firstGuesses: 12,
-      movement: 1,
-      avatarPath: 'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaderboardPlayer(
-      rank: 8,
-      name: 'PuzzlePro',
-      score: 6980,
-      firstGuesses: 10,
-      movement: -2,
-      avatarPath: 'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaderboardPlayer(
-      rank: 9,
-      name: 'MindMap',
-      score: 6250,
-      firstGuesses: 9,
-      movement: 0,
-      avatarPath: 'assets/images/leaderboard/default_profile.webp',
-    ),
-    _LeaderboardPlayer(
-      rank: 10,
-      name: 'FactFinder',
-      score: 5830,
-      firstGuesses: 8,
-      movement: 1,
-      avatarPath: 'assets/images/leaderboard/default_profile.webp',
-    ),
-  ];
+  bool _isLoading = true;
+  List<_LeaderboardPlayer> _players = <_LeaderboardPlayer>[];
+  _LeaderboardPlayer? _currentPlayer;
 
-  final _LeaderboardPlayer _currentPlayer = const _LeaderboardPlayer(
-    rank: 27,
-    name: 'YOU',
-    score: 3420,
-    firstGuesses: 5,
-    movement: 4,
-    isCurrentPlayer: true,
-    avatarPath: 'assets/images/leaderboard/default_profile.webp',
-  );
+  static const List<_SeededPlayer> _seededPlayers = <_SeededPlayer>[
+    _SeededPlayer('seed_01', 'Quiz Lover', 'assets/images/avatars/Final/optimized/15_fox.webp', 15550, 84, 1250, 8, 4230, 27),
+    _SeededPlayer('seed_02', 'Milo', 'assets/images/avatars/Final/optimized/owl.webp', 14920, 79, 1180, 7, 3980, 25),
+    _SeededPlayer('seed_03', 'Puzzle Panda', 'assets/images/avatars/Final/optimized/13_panda.webp', 14180, 73, 1110, 7, 3760, 23),
+    _SeededPlayer('seed_04', 'Luna', 'assets/images/avatars/Final/optimized/raccoon_blocky.webp', 13240, 69, 1030, 6, 3510, 21),
+    _SeededPlayer('seed_05', 'Trivia Otter', 'assets/images/avatars/Final/optimized/07_otter.webp', 12460, 64, 960, 6, 3290, 20),
+    _SeededPlayer('seed_06', 'Fact Finder', 'assets/images/avatars/Final/optimized/21_astronaut.webp', 11690, 59, 890, 5, 3060, 18),
+    _SeededPlayer('seed_07', 'Dexter', 'assets/images/avatars/Final/optimized/knight.webp', 10820, 55, 820, 5, 2840, 17),
+    _SeededPlayer('seed_08', 'Clue Cat', 'assets/images/avatars/Final/optimized/10_black_white_cat.webp', 9960, 49, 750, 4, 2610, 15),
+    _SeededPlayer('seed_09', 'Poppy', 'assets/images/avatars/Final/optimized/05_pig.webp', 9140, 45, 680, 4, 2380, 14),
+    _SeededPlayer('seed_10', 'Puzzle Parrot', 'assets/images/avatars/Final/optimized/08_parrot.webp', 8360, 41, 610, 4, 2160, 13),
+    _SeededPlayer('seed_11', 'Merlin', 'assets/images/avatars/Final/optimized/wizard.webp', 7580, 37, 540, 3, 1940, 11),
+    _SeededPlayer('seed_12', 'Clue Chaser', 'assets/images/avatars/Final/optimized/16_giraffe.webp', 6810, 33, 470, 3, 1720, 10),
+    _SeededPlayer('seed_13', 'Nova', 'assets/images/avatars/Final/optimized/robot.webp', 6090, 29, 410, 2, 1510, 9),
+    _SeededPlayer('seed_14', 'Brain Box', 'assets/images/avatars/Final/optimized/scientist.webp', 5380, 25, 350, 2, 1310, 8),
+    _SeededPlayer('seed_15', 'Finn', 'assets/images/avatars/Final/optimized/pirate.webp', 4670, 22, 300, 2, 1120, 7),
+    _SeededPlayer('seed_16', 'Guess Again', 'assets/images/avatars/Final/optimized/ghost.webp', 3970, 18, 250, 1, 940, 5),
+    _SeededPlayer('seed_17', 'Pip', 'assets/images/avatars/Final/optimized/penguin.webp', 3290, 15, 200, 1, 770, 4),
+    _SeededPlayer('seed_18', 'Trivia Star', 'assets/images/avatars/Final/optimized/12_zebra.webp', 2630, 12, 150, 1, 610, 3),
+    _SeededPlayer('seed_19', 'Ziggy', 'assets/images/avatars/Final/optimized/alien.webp', 1980, 9, 100, 1, 450, 2),
+    _SeededPlayer('seed_20', 'Clue Hunter', 'assets/images/avatars/Final/optimized/04_hedgehog.webp', 1360, 6, 60, 0, 290, 1),
+  ];
 
   @override
   void initState() {
     super.initState();
-
     _updateCountdown();
-
+    _loadLeaderboard();
     _countdownTimer = Timer.periodic(
       const Duration(seconds: 1),
       (_) => _updateCountdown(),
@@ -139,43 +76,274 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     super.dispose();
   }
 
-  void _updateCountdown() {
-    if (_periodTab == 0) {
-      if (!mounted) {
+  String _periodId() {
+    final DateTime now = DateTime.now();
+    final String month = now.month.toString().padLeft(2, '0');
+    final String day = now.day.toString().padLeft(2, '0');
+    if (_periodTab == 1) return 'daily_${now.year}-$month-$day';
+    if (_periodTab == 2) return 'monthly_${now.year}-$month';
+    return 'all_time';
+  }
+
+  Future<_LeaderboardPlayer> _loadCurrentPlayerFallback(
+    String currentUid,
+    String periodId,
+  ) async {
+    int score = 0;
+    int firstGuesses = 0;
+
+    try {
+      final String legacyDocumentId = periodId == 'all_time'
+          ? 'public_stats'
+          : periodId;
+      final DocumentSnapshot<Map<String, dynamic>> legacySnapshot =
+          await FirebaseFirestore.instance
+              .collection('players')
+              .doc(currentUid)
+              .collection('leaderboard')
+              .doc(legacyDocumentId)
+              .get();
+
+      final Map<String, dynamic>? legacyData = legacySnapshot.data();
+      if (legacyData != null) {
+        final String scoreField = periodId == 'all_time'
+            ? 'totalScore'
+            : 'score';
+        score = (legacyData[scoreField] as num?)?.toInt() ?? 0;
+        firstGuesses =
+            (legacyData['firstGuesses'] as num?)?.toInt() ?? 0;
+      }
+    } on FirebaseException {
+      // A missing legacy period record simply means a zero score.
+    }
+
+    final String? savedDisplayName =
+        await PlayerProfileService.loadDisplayName();
+    final String displayName =
+        savedDisplayName?.trim().isNotEmpty == true
+            ? savedDisplayName!.trim()
+            : 'Player';
+
+    final String avatarPath =
+        await AvatarPreferencesService.loadSelectedAvatarPath() ??
+            'assets/images/avatars/Final/optimized/default_avatar.webp';
+
+    return _LeaderboardPlayer(
+      id: currentUid,
+      rank: 0,
+      name: displayName,
+      score: score,
+      firstGuesses: firstGuesses,
+      movement: 0,
+      avatarPath: avatarPath,
+      isCurrentPlayer: true,
+    );
+  }
+
+  Future<_GlobalRankSnapshot> _loadRankSnapshot(
+    String periodId,
+  ) async {
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> snapshot =
+          await FirebaseFirestore.instance
+              .collection('global_leaderboards')
+              .doc(periodId)
+              .collection('rank_snapshots')
+              .doc('current')
+              .get();
+
+      final Map<String, dynamic>? data = snapshot.data();
+      if (data == null) {
+        return const _GlobalRankSnapshot();
+      }
+
+      return _GlobalRankSnapshot.fromData(data);
+    } on FirebaseException {
+      return const _GlobalRankSnapshot();
+    }
+  }
+
+  Future<void> _saveRankSnapshot(
+    String periodId, {
+    required Map<String, int> ranks,
+    required Map<String, int> movements,
+  }) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('global_leaderboards')
+          .doc(periodId)
+          .collection('rank_snapshots')
+          .doc('current')
+          .set(
+        <String, dynamic>{
+          'ranks': ranks,
+          'movements': movements,
+          'schemaVersion': 1,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+    } on FirebaseException {
+      // Movement tracking must never block the Global leaderboard.
+    }
+  }
+
+  Map<String, int> _movementValues({
+    required Map<String, int> previousRanks,
+    required Map<String, int> previousMovements,
+    required Map<String, int> currentRanks,
+  }) {
+    final Map<String, int> movements = <String, int>{};
+
+    currentRanks.forEach((String playerId, int currentRank) {
+      final int? previousRank = previousRanks[playerId];
+      final int previousMovement = previousMovements[playerId] ?? 0;
+
+      if (previousRank == null) {
+        movements[playerId] = previousMovement;
         return;
       }
 
-      setState(() {
-        _timeUntilReset = Duration.zero;
-      });
+      final int rankMovement = previousRank - currentRank;
+      movements[playerId] =
+          rankMovement == 0 ? previousMovement : rankMovement;
+    });
 
+    return movements;
+  }
+
+  Future<void> _loadLeaderboard() async {
+    if (mounted) setState(() => _isLoading = true);
+    final String periodId = _periodId();
+    final String? currentUid = FirebaseAuth.instance.currentUser?.uid;
+
+    final List<_LeaderboardPlayer> combined = _seededPlayers.map((seed) {
+      return seed.toLeaderboardPlayer(_periodTab);
+    }).toList();
+
+    try {
+      final CollectionReference<Map<String, dynamic>> collection =
+          FirebaseFirestore.instance
+              .collection('global_leaderboards')
+              .doc(periodId)
+              .collection('players');
+
+      final QuerySnapshot<Map<String, dynamic>> snapshot = await collection
+          .orderBy('score', descending: true)
+          .limit(100)
+          .get();
+
+      final Map<String, _LeaderboardPlayer> realPlayers =
+          <String, _LeaderboardPlayer>{};
+
+      for (final QueryDocumentSnapshot<Map<String, dynamic>> doc
+          in snapshot.docs) {
+        final Map<String, dynamic> data = doc.data();
+        realPlayers[doc.id] = _LeaderboardPlayer(
+          id: doc.id,
+          rank: 0,
+          name: (data['displayName'] as String?)?.trim().isNotEmpty == true
+              ? (data['displayName'] as String).trim()
+              : 'Player',
+          score: (data['score'] as num?)?.toInt() ?? 0,
+          firstGuesses: (data['firstGuesses'] as num?)?.toInt() ?? 0,
+          movement: 0,
+          avatarPath: (data['avatarPath'] as String?)?.isNotEmpty == true
+              ? data['avatarPath'] as String
+              : 'assets/images/avatars/Final/optimized/default_avatar.webp',
+          isCurrentPlayer: doc.id == currentUid,
+        );
+      }
+
+      if (currentUid != null && !realPlayers.containsKey(currentUid)) {
+        final _LeaderboardPlayer fallbackPlayer =
+            await _loadCurrentPlayerFallback(
+          currentUid,
+          periodId,
+        );
+        realPlayers[currentUid] = fallbackPlayer;
+      }
+
+      combined.addAll(realPlayers.values);
+    } on FirebaseException {
+      // Seeded players keep the Global leaderboard usable if Firestore is unavailable.
+    }
+
+    combined.sort((a, b) {
+      final int byScore = b.score.compareTo(a.score);
+      if (byScore != 0) return byScore;
+      final int byFirstGuess = b.firstGuesses.compareTo(a.firstGuesses);
+      if (byFirstGuess != 0) return byFirstGuess;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+
+    final List<_LeaderboardPlayer> rankedWithoutMovement =
+        <_LeaderboardPlayer>[];
+    for (int index = 0; index < combined.length; index++) {
+      rankedWithoutMovement.add(
+        combined[index].copyWith(rank: index + 1),
+      );
+    }
+
+    final Map<String, int> currentRanks = <String, int>{
+      for (final _LeaderboardPlayer player in rankedWithoutMovement)
+        player.id: player.rank,
+    };
+
+    final _GlobalRankSnapshot previousSnapshot =
+        await _loadRankSnapshot(periodId);
+    final Map<String, int> movements = _movementValues(
+      previousRanks: previousSnapshot.ranks,
+      previousMovements: previousSnapshot.movements,
+      currentRanks: currentRanks,
+    );
+
+    final List<_LeaderboardPlayer> ranked = rankedWithoutMovement
+        .map(
+          (_LeaderboardPlayer player) => player.copyWith(
+            movement: movements[player.id] ?? 0,
+          ),
+        )
+        .toList();
+
+    await _saveRankSnapshot(
+      periodId,
+      ranks: currentRanks,
+      movements: movements,
+    );
+
+    _LeaderboardPlayer? currentPlayer;
+    if (currentUid != null) {
+      for (final _LeaderboardPlayer player in ranked) {
+        if (player.id == currentUid) {
+          currentPlayer = player.copyWith(isCurrentPlayer: true);
+          break;
+        }
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _players = ranked.take(10).toList();
+      _currentPlayer = currentPlayer;
+      _isLoading = false;
+    });
+  }
+
+  void _updateCountdown() {
+    if (_periodTab == 0) {
+      if (!mounted) return;
+      setState(() => _timeUntilReset = Duration.zero);
       return;
     }
 
     final DateTime now = DateTime.now();
-    late final DateTime resetTime;
+    final DateTime resetTime = _periodTab == 1
+        ? DateTime(now.year, now.month, now.day + 1)
+        : DateTime(now.year, now.month + 1, 1);
 
-    if (_periodTab == 1) {
-      resetTime = DateTime(
-        now.year,
-        now.month,
-        now.day + 1,
-      );
-    } else {
-      resetTime = DateTime(
-        now.year,
-        now.month + 1,
-        1,
-      );
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _timeUntilReset = resetTime.difference(now);
-    });
+    if (!mounted) return;
+    setState(() => _timeUntilReset = resetTime.difference(now));
   }
 
   String get _countdownText {
@@ -187,21 +355,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     if (_periodTab == 2) {
       if (days > 0) {
         final String dayLabel = days == 1 ? 'DAY' : 'DAYS';
-        final String hourLabel =
-            remainingHours == 1 ? 'HOUR' : 'HOURS';
+        final String hourLabel = remainingHours == 1 ? 'HOUR' : 'HOURS';
         return '$days $dayLabel $remainingHours $hourLabel';
       }
-
-      final String hourLabel =
-          totalHours == 1 ? 'HOUR' : 'HOURS';
+      final String hourLabel = totalHours == 1 ? 'HOUR' : 'HOURS';
       return '$totalHours $hourLabel';
     }
 
-    final String hourLabel =
-        totalHours == 1 ? 'HOUR' : 'HOURS';
-    final String minuteLabel =
-        minutes == 1 ? 'MINUTE' : 'MINUTES';
-
+    final String hourLabel = totalHours == 1 ? 'HOUR' : 'HOURS';
+    final String minuteLabel = minutes == 1 ? 'MINUTE' : 'MINUTES';
     return '$totalHours $hourLabel $minutes $minuteLabel';
   }
 
@@ -288,40 +450,103 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   Widget _buildGlobalLeaderboard() {
+    final bool isDesktop = MediaQuery.sizeOf(context).width >= 1200;
+
+    if (_isLoading || _players.length < 3) {
+      return Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              isDesktop ? 24 : 14,
+              8,
+              isDesktop ? 24 : 14,
+              0,
+            ),
+            child: Column(
+              children: [
+                _buildMainTabs(),
+                const SizedBox(height: 12),
+                _buildPeriodTabs(),
+              ],
+            ),
+          ),
+          const Expanded(
+            child: Center(
+              child: CircularProgressIndicator(color: _orange),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final bool currentInTopTen = _currentPlayer != null &&
+        _players.any((player) => player.id == _currentPlayer!.id);
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        14,
+      padding: EdgeInsets.fromLTRB(
+        isDesktop ? 24 : 14,
         8,
-        14,
+        isDesktop ? 24 : 14,
         26,
       ),
-      child: Column(
-        children: [
-          _buildMainTabs(),
-          const SizedBox(height: 12),
-          _buildPeriodTabs(),
-          if (_periodTab != 0) ...[
-            const SizedBox(height: 10),
-            _buildResetCountdown(),
-          ],
-          const SizedBox(height: 14),
-          _buildPodium(),
-          const SizedBox(height: 10),
-          _buildTableHeader(),
-          const SizedBox(height: 6),
-          ..._players.skip(3).map(
-                (player) => Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: 6,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isDesktop ? 1320 : double.infinity,
+          ),
+          child: Column(
+            children: [
+              _buildMainTabs(),
+              const SizedBox(height: 12),
+              _buildPeriodTabs(),
+              if (_periodTab != 0) ...[
+                const SizedBox(height: 10),
+                _buildResetCountdown(),
+              ],
+              SizedBox(height: isDesktop ? 18 : 14),
+              _buildPodium(),
+              SizedBox(height: isDesktop ? 16 : 10),
+              if (isDesktop)
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1080),
+                  child: Column(
+                    children: [
+                      _buildTableHeader(),
+                      const SizedBox(height: 8),
+                      ..._players.skip(3).map(
+                            (player) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _buildPlayerRow(player),
+                            ),
+                          ),
+                      if (_currentPlayer != null && !currentInTopTen) ...[
+                        const SizedBox(height: 4),
+                        _buildPinnedPlayer(),
+                      ],
+                      const SizedBox(height: 12),
+                      _buildLegend(),
+                    ],
                   ),
-                  child: _buildPlayerRow(player),
-                ),
-              ),
-          const SizedBox(height: 8),
-          _buildPinnedPlayer(),
-          const SizedBox(height: 12),
-          _buildLegend(),
-        ],
+                )
+              else ...[
+                _buildTableHeader(),
+                const SizedBox(height: 6),
+                ..._players.skip(3).map(
+                      (player) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: _buildPlayerRow(player),
+                      ),
+                    ),
+                if (_currentPlayer != null && !currentInTopTen) ...[
+                  const SizedBox(height: 8),
+                  _buildPinnedPlayer(),
+                ],
+                const SizedBox(height: 12),
+                _buildLegend(),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -371,6 +596,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     required String imagePath,
   }) {
     final bool selected = _mainTab == index;
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
 
     return GestureDetector(
       onTap: () {
@@ -420,7 +647,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 color: selected
                     ? Colors.white
                     : _grey,
-                fontSize: 16,
+                fontSize: isDesktop ? 19 : 16,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.3,
               ),
@@ -458,6 +685,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   });
 
                   _updateCountdown();
+                  _loadLeaderboard();
                 },
                 child: AnimatedContainer(
                   duration: const Duration(
@@ -551,8 +779,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   Widget _buildPodium() {
-    return SizedBox(
-      height: 252,
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
+    final Widget podium = SizedBox(
+      height: isDesktop ? 258 : 252,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -562,8 +793,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               position: 2,
               crownPath:
                   'assets/images/leaderboard/crown_silver.webp',
-              height: 220,
-              avatarSize: 62,
+              height: isDesktop ? 226 : 220,
+              avatarSize: isDesktop ? 58 : 62,
             ),
           ),
           Expanded(
@@ -572,8 +803,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               position: 1,
               crownPath:
                   'assets/images/leaderboard/crown_gold.webp',
-              height: 250,
-              avatarSize: 76,
+              height: isDesktop ? 246 : 250,
+              avatarSize: isDesktop ? 70 : 76,
             ),
           ),
           Expanded(
@@ -582,12 +813,29 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               position: 3,
               crownPath:
                   'assets/images/leaderboard/crown_bronze.webp',
-              height: 214,
-              avatarSize: 60,
+              height: isDesktop ? 222 : 214,
+              avatarSize: isDesktop ? 56 : 60,
             ),
           ),
         ],
       ),
+    );
+
+    if (!isDesktop) {
+      return podium;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+      decoration: BoxDecoration(
+        color: _panel,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: _border,
+        ),
+      ),
+      child: podium,
     );
   }
 
@@ -717,59 +965,62 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   Widget _buildTableHeader() {
-    return const Padding(
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
+    return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: 10,
       ),
       child: Row(
         children: [
-          SizedBox(width: 38),
+          SizedBox(width: isDesktop ? 48 : 38),
           Expanded(
             child: Text(
               'PLAYER',
               style: TextStyle(
                 fontFamily: 'Oswald',
                 color: Colors.white,
-                fontSize: 10.5,
+                fontSize: isDesktop ? 12.5 : 10.5,
                 letterSpacing: 0.5,
               ),
             ),
           ),
           SizedBox(
-            width: 68,
+            width: isDesktop ? 90 : 68,
             child: Text(
               'SCORE',
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontFamily: 'Oswald',
                 color: Colors.white,
-                fontSize: 10.5,
+                fontSize: isDesktop ? 12.5 : 10.5,
                 letterSpacing: 0.5,
               ),
             ),
           ),
           SizedBox(
-            width: 78,
+            width: isDesktop ? 100 : 78,
             child: Text(
               'FIRST GUESS',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Oswald',
                 color: Colors.white,
-                fontSize: 9.5,
+                fontSize: isDesktop ? 11.5 : 9.5,
                 letterSpacing: 0.2,
               ),
             ),
           ),
           SizedBox(
-            width: 50,
+            width: isDesktop ? 70 : 50,
             child: Text(
               'CHANGE',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Oswald',
                 color: Colors.white,
-                fontSize: 9.5,
+                fontSize: isDesktop ? 11.5 : 9.5,
                 letterSpacing: 0.2,
               ),
             ),
@@ -782,64 +1033,78 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Widget _buildPlayerRow(
     _LeaderboardPlayer player,
   ) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
+      height: isDesktop ? 60 : 50,
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 16 : 10,
       ),
       decoration: BoxDecoration(
-        color: _panel,
+        color: player.isCurrentPlayer
+            ? const Color(0xFF17110D)
+            : _panel,
         borderRadius: BorderRadius.circular(11),
         border: Border.all(
-          color: _border,
+          color: player.isCurrentPlayer ? _orange : _border,
+          width: player.isCurrentPlayer ? 1.5 : 1,
         ),
+        boxShadow: player.isCurrentPlayer
+            ? const [
+                BoxShadow(
+                  color: Color(0x44FE5E02),
+                  blurRadius: 10,
+                ),
+              ]
+            : null,
       ),
       child: Row(
         children: [
           SizedBox(
-            width: 28,
+            width: isDesktop ? 36 : 28,
             child: Text(
               '${player.rank}',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Oswald',
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: isDesktop ? 19 : 16,
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: isDesktop ? 8 : 6),
           _buildSmallAvatar(player),
-          const SizedBox(width: 8),
+          SizedBox(width: isDesktop ? 12 : 8),
           Expanded(
             child: Text(
               player.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 13.5,
+                fontSize: isDesktop ? 16.5 : 13.5,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
           SizedBox(
-            width: 68,
+            width: isDesktop ? 90 : 68,
             child: Text(
               _formatScore(
                 player.score,
               ),
               textAlign: TextAlign.right,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Oswald',
                 color: _gold,
-                fontSize: 15,
+                fontSize: isDesktop ? 18 : 15,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
           SizedBox(
-            width: 78,
+            width: isDesktop ? 100 : 78,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -851,9 +1116,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 const SizedBox(width: 3),
                 Text(
                   '${player.firstGuesses}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 11.5,
+                    fontSize: isDesktop ? 14 : 11.5,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -861,7 +1126,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           ),
           SizedBox(
-            width: 50,
+            width: isDesktop ? 70 : 50,
             child: _buildMovement(
               player.movement,
             ),
@@ -874,9 +1139,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Widget _buildSmallAvatar(
     _LeaderboardPlayer player,
   ) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Container(
-      width: 32,
-      height: 32,
+      width: isDesktop ? 38 : 32,
+      height: isDesktop ? 38 : 32,
       padding: const EdgeInsets.all(1),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
@@ -897,21 +1165,24 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Widget _buildMovement(
     int movement,
   ) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     if (movement > 0) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.arrow_upward_rounded,
             color: _green,
-            size: 19,
+            size: isDesktop ? 22 : 19,
           ),
           const SizedBox(width: 2),
           Text(
             '$movement',
-            style: const TextStyle(
+            style: TextStyle(
               color: _green,
-              fontSize: 11.5,
+              fontSize: isDesktop ? 14 : 11.5,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -923,17 +1194,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.arrow_downward_rounded,
             color: _red,
-            size: 19,
+            size: isDesktop ? 22 : 19,
           ),
           const SizedBox(width: 2),
           Text(
             '${movement.abs()}',
-            style: const TextStyle(
+            style: TextStyle(
               color: _red,
-              fontSize: 11.5,
+              fontSize: isDesktop ? 14 : 11.5,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -954,100 +1225,76 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   Widget _buildPinnedPlayer() {
+    final _LeaderboardPlayer? player = _currentPlayer;
+    if (player == null) return const SizedBox.shrink();
+
+    final bool isDesktop = MediaQuery.sizeOf(context).width >= 1200;
+
     return Container(
-      constraints: const BoxConstraints(
-        minHeight: 62,
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 11,
-        vertical: 7,
-      ),
+      height: isDesktop ? 60 : 50,
+      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 16 : 10),
       decoration: BoxDecoration(
-        color: const Color(
-          0xFF17110D,
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: _orange,
-          width: 1.5,
-        ),
+        color: const Color(0xFF17110D),
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: _orange, width: 1.5),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0x44FE5E02),
-            blurRadius: 10,
-          ),
+          BoxShadow(color: Color(0x44FE5E02), blurRadius: 10),
         ],
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
-            ),
-            decoration: BoxDecoration(
-              color: _orange,
-              borderRadius: BorderRadius.circular(
-                7,
-              ),
-            ),
-            child: const Text(
-              'YOU',
+          SizedBox(
+            width: isDesktop ? 36 : 28,
+            child: Text(
+              '${player.rank}',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Oswald',
                 color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+                fontSize: isDesktop ? 19 : 16,
               ),
             ),
           ),
-          const SizedBox(width: 9),
-          _buildSmallAvatar(
-            _currentPlayer,
-          ),
-          const SizedBox(width: 9),
+          SizedBox(width: isDesktop ? 8 : 6),
+          _buildSmallAvatar(player),
+          SizedBox(width: isDesktop ? 12 : 8),
           Expanded(
             child: Text(
-              '#${_currentPlayer.rank} You',
-              style: const TextStyle(
-                fontFamily: 'Oswald',
+              'You: ${player.name}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: isDesktop ? 16.5 : 13.5,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
           SizedBox(
-            width: 68,
+            width: isDesktop ? 90 : 68,
             child: Text(
-              _formatScore(
-                _currentPlayer.score,
-              ),
+              _formatScore(player.score),
               textAlign: TextAlign.right,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Oswald',
                 color: _orange,
-                fontSize: 16,
+                fontSize: isDesktop ? 18 : 15,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
           SizedBox(
-            width: 78,
+            width: isDesktop ? 100 : 78,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.star_rounded,
-                  color: _gold,
-                  size: 14,
-                ),
+                Icon(Icons.star_rounded, color: _gold, size: isDesktop ? 17 : 14),
                 const SizedBox(width: 3),
                 Text(
-                  '${_currentPlayer.firstGuesses}',
-                  style: const TextStyle(
+                  '${player.firstGuesses}',
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 11.5,
+                    fontSize: isDesktop ? 14 : 11.5,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1055,10 +1302,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           ),
           SizedBox(
-            width: 50,
-            child: _buildMovement(
-              _currentPlayer.movement,
-            ),
+            width: isDesktop ? 70 : 50,
+            child: _buildMovement(player.movement),
           ),
         ],
       ),
@@ -1066,11 +1311,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   Widget _buildLegend() {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 13,
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 18 : 14,
+        vertical: isDesktop ? 16 : 13,
       ),
       decoration: BoxDecoration(
         color: _panel,
@@ -1080,39 +1328,39 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         ),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.star_rounded,
                   color: _gold,
-                  size: 23,
+                  size: isDesktop ? 28 : 23,
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: isDesktop ? 12 : 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'FIRST GUESS',
                         style: TextStyle(
                           fontFamily: 'Oswald',
                           color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                          fontSize: isDesktop ? 16 : 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(
-                        height: 3,
-                      ),
+                      SizedBox(height: isDesktop ? 4 : 3),
                       Text(
                         'Times answered correctly on the first clue.',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 10.5,
+                          fontSize: isDesktop ? 13.5 : 10.5,
                           height: 1.3,
                         ),
                       ),
@@ -1124,59 +1372,54 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           ),
           Container(
             width: 1,
-            height: 58,
-            margin: const EdgeInsets.symmetric(
-              horizontal: 10,
+            height: isDesktop ? 64 : 58,
+            margin: EdgeInsets.symmetric(
+              horizontal: isDesktop ? 18 : 10,
             ),
             color: _border,
           ),
           Expanded(
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Row(
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.arrow_upward_rounded,
                       color: _green,
-                      size: 20,
+                      size: isDesktop ? 25 : 20,
                     ),
                     Icon(
                       Icons.arrow_downward_rounded,
                       color: _red,
-                      size: 20,
+                      size: isDesktop ? 25 : 20,
                     ),
                   ],
                 ),
-                const SizedBox(width: 7),
+                SizedBox(width: isDesktop ? 11 : 7),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'CHANGE',
                         style: TextStyle(
                           fontFamily: 'Oswald',
                           color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                          fontSize: isDesktop ? 16 : 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(
-                        height: 3,
-                      ),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'How many leaderboard\nplaces the player moved.',
-                          maxLines: 2,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10.5,
-                            height: 1.3,
-                          ),
+                      SizedBox(height: isDesktop ? 4 : 3),
+                      Text(
+                        'How many leaderboard places the player moved.',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isDesktop ? 13.5 : 10.5,
+                          height: 1.3,
                         ),
                       ),
                     ],
@@ -1210,6 +1453,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 }
 
 class _LeaderboardPlayer {
+  final String id;
   final int rank;
   final String name;
   final int score;
@@ -1219,6 +1463,7 @@ class _LeaderboardPlayer {
   final bool isCurrentPlayer;
 
   const _LeaderboardPlayer({
+    required this.id,
     required this.rank,
     required this.name,
     required this.score,
@@ -1227,4 +1472,101 @@ class _LeaderboardPlayer {
     required this.avatarPath,
     this.isCurrentPlayer = false,
   });
+
+  _LeaderboardPlayer copyWith({
+    int? rank,
+    int? movement,
+    bool? isCurrentPlayer,
+  }) {
+    return _LeaderboardPlayer(
+      id: id,
+      rank: rank ?? this.rank,
+      name: name,
+      score: score,
+      firstGuesses: firstGuesses,
+      movement: movement ?? this.movement,
+      avatarPath: avatarPath,
+      isCurrentPlayer: isCurrentPlayer ?? this.isCurrentPlayer,
+    );
+  }
+}
+
+class _GlobalRankSnapshot {
+  final Map<String, int> ranks;
+  final Map<String, int> movements;
+
+  const _GlobalRankSnapshot({
+    this.ranks = const <String, int>{},
+    this.movements = const <String, int>{},
+  });
+
+  factory _GlobalRankSnapshot.fromData(
+    Map<String, dynamic> data,
+  ) {
+    Map<String, int> intMap(dynamic raw) {
+      if (raw is! Map) {
+        return <String, int>{};
+      }
+
+      final Map<String, int> result = <String, int>{};
+      raw.forEach((dynamic key, dynamic value) {
+        if (key is String && value is num) {
+          result[key] = value.toInt();
+        }
+      });
+      return result;
+    }
+
+    return _GlobalRankSnapshot(
+      ranks: intMap(data['ranks']),
+      movements: intMap(data['movements']),
+    );
+  }
+}
+
+class _SeededPlayer {
+  final String id;
+  final String name;
+  final String avatarPath;
+  final int allTimeScore;
+  final int allTimeFirstGuesses;
+  final int dailyScore;
+  final int dailyFirstGuesses;
+  final int monthlyScore;
+  final int monthlyFirstGuesses;
+
+  const _SeededPlayer(
+    this.id,
+    this.name,
+    this.avatarPath,
+    this.allTimeScore,
+    this.allTimeFirstGuesses,
+    this.dailyScore,
+    this.dailyFirstGuesses,
+    this.monthlyScore,
+    this.monthlyFirstGuesses,
+  );
+
+  _LeaderboardPlayer toLeaderboardPlayer(int periodTab) {
+    final int score = switch (periodTab) {
+      1 => dailyScore,
+      2 => monthlyScore,
+      _ => allTimeScore,
+    };
+    final int firstGuesses = switch (periodTab) {
+      1 => dailyFirstGuesses,
+      2 => monthlyFirstGuesses,
+      _ => allTimeFirstGuesses,
+    };
+
+    return _LeaderboardPlayer(
+      id: id,
+      rank: 0,
+      name: name,
+      score: score,
+      firstGuesses: firstGuesses,
+      movement: 0,
+      avatarPath: avatarPath,
+    );
+  }
 }

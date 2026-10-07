@@ -14,7 +14,7 @@ const List<CaseMission> animalKingdomCaseMissions = [
     stage: 2,
     difficulty: CaseDifficulty.easy,
     title: 'CASE 2',
-    missionText: 'GET 10 JUNGLE & SAFARI QUESTIONS CORRECT',
+    missionText: 'GET 10 JUNGLE & SAFARI ANIMALS QUESTIONS CORRECT',
     category: 'animals',
     subcategory: 'jungle_safari_animals',
     correctRequired: 10,
@@ -49,7 +49,7 @@ const List<CaseMission> animalKingdomCaseMissions = [
     difficulty: CaseDifficulty.easy,
     title: 'CASE 5',
     missionText:
-        'GET 10 MAMMALS ANIMALS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 5',
+        'GET 10 MAMMALS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 5',
     category: 'animals',
     subcategory: 'mammals',
     correctRequired: 10,
@@ -101,9 +101,8 @@ const List<CaseMission> animalKingdomCaseMissions = [
     difficulty: CaseDifficulty.moderate,
     title: 'CASE 9',
     missionText:
-        'GET 10 TRACKS & FOOTPRINTS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 4',
+        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 4',
     category: 'animals',
-    subcategory: 'tracks_footprints',
     correctRequired: 10,
     clueThreshold: 4,
     clueThresholdRequired: 5,
@@ -114,12 +113,11 @@ const List<CaseMission> animalKingdomCaseMissions = [
     difficulty: CaseDifficulty.moderate,
     title: 'CASE 10',
     missionText:
-        'GET 10 QUESTIONS CORRECT FROM DINOSAURS SUBCATEGORY, INCLUDING 5 BY CLUE 4',
+        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 6 BY CLUE 4',
     category: 'animals',
-    subcategory: 'dinosaurs',
     correctRequired: 10,
     clueThreshold: 4,
-    clueThresholdRequired: 5,
+    clueThresholdRequired: 6,
   ),
 
   CaseMission(
@@ -127,11 +125,12 @@ const List<CaseMission> animalKingdomCaseMissions = [
     difficulty: CaseDifficulty.hard,
     title: 'CASE 11',
     missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 6 BY CLUE 4',
+        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 6 BY CLUE 4 AND 1 FIRST GUESS',
     category: 'animals',
     correctRequired: 10,
     clueThreshold: 4,
     clueThresholdRequired: 6,
+    firstGuessesRequired: 1,
   ),
 
   CaseMission(

@@ -2,9 +2,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum SubcategoryProgressState {
   comingSoon,
-  play,
+  start,
+  continuePlaying,
   newQuestions,
-  playAgain,
+  completed,
 }
 
 class SubcategoryProgressStatus {
@@ -22,10 +23,16 @@ class SubcategoryProgressStatus {
     ctaLabel: 'COMING SOON',
   );
 
-  static const SubcategoryProgressStatus play =
+  static const SubcategoryProgressStatus start =
       SubcategoryProgressStatus._(
-    state: SubcategoryProgressState.play,
-    ctaLabel: 'PLAY',
+    state: SubcategoryProgressState.start,
+    ctaLabel: 'START',
+  );
+
+  static const SubcategoryProgressStatus continuePlaying =
+      SubcategoryProgressStatus._(
+    state: SubcategoryProgressState.continuePlaying,
+    ctaLabel: 'CONTINUE',
   );
 
   static const SubcategoryProgressStatus newQuestions =
@@ -34,9 +41,9 @@ class SubcategoryProgressStatus {
     ctaLabel: 'NEW QUESTIONS',
   );
 
-  static const SubcategoryProgressStatus playAgain =
+  static const SubcategoryProgressStatus completed =
       SubcategoryProgressStatus._(
-    state: SubcategoryProgressState.playAgain,
+    state: SubcategoryProgressState.completed,
     ctaLabel: 'PLAY AGAIN',
   );
 
@@ -51,14 +58,18 @@ class SubcategoryProgressStatus {
     }
 
     if (playedQuestions >= totalQuestions) {
-      return playAgain;
+      return completed;
     }
 
     if (hadPreviouslyCompleted) {
       return newQuestions;
     }
 
-    return play;
+    if (playedQuestions <= 0) {
+      return start;
+    }
+
+    return continuePlaying;
   }
 }
 
@@ -121,6 +132,67 @@ class SubcategoryCompletionHistoryService {
         category: category,
         subcategory: subcategory,
       ),
+      totalQuestions,
+    );
+  }
+
+  static bool hasNewQuestionsSinceCompletion({
+    required int completedTotal,
+    required int playedQuestions,
+    required int totalQuestions,
+  }) {
+    return completedTotal > 0 &&
+        totalQuestions > completedTotal &&
+        playedQuestions < totalQuestions;
+  }
+}
+
+class CategoryCompletionHistoryService {
+  CategoryCompletionHistoryService._();
+
+  static final SharedPreferencesAsync _preferences =
+      SharedPreferencesAsync();
+
+  static const String _keyPrefix =
+      'category_completed_total_v1_';
+
+  static String _storageKey(String category) {
+    return '$_keyPrefix$category';
+  }
+
+  static Future<int> loadCompletedTotal({
+    required String category,
+  }) async {
+    return await _preferences.getInt(
+          _storageKey(category),
+        ) ??
+        0;
+  }
+
+  static Future<Map<String, int>> loadCompletedTotals({
+    required Iterable<String> categories,
+  }) async {
+    final Map<String, int> totals = <String, int>{};
+
+    for (final String category in categories) {
+      totals[category] = await loadCompletedTotal(
+        category: category,
+      );
+    }
+
+    return totals;
+  }
+
+  static Future<void> recordCompletion({
+    required String category,
+    required int totalQuestions,
+  }) async {
+    if (totalQuestions <= 0) {
+      return;
+    }
+
+    await _preferences.setInt(
+      _storageKey(category),
       totalQuestions,
     );
   }

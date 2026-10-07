@@ -1,10 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../services/league_service.dart';
 import 'create_league_screen.dart';
 import 'join_league_screen.dart';
 import 'league_detail_screen.dart';
 
-class MyLeaguesScreen extends StatelessWidget {
+class MyLeaguesScreen extends StatefulWidget {
   const MyLeaguesScreen({
     super.key,
     required this.onGlobalPressed,
@@ -12,39 +14,61 @@ class MyLeaguesScreen extends StatelessWidget {
 
   final VoidCallback onGlobalPressed;
 
+  @override
+  State<MyLeaguesScreen> createState() => _MyLeaguesScreenState();
+}
+
+class _MyLeaguesScreenState extends State<MyLeaguesScreen> {
   static const Color _orange = Color(0xFFFE5E02);
   static const Color _panel = Color(0xFF111111);
   static const Color _panelLight = Color(0xFF181818);
   static const Color _border = Color(0xFF343434);
   static const Color _gold = Color(0xFFFFB21A);
 
-  static const List<_LeagueData> _leagues = [
-    _LeagueData(
-      name: 'Scrappy',
-      members: 12,
-      rank: 3,
-      badgePath:
-          'assets/images/leaderboard/league_badges/league_dog.webp',
-    ),
-    _LeagueData(
-      name: 'Shitten',
-      members: 8,
-      rank: 1,
-      badgePath:
-          'assets/images/leaderboard/league_badges/league_cat.webp',
-    ),
-    _LeagueData(
-      name: 'Tatty',
-      members: 15,
-      rank: 7,
-      badgePath:
-          'assets/images/leaderboard/league_badges/league_otter.webp',
-    ),
-  ];
+  List<LeagueRecord> _leagues = <LeagueRecord>[];
+  bool _isLoading = true;
+  String? _loadError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLeagues();
+  }
+
+  Future<void> _loadLeagues() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _loadError = null;
+      });
+    }
+
+    try {
+      final List<LeagueRecord> leagues = await LeagueService.loadMyLeagues();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _leagues = leagues;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _loadError = 'Your leagues could not be loaded. Pull to refresh or try again.';
+        _isLoading = false;
+      });
+    }
+  }
 
   void _openLeague(
     BuildContext context,
-    _LeagueData league,
+    LeagueRecord league,
   ) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -52,7 +76,8 @@ class MyLeaguesScreen extends StatelessWidget {
           return LeagueDetailScreen(
             leagueName: league.name,
             badgePath: league.badgePath,
-            memberCount: league.members,
+            memberCount: league.memberCount,
+            inviteCode: league.inviteCode,
           );
         },
       ),
@@ -61,37 +86,74 @@ class MyLeaguesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        14,
+      padding: EdgeInsets.fromLTRB(
+        isDesktop ? 24 : 14,
         8,
-        14,
+        isDesktop ? 24 : 14,
         28,
       ),
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.stretch,
-        children: [
-          _buildMainTabs(),
-          const SizedBox(height: 22),
-          _buildIntro(),
-          const SizedBox(height: 22),
-          ..._leagues.map(
-            (league) => Padding(
-              padding: const EdgeInsets.only(
-                bottom: 12,
-              ),
-              child: _buildLeagueCard(
-                context,
-                league,
-              ),
-            ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isDesktop ? 1280 : double.infinity,
           ),
-          const SizedBox(height: 8),
-          _buildActions(context),
-          const SizedBox(height: 18),
-          _buildInfoPanel(),
-        ],
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.stretch,
+            children: [
+              _buildMainTabs(),
+              SizedBox(height: isDesktop ? 12 : 22),
+              _buildIntro(context),
+              SizedBox(height: isDesktop ? 14 : 22),
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 28),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: _orange,
+                    ),
+                  ),
+                )
+              else if (_loadError != null)
+                _buildLoadError()
+              else if (_leagues.isEmpty)
+                _buildEmptyState()
+              else if (isDesktop)
+                Wrap(
+                  spacing: 14,
+                  runSpacing: 14,
+                  children: [
+                    for (final LeagueRecord league in _leagues)
+                      SizedBox(
+                        width: 390,
+                        child: _buildLeagueCard(
+                          context,
+                          league,
+                        ),
+                      ),
+                  ],
+                )
+              else
+                ..._leagues.map(
+                  (LeagueRecord league) => Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: 12,
+                    ),
+                    child: _buildLeagueCard(
+                      context,
+                      league,
+                    ),
+                  ),
+                ),
+              SizedBox(height: isDesktop ? 14 : 8),
+              _buildActions(context),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -113,7 +175,7 @@ class MyLeaguesScreen extends StatelessWidget {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: onGlobalPressed,
+                onTap: widget.onGlobalPressed,
                 borderRadius:
                     BorderRadius.circular(
                   15,
@@ -205,13 +267,18 @@ class MyLeaguesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildIntro() {
+  Widget _buildIntro(
+    BuildContext context,
+  ) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Column(
       children: [
         Image.asset(
           'assets/images/leaderboard/my_leagues.webp',
-          width: 92,
-          height: 92,
+          width: isDesktop ? 72 : 92,
+          height: isDesktop ? 72 : 92,
           fit: BoxFit.contain,
         ),
         const SizedBox(height: 8),
@@ -220,7 +287,8 @@ class MyLeaguesScreen extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.white,
-            fontSize: 13,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
             height: 1.35,
           ),
         ),
@@ -230,8 +298,11 @@ class MyLeaguesScreen extends StatelessWidget {
 
   Widget _buildLeagueCard(
     BuildContext context,
-    _LeagueData league,
+    LeagueRecord league,
   ) {
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
     return Material(
       color: Colors.transparent,
       borderRadius:
@@ -247,15 +318,15 @@ class MyLeaguesScreen extends StatelessWidget {
             BorderRadius.circular(18),
         child: Container(
           constraints:
-              const BoxConstraints(
-            minHeight: 118,
+              BoxConstraints(
+            minHeight: isDesktop ? 104 : 118,
           ),
           padding:
-              const EdgeInsets.fromLTRB(
-            14,
-            12,
-            12,
-            12,
+              EdgeInsets.fromLTRB(
+            isDesktop ? 12 : 14,
+            isDesktop ? 10 : 12,
+            isDesktop ? 10 : 12,
+            isDesktop ? 10 : 12,
           ),
           decoration: BoxDecoration(
             color: _panelLight,
@@ -270,8 +341,8 @@ class MyLeaguesScreen extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 88,
-                height: 88,
+                width: isDesktop ? 72 : 88,
+                height: isDesktop ? 72 : 88,
                 padding:
                     const EdgeInsets.all(4),
                 decoration: BoxDecoration(
@@ -308,12 +379,12 @@ class MyLeaguesScreen extends StatelessWidget {
                       overflow:
                           TextOverflow.ellipsis,
                       style:
-                          const TextStyle(
+                          TextStyle(
                         fontFamily:
                             'Oswald',
                         color:
                             Colors.white,
-                        fontSize: 21,
+                        fontSize: isDesktop ? 19 : 21,
                         fontWeight:
                             FontWeight.w500,
                       ),
@@ -332,7 +403,7 @@ class MyLeaguesScreen extends StatelessWidget {
                           width: 5,
                         ),
                         Text(
-                          '${league.members} MEMBERS',
+                          '${league.memberCount} ${league.memberCount == 1 ? 'MEMBER' : 'MEMBERS'}',
                           style:
                               const TextStyle(
                             fontFamily:
@@ -347,40 +418,34 @@ class MyLeaguesScreen extends StatelessWidget {
                     const SizedBox(
                       height: 6,
                     ),
-                    Row(
+                    const Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.emoji_events_rounded,
                           color: _gold,
                           size: 17,
                         ),
-                        const SizedBox(
+                        SizedBox(
                           width: 5,
                         ),
-                        const Text(
+                        Text(
                           'YOUR RANK',
                           style: TextStyle(
-                            fontFamily:
-                                'Oswald',
-                            color:
-                                Colors.white,
+                            fontFamily: 'Oswald',
+                            color: Colors.white,
                             fontSize: 13,
                           ),
                         ),
-                        const SizedBox(
+                        SizedBox(
                           width: 6,
                         ),
                         Text(
-                          '#${league.rank}',
-                          style:
-                              const TextStyle(
-                            fontFamily:
-                                'Oswald',
-                            color:
-                                _orange,
+                          '—',
+                          style: TextStyle(
+                            fontFamily: 'Oswald',
+                            color: _orange,
                             fontSize: 19,
-                            fontWeight:
-                                FontWeight.w600,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -395,13 +460,103 @@ class MyLeaguesScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildEmptyState() {
+    return Center(
+      child: Container(
+        width: kIsWeb ? 760 : double.infinity,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.fromLTRB(18, 22, 18, 22),
+        decoration: BoxDecoration(
+          color: _panelLight,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: _border,
+          ),
+        ),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'NO LEAGUES YET',
+              style: TextStyle(
+                fontFamily: 'Oswald',
+                color: Colors.white,
+                fontSize: 19,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 5),
+            Text(
+              'Create a league or join one with an invite code.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 17,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadError() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+      decoration: BoxDecoration(
+        color: _panelLight,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: _border,
+        ),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            color: _orange,
+            size: 34,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _loadError ?? 'Your leagues could not be loaded.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12.5,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _loadLeagues,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('TRY AGAIN'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: const BorderSide(
+                color: _orange,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActions(
     BuildContext context,
   ) {
-    return SizedBox(
-      width: double.infinity,
-      height: 58,
-      child: ElevatedButton.icon(
+    final bool isDesktop =
+        MediaQuery.sizeOf(context).width >= 1200;
+
+    return Align(
+      alignment: Alignment.center,
+      child: SizedBox(
+        width: isDesktop ? 420 : double.infinity,
+        height: 56,
+        child: ElevatedButton.icon(
         onPressed: () {
           showModalBottomSheet<void>(
             context: context,
@@ -459,15 +614,19 @@ class MyLeaguesScreen extends StatelessWidget {
 
                             Navigator.of(
                               context,
-                            ).push(
-                              MaterialPageRoute<
-                                  void>(
-                                builder:
-                                    (context) {
+                            )
+                                .push<bool>(
+                              MaterialPageRoute<bool>(
+                                builder: (context) {
                                   return const CreateLeagueScreen();
                                 },
                               ),
-                            );
+                            )
+                                .then((bool? created) {
+                              if (created == true) {
+                                _loadLeagues();
+                              }
+                            });
                           },
                           icon: const Icon(
                             Icons.add_rounded,
@@ -514,15 +673,17 @@ class MyLeaguesScreen extends StatelessWidget {
 
                             Navigator.of(
                               context,
-                            ).push(
-                              MaterialPageRoute<
-                                  void>(
-                                builder:
-                                    (context) {
+                            )
+                                .push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (context) {
                                   return const JoinLeagueScreen();
                                 },
                               ),
-                            );
+                            )
+                                .then((_) {
+                              _loadLeagues();
+                            });
                           },
                           icon: const Icon(
                             Icons.group_add_rounded,
@@ -586,63 +747,12 @@ class MyLeaguesScreen extends StatelessWidget {
                 FontWeight.w600,
             letterSpacing: 0.2,
           ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildInfoPanel() {
-    return Container(
-      width: double.infinity,
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 13,
-      ),
-      decoration: BoxDecoration(
-        color: _panel,
-        borderRadius:
-            BorderRadius.circular(15),
-        border: Border.all(
-          color: _border,
-        ),
-      ),
-      child: const Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.info_outline_rounded,
-            color: _orange,
-            size: 21,
-          ),
-          SizedBox(width: 9),
-          Expanded(
-            child: Text(
-              'Open a league to see its All Time, Daily and Monthly leaderboard.',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 11.5,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
-class _LeagueData {
-  const _LeagueData({
-    required this.name,
-    required this.members,
-    required this.rank,
-    required this.badgePath,
-  });
 
-  final String name;
-  final int members;
-  final int rank;
-  final String badgePath;
 }

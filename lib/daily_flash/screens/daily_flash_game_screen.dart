@@ -1,17 +1,18 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../services/achievement_service.dart';
+import '../../services/analytics_service.dart';
 import '../../services/player_stats_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/game_dialogs.dart';
 import '../../widgets/game_error_screen.dart';
 import '../../widgets/app_home_button.dart';
-import '../../widgets/timer_bar.dart';
+import '../../widgets/milestone_reached_dialog.dart';
 
-import '../data/planets_daily_flash.dart';
 import '../models/daily_flash_question.dart';
 import '../services/daily_flash_progress_service.dart';
 
@@ -58,11 +59,6 @@ class _DailyFlashGameScreenState
   static const int maximumLives = 3;
   static const int firstGuessBonus = 50;
 
-  static const String _hideLeaveWarningPreferenceKey =
-      'daily_flash_hide_leave_warning_v2';
-
-  static const String _leaveWarningCountPreferenceKey =
-      'daily_flash_leave_warning_count_v2';
 
   static const String heartAsset =
       'assets/images/stats/life_heart.png';
@@ -78,6 +74,10 @@ class _DailyFlashGameScreenState
 
   DailyFlashProgress? savedProgress;
   bool loadingProgress = true;
+
+  List<DailyFlashQuestion> dailyQuestions = <DailyFlashQuestion>[];
+  List<Set<String>> acceptedAnswersByQuestion = <Set<String>>[];
+  String dailyTitle = '';
 
   int questionIndex = 0;
   int clueIndex = 0;
@@ -106,14 +106,13 @@ class _DailyFlashGameScreenState
       GameMessageType.info;
 
   DailyFlashQuestion get currentQuestion =>
-      planetsDailyFlashQuestions[questionIndex];
+      dailyQuestions[questionIndex];
 
   bool get isLastClue =>
       clueIndex >= currentQuestion.clues.length - 1;
 
   bool get isLastQuestion =>
-      questionIndex >=
-      planetsDailyFlashQuestions.length - 1;
+      questionIndex >= dailyQuestions.length - 1;
 
   int get baseXp =>
       currentQuestion.baseXpForClue(clueIndex);
@@ -132,6 +131,154 @@ class _DailyFlashGameScreenState
     _loadDailyProgress();
   }
 
+  String _compactDateKey(String value) =>
+      value.replaceAll('-', '');
+
+  String _normaliseAcceptedAnswer(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]'), '');
+  }
+
+  Future<void> _loadScheduledClassicQuestions(
+    String dateKey,
+  ) async {
+    final FirebaseFirestore firestore =
+        FirebaseFirestore.instance;
+    final String compact = _compactDateKey(dateKey);
+
+    final List<Future<DocumentSnapshot<Map<String, dynamic>>>> reads =
+        <Future<DocumentSnapshot<Map<String, dynamic>>>>[
+      for (int number = 1; number <= 5; number++)
+        firestore
+            .collection('daily_flash_questions')
+            .doc(
+              'df_classic_${compact}_${number.toString().padLeft(2, '0')}',
+            )
+            .get(),
+    ];
+
+    final List<DocumentSnapshot<Map<String, dynamic>>> snapshots =
+        await Future.wait(reads);
+
+    final List<DailyFlashQuestion> loadedQuestions =
+        <DailyFlashQuestion>[];
+    final List<Set<String>> loadedAcceptedAnswers =
+        <Set<String>>[];
+
+    String? loadedTitle;
+
+    for (int index = 0; index < snapshots.length; index++) {
+      final DocumentSnapshot<Map<String, dynamic>> snapshot =
+          snapshots[index];
+
+      if (!snapshot.exists) {
+        throw StateError(
+          'Missing Classic Daily Flash document: ${snapshot.id}',
+        );
+      }
+
+      final Map<String, dynamic>? data = snapshot.data();
+
+      if (data == null) {
+        throw StateError(
+          'Classic Daily Flash document has no data: ${snapshot.id}',
+        );
+      }
+
+      final String gameKey =
+          (data['gameKey'] ?? '').toString().trim();
+      final String storedDate =
+          (data['date'] ?? '').toString().trim();
+      final String status =
+          (data['status'] ?? '').toString().trim();
+      final String answer =
+          (data['answer'] ?? '').toString().trim();
+      final String imagePath =
+          (data['questionImagePath'] ?? '').toString().trim();
+      final String title =
+          (data['dailyTitle'] ?? '').toString().trim();
+
+      if (gameKey != 'classic' ||
+          storedDate != dateKey ||
+          status != 'live' ||
+          answer.isEmpty ||
+          imagePath.isEmpty ||
+          title.isEmpty) {
+        throw StateError(
+          'Invalid Classic Daily Flash document: ${snapshot.id}',
+        );
+      }
+
+      loadedTitle ??= title;
+
+      if (loadedTitle != title) {
+        throw StateError(
+          'Classic Daily Flash title mismatch for $dateKey.',
+        );
+      }
+
+      final List<String> clues = <String>[
+        for (int clue = 1; clue <= 5; clue++)
+          (data['clue$clue'] ?? '').toString().trim(),
+      ];
+
+      if (clues.any((String clue) => clue.isEmpty)) {
+        throw StateError(
+          'Classic Daily Flash has a blank clue: ${snapshot.id}',
+        );
+      }
+
+      final Set<String> accepted = <String>{
+        _normaliseAcceptedAnswer(answer),
+      };
+
+      final dynamic rawAccepted = data['acceptedAnswers'];
+
+      if (rawAccepted is List) {
+        for (final dynamic value in rawAccepted) {
+          final String normalised =
+              _normaliseAcceptedAnswer(value.toString());
+          if (normalised.isNotEmpty) {
+            accepted.add(normalised);
+          }
+        }
+      } else if (rawAccepted != null) {
+        for (final String value
+            in rawAccepted.toString().split(RegExp(r'[\*\|]'))) {
+          final String normalised =
+              _normaliseAcceptedAnswer(value);
+          if (normalised.isNotEmpty) {
+            accepted.add(normalised);
+          }
+        }
+      }
+
+      loadedQuestions.add(
+        DailyFlashQuestion(
+          answer: answer,
+          imagePath: imagePath,
+          clues: clues,
+        ),
+      );
+      loadedAcceptedAnswers.add(accepted);
+    }
+
+    if (loadedQuestions.length != 5 ||
+        loadedAcceptedAnswers.length != 5 ||
+        loadedTitle == null ||
+        loadedTitle.isEmpty) {
+      throw StateError(
+        'Classic Daily Flash for $dateKey is not complete.',
+      );
+    }
+
+    dailyQuestions = loadedQuestions;
+    acceptedAnswersByQuestion = loadedAcceptedAnswers;
+    dailyTitle = loadedTitle;
+  }
+
   Future<void> _loadDailyProgress() async {
     try {
       if (mounted) {
@@ -143,6 +290,10 @@ class _DailyFlashGameScreenState
 
       final DailyFlashProgress progress =
           await DailyFlashProgressService.loadToday();
+
+      if (!progress.allQuestionsAttempted) {
+        await _loadScheduledClassicQuestions(progress.dateKey);
+      }
 
       if (!mounted) {
         return;
@@ -167,6 +318,9 @@ class _DailyFlashGameScreenState
         return;
       }
 
+      final bool startingNewDailyFlash =
+          progress.nextQuestionIndex == 0;
+
       setState(() {
         savedProgress = progress;
         questionIndex = progress.nextQuestionIndex;
@@ -177,6 +331,13 @@ class _DailyFlashGameScreenState
       });
 
       await _consumeCurrentQuestion();
+
+      if (startingNewDailyFlash &&
+          savedProgress?.nextQuestionIndex == 1) {
+        await AnalyticsService.logDailyFlashStarted(
+          dateKey: progress.dateKey,
+        );
+      }
     } catch (_) {
       if (!mounted) {
         return;
@@ -205,7 +366,6 @@ class _DailyFlashGameScreenState
 
     // Mid-game image/render failure: keep the exact current
     // question/clue and simply rebuild the failed asset.
-    startClueTimer(resetTime: false);
   }
 
   void _showTechnicalError() {
@@ -221,33 +381,86 @@ class _DailyFlashGameScreenState
   }
 
   Future<void> _consumeCurrentQuestion() async {
-    final DailyFlashProgress? progress = savedProgress;
+    DailyFlashProgress? progress = savedProgress;
 
     if (progress == null || progress.allQuestionsAttempted) {
       return;
     }
 
-    final DailyFlashProgress updated =
-        await DailyFlashProgressService.consumeQuestion(
-      progress: progress,
-      questionIndex: questionIndex,
-    );
+    while (mounted && !progress!.allQuestionsAttempted) {
+      final int requestedQuestionIndex = questionIndex;
 
-    if (!mounted) {
-      return;
-    }
+      final DailyFlashProgress updated =
+          await DailyFlashProgressService.consumeQuestion(
+        progress: progress,
+        questionIndex: requestedQuestionIndex,
+      );
 
-    setState(() {
-      savedProgress = updated;
-    });
-
-    startClueTimer();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        guessFocusNode.requestFocus();
+      if (!mounted) {
+        return;
       }
-    });
+
+      final bool claimedRequestedQuestion =
+          updated.nextQuestionIndex ==
+              requestedQuestionIndex + 1;
+
+      if (claimedRequestedQuestion) {
+        setState(() {
+          savedProgress = updated;
+          totalXp = updated.totalXp;
+          questionsCorrect = updated.questionsCorrect;
+          firstGuesses = updated.firstGuesses;
+        });
+
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            guessFocusNode.requestFocus();
+          }
+        });
+
+        return;
+      }
+
+      progress = updated;
+
+      if (updated.allQuestionsAttempted) {
+        setState(() {
+          savedProgress = updated;
+          totalXp = updated.totalXp;
+          questionsCorrect = updated.questionsCorrect;
+          firstGuesses = updated.firstGuesses;
+          challengeFinished = true;
+          questionFinished = true;
+        });
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            showCompletedTodayScreen();
+          }
+        });
+
+        return;
+      }
+
+      setState(() {
+        savedProgress = updated;
+        questionIndex = updated.nextQuestionIndex;
+        clueIndex = 0;
+        lives = maximumLives;
+        millisecondsRemaining = clueDurationMilliseconds;
+        closeGuessesThisClue = 0;
+        guessesThisQuestion = 0;
+        questionFinished = false;
+        showTimeUpOverlay = false;
+        gameMessage = null;
+        gameMessageType = GameMessageType.info;
+        guessController.clear();
+        totalXp = updated.totalXp;
+        questionsCorrect = updated.questionsCorrect;
+        firstGuesses = updated.firstGuesses;
+      });
+    }
   }
 
   @override
@@ -419,7 +632,12 @@ class _DailyFlashGameScreenState
       currentQuestion.answer,
     );
 
-    if (typed == answer) {
+    final Set<String> accepted =
+        questionIndex < acceptedAnswersByQuestion.length
+            ? acceptedAnswersByQuestion[questionIndex]
+            : <String>{answer};
+
+    if (accepted.contains(typed)) {
       return _DailyFlashGuessMatch.correct;
     }
 
@@ -761,6 +979,7 @@ class _DailyFlashGameScreenState
       progress =
           await DailyFlashProgressService.recordCorrectAnswer(
         progress: progress,
+        questionIndex: questionIndex,
         xpEarned: xpEarned,
         wasFirstGuess: wasFirstGuess,
       );
@@ -1000,7 +1219,6 @@ class _DailyFlashGameScreenState
           clueDurationMilliseconds;
     });
 
-    startClueTimer();
 
     WidgetsBinding.instance
         .addPostFrameCallback((_) {
@@ -1171,16 +1389,44 @@ class _DailyFlashGameScreenState
     // Count this Daily Flash once and only show a milestone
     // when the new lifetime total reaches a real milestone target.
     // A perfect 5 is also stored as a lifetime stat.
-    final DailyFlashMilestone? milestone =
+    DailyFlashMilestone? milestone =
         await DailyFlashMilestoneService
             .recordCompletionAndAwardIfEarned(
       perfect: perfect,
     );
 
-    // Milestone bonus XP is added to the player's stored XP.
-    if (milestone != null && milestone.bonusXp > 0) {
-      await PlayerStatsService.addBonusXp(
-        xp: milestone.bonusXp,
+    if (!mounted) return;
+
+    // Daily Flash XP contributes to the player's global XP/rank once the
+    // five-question Flash is completed. Capture the before/after snapshots
+    // so reward popups can follow the same hierarchy as every other game.
+    final PlayerStats previousPlayerStats =
+        await PlayerStatsService.loadStats();
+    final PlayerStats currentPlayerStats =
+        await PlayerStatsService.addBonusXp(xp: totalXp);
+
+    await AnalyticsService.logDailyFlashCompleted(
+      dateKey: savedProgress?.dateKey ??
+          DailyFlashProgressService.todayKey(),
+      questionsCorrect: questionsCorrect,
+      firstGuesses: firstGuesses,
+      totalXp: totalXp,
+      perfect: perfect,
+    );
+
+    await AnalyticsService.logEarnedRewards(
+      previous: previousPlayerStats,
+      current: currentPlayerStats,
+      gameKey: 'daily_flash',
+      gameLabel: 'Daily Flash 5',
+    );
+
+    if (milestone != null) {
+      await AnalyticsService.logAchievementEarned(
+        achievementId: 'daily_flash_${milestone.completions}',
+        achievementTitle: 'Daily Flash ${milestone.completions}',
+        category: 'dailyFlash',
+        target: milestone.completions,
       );
     }
 
@@ -1210,17 +1456,113 @@ class _DailyFlashGameScreenState
 
     if (!mounted) return;
 
-    // Milestone celebration appears AFTER the results screen.
-    if (milestone != null) {
+    // Reward popup hierarchy after the results screen:
+    // 1. Badge
+    // 2. Rank / XP level-up
+    // 3. Standalone XP achievement
+    // 4. Daily Flash 5 achievement
+    // Lower-priority rewards are still recorded immediately but are not
+    // queued to appear later.
+    bool higherPriorityRewardShown = false;
+
+    final List<EarnedBadge> earnedBadges =
+        AchievementService.newlyEarnedBadges(
+      previous: previousPlayerStats,
+      current: currentPlayerStats,
+      gameKey: 'daily_flash',
+      gameLabel: 'Daily Flash 5',
+    );
+
+    // Daily Flash has no game-specific badge series here, so this normally
+    // contains only any newly crossed general Clue XP badge thresholds.
+    if (earnedBadges.isNotEmpty) {
+      for (final EarnedBadge badge in earnedBadges) {
+        if (!mounted) return;
+
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext dialogContext) => BadgeEarnedDialog(
+            badgeName: badge.name,
+            imageAsset: badge.imageAsset,
+          ),
+        );
+      }
+      higherPriorityRewardShown = true;
+    } else {
+      final PlayerRankProgress previousRank =
+          PlayerRankProgress.fromXp(previousPlayerStats.totalXp);
+      final PlayerRankProgress currentRank =
+          PlayerRankProgress.fromXp(currentPlayerStats.totalXp);
+
+      if (currentRank.isLevelUpFrom(previousRank)) {
+        await showRankProgressDialog(
+          context: context,
+          previous: previousRank,
+          current: currentRank,
+          xpEarned:
+              currentPlayerStats.totalXp - previousPlayerStats.totalXp,
+        );
+        higherPriorityRewardShown = true;
+      } else {
+        final List<Achievement> xpAchievements =
+            AchievementService.newlyReachedMilestones(
+          previous: previousPlayerStats,
+          current: currentPlayerStats,
+        )
+                .where(
+                  (Achievement achievement) =>
+                      achievement.category == AchievementCategory.xp,
+                )
+                .toList()
+              ..sort(
+                (Achievement first, Achievement second) =>
+                    second.target.compareTo(first.target),
+              );
+
+        if (xpAchievements.isNotEmpty) {
+          final Achievement achievement = xpAchievements.first;
+          final Achievement? next =
+              AchievementService.nextMilestoneAfter(achievement);
+
+          await showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext dialogContext) {
+              return MilestoneReachedDialog(
+                milestone: MilestonePopupData(
+                  target: achievement.target,
+                  label:
+                      AchievementService.milestoneLabelFor(achievement),
+                  nextTarget: next?.target,
+                  nextLabel: next == null
+                      ? null
+                      : AchievementService.milestoneLabelFor(next),
+                ),
+              );
+            },
+          );
+          higherPriorityRewardShown = true;
+        }
+      }
+    }
+
+    // Only show the Daily Flash achievement if no higher-priority reward
+    // from this same completion has already been shown.
+    if (!mounted) return;
+
+    if (!higherPriorityRewardShown && milestone != null) {
       await showDialog<void>(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext dialogContext) {
-          return _DailyFlashMilestoneDialog(
-            milestone: milestone,
-            onContinue: () {
-              Navigator.of(dialogContext).pop();
-            },
+          return MilestoneReachedDialog(
+            milestone: MilestonePopupData(
+              target: milestone.completions,
+              label: 'DAILY FLASH 5s',
+              nextTarget: milestone.nextTarget,
+              nextLabel: 'DAILY FLASH 5s',
+            ),
           );
         },
       );
@@ -1240,30 +1582,9 @@ class _DailyFlashGameScreenState
 
     clueTimer?.cancel();
 
-    final SharedPreferences preferences =
-        await SharedPreferences.getInstance();
-
     if (!mounted) {
       return;
     }
-
-    final bool hideLeaveWarning =
-        preferences.getBool(_hideLeaveWarningPreferenceKey) ?? false;
-
-    if (hideLeaveWarning) {
-      leaveFlash5();
-      return;
-    }
-
-    final int warningCount =
-        preferences.getInt(_leaveWarningCountPreferenceKey) ?? 0;
-
-    final bool showDontShowAgain = warningCount >= 1;
-
-    await preferences.setInt(
-      _leaveWarningCountPreferenceKey,
-      warningCount + 1,
-    );
 
     if (!mounted) {
       return;
@@ -1275,6 +1596,7 @@ class _DailyFlashGameScreenState
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
+          constraints: const BoxConstraints(maxWidth: 500),
           backgroundColor: AppColors.panel,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
@@ -1364,38 +1686,6 @@ class _DailyFlashGameScreenState
                       ),
                     ),
                   ),
-                  if (showDontShowAgain) ...[
-                    const SizedBox(height: 6),
-                    TextButton(
-                      onPressed: () async {
-                        final SharedPreferences preferences =
-                            await SharedPreferences.getInstance();
-
-                        await preferences.setBool(
-                          _hideLeaveWarningPreferenceKey,
-                          true,
-                        );
-
-                        if (!dialogContext.mounted) {
-                          return;
-                        }
-
-                        Navigator.of(dialogContext).pop(false);
-                      },
-                      child: const Text(
-                        "I UNDERSTAND, DON'T SHOW AGAIN",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: AppColors.white,
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w800,
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColors.white,
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -1413,7 +1703,6 @@ class _DailyFlashGameScreenState
       return;
     }
 
-    startClueTimer(resetTime: false);
   }
 
   Future<void> showCompletedTodayScreen() async {
@@ -1596,6 +1885,147 @@ class _DailyFlashGameScreenState
                         constraints.maxWidth <
                             370;
 
+                final bool isDesktop =
+                    constraints.maxWidth >= 1200;
+
+                if (isDesktop) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                      18,
+                      8,
+                      18,
+                      18,
+                    ),
+                    child: Column(
+                      children: [
+                        _DailyFlashHeader(
+                          isSmall: false,
+                          onBack: goBack,
+                          onHome: goBack,
+                        ),
+                        const SizedBox(height: 8),
+                        _TopicBadge(
+                          isSmall: false,
+                          title: dailyTitle,
+                        ),
+                        if (gameMessage != null) ...[
+                          const SizedBox(height: 10),
+                          GameMessagePanel(
+                            message: gameMessage!,
+                            type: gameMessageType,
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 5,
+                              child: _DailyFlashQuestionImagePanel(
+                                key: ValueKey<String>(
+                                  currentQuestion.answer,
+                                ),
+                                imagePath:
+                                    currentQuestion.imagePath,
+                                retryVersion:
+                                    imageRetryVersion,
+                                onImageError:
+                                    _showTechnicalError,
+                                isSmall: false,
+                                height: 560,
+                              ),
+                            ),
+                            const SizedBox(width: 22),
+                            Expanded(
+                              flex: 7,
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.stretch,
+                                children: [
+                                  _GameStatusPanel(
+                                    questionNumber:
+                                        questionIndex + 1,
+                                    clueNumber:
+                                        clueIndex + 1,
+                                    clueTotal:
+                                        currentQuestion
+                                            .clues.length,
+                                    lives: lives,
+                                    baseXp: baseXp,
+                                    showFirstGuessBonus:
+                                        clueIndex == 0 &&
+                                        guessesThisQuestion ==
+                                            0,
+                                    timerProgress:
+                                        timerProgress,
+                                    isSmall: false,
+                                  ),
+                                  const SizedBox(height: 14),
+                                  _CluePanel(
+                                    clue: currentQuestion
+                                        .clues[clueIndex],
+                                    isSmall: false,
+                                  ),
+                                  const SizedBox(height: 22),
+                                  _GuessField(
+                                    controller:
+                                        guessController,
+                                    focusNode:
+                                        guessFocusNode,
+                                    enabled:
+                                        !questionFinished &&
+                                        !challengeFinished,
+                                    onSubmitted: (_) {
+                                      submitGuess();
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _GuessButton(
+                                          onPressed:
+                                              questionFinished ||
+                                                      challengeFinished
+                                                  ? null
+                                                  : submitGuess,
+                                          isSmall: false,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child:
+                                            _NextClueButton(
+                                          onPressed:
+                                              questionFinished ||
+                                                      challengeFinished
+                                                  ? null
+                                                  : nextCluePressed,
+                                          isSmall: false,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _GiveUpButton(
+                                    onPressed:
+                                        questionFinished ||
+                                                challengeFinished
+                                            ? null
+                                            : finishFailedQuestion,
+                                    isSmall: false,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
                 return SingleChildScrollView(
                   padding:
                       EdgeInsets.fromLTRB(
@@ -1619,6 +2049,7 @@ class _DailyFlashGameScreenState
 
                       _TopicBadge(
                         isSmall: isSmall,
+                        title: dailyTitle,
                       ),
 
                       if (gameMessage !=
@@ -1687,7 +2118,7 @@ class _DailyFlashGameScreenState
                                 : 10,
                       ),
 
-                      _PlanetImagePanel(
+                      _DailyFlashQuestionImagePanel(
                         key:
                             ValueKey<
                                 String>(
@@ -1924,9 +2355,11 @@ class _DailyFlashHeader
 class _TopicBadge
     extends StatelessWidget {
   final bool isSmall;
+  final String title;
 
   const _TopicBadge({
     required this.isSmall,
+    required this.title,
   });
 
   @override
@@ -1954,14 +2387,10 @@ class _TopicBadge
         mainAxisSize:
             MainAxisSize.min,
         children: [
-          Text(
-            '🪐',
-            style: TextStyle(
-              fontSize:
-                  isSmall
-                      ? 18
-                      : 21,
-            ),
+          Icon(
+            Icons.bolt_rounded,
+            color: AppColors.orange,
+            size: isSmall ? 18 : 21,
           ),
           const SizedBox(
             width: 7,
@@ -1983,7 +2412,7 @@ class _TopicBadge
             ),
           ),
           Text(
-            'PLANETS',
+            title.toUpperCase(),
             style:
                 AppTextStyles
                     .category
@@ -2178,15 +2607,6 @@ class _GameStatusPanel
             ],
           ),
 
-          SizedBox(
-            height:
-                isSmall ? 6 : 8,
-          ),
-
-          TimerBar(
-            progress:
-                timerProgress,
-          ),
         ],
       ),
     );
@@ -2314,29 +2734,31 @@ class _CluePanel
 }
 
 // ===========================================================
-// PLANET IMAGE
+// DAILY FLASH QUESTION IMAGE
 // ===========================================================
 
-class _PlanetImagePanel
+class _DailyFlashQuestionImagePanel
     extends StatelessWidget {
   final String imagePath;
   final int retryVersion;
   final VoidCallback onImageError;
   final bool isSmall;
+  final double? height;
 
-  const _PlanetImagePanel({
+  const _DailyFlashQuestionImagePanel({
     super.key,
     required this.imagePath,
     required this.retryVersion,
     required this.onImageError,
     required this.isSmall,
+    this.height,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height:
-          isSmall ? 270 : 320,
+          height ?? (isSmall ? 270 : 320),
       width: double.infinity,
       padding:
           EdgeInsets.all(
@@ -2900,287 +3322,6 @@ class _DailyFlashResultsDialogState
   }
 }
 
-
-class _DailyFlashMilestoneDialog extends StatelessWidget {
-  final DailyFlashMilestone milestone;
-  final VoidCallback onContinue;
-
-  const _DailyFlashMilestoneDialog({
-    required this.milestone,
-    required this.onContinue,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final int completed = milestone.completions;
-    final int? nextTarget = milestone.nextTarget;
-
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 18,
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: 430,
-        ),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(
-            20,
-            18,
-            20,
-            20,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.panel,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: AppColors.orange,
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.orange.withValues(
-                  alpha: 0.22,
-                ),
-                blurRadius: 22,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 58,
-                  height: 58,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.orange,
-                      width: 2,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.bolt_rounded,
-                    color: AppColors.orange,
-                    size: 40,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'MILESTONE REACHED!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Oswald',
-                    color: AppColors.orange,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  width: 190,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(
-                      alpha: 0.24,
-                    ),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(
-                      color: AppColors.orange,
-                      width: 2,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        '$completed',
-                        style: const TextStyle(
-                          fontFamily: 'Oswald',
-                          color: AppColors.orange,
-                          fontSize: 62,
-                          height: 0.95,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'DAILY FLASH 5s\nCOMPLETED',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Oswald',
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          height: 1.15,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'INCREDIBLE DEDICATION!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Oswald',
-                    color: AppColors.orange,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  'You’ve completed $completed Daily Flash 5 challenges.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    color: Colors.white,
-                    fontSize: 14,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _DailyFlashMilestoneInfoCard(
-                  icon: Icons.workspace_premium_rounded,
-                  title: 'MILESTONE BONUS',
-                  value: '+${_formatDailyFlashNumber(milestone.bonusXp)} XP',
-                ),
-                const SizedBox(height: 10),
-                _DailyFlashMilestoneInfoCard(
-                  icon: Icons.track_changes_rounded,
-                  title: 'NEXT TARGET',
-                  value: nextTarget == null
-                      ? 'MAX MILESTONE'
-                      : '$nextTarget DAILY FLASH 5s COMPLETED',
-                ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: FilledButton.icon(
-                    onPressed: onContinue,
-                    icon: const Icon(
-                      Icons.home_rounded,
-                    ),
-                    label: const Text(
-                      'BACK TO HOME',
-                      style: TextStyle(
-                        fontFamily: 'Oswald',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.6,
-                      ),
-                    ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor:
-                          AppColors.orange,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(16),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DailyFlashMilestoneInfoCard
-    extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-
-  const _DailyFlashMilestoneInfoCard({
-    required this.icon,
-    required this.title,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 12,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(
-          alpha: 0.18,
-        ),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: Colors.white24,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.orange,
-                width: 1.5,
-              ),
-            ),
-            child: Icon(
-              icon,
-              color: AppColors.orange,
-              size: 27,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Oswald',
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontFamily: 'Oswald',
-                    color: AppColors.orange,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _DailyFlashXpRow extends StatelessWidget {
   final IconData? icon;

@@ -2,6 +2,9 @@ import '../data/animal_kingdom_case_data.dart';
 import '../data/round_the_world_missions.dart';
 import '../data/secrets_of_the_past_missions.dart';
 import '../data/taste_and_treats_missions.dart';
+import '../data/nature_of_discovery_missions.dart';
+import '../data/the_written_word_missions.dart';
+import '../data/the_creative_code_missions.dart';
 import '../models/case_mission.dart';
 import '../models/case_progress.dart';
 import '../models/gameplay_result_event.dart';
@@ -11,6 +14,36 @@ import 'case_tracking_service.dart';
 
 class CasePathService {
   CasePathService._();
+
+  // TEMPORARY TEST MODE.
+  // Set to false after Case Files testing is complete.
+  // When true, progress is only PRESENTED as completed in memory so every
+  // stage can be opened for testing. Saved local/cloud progress is not changed
+  // by this unlock override.
+  static const bool caseFileTestMode = true;
+
+  static CaseProgress _applyCaseFileTestUnlock(
+    CaseProgress progress,
+  ) {
+    if (!caseFileTestMode) {
+      return progress;
+    }
+
+    return CaseProgress(
+      casePathId: progress.casePathId,
+      currentStage: progress.currentStage,
+      totalStages: progress.totalStages,
+      completedStages: List<int>.generate(
+        progress.totalStages,
+        (int index) => index + 1,
+      ),
+      isCompleted: true,
+      currentStageProgress: progress.currentStageProgress,
+      startedAt: progress.startedAt,
+      updatedAt: progress.updatedAt,
+      completedAt: progress.completedAt ?? DateTime.now(),
+    );
+  }
 
   static const String animalKingdomCasePathId =
       'animal_kingdom';
@@ -33,6 +66,21 @@ class CasePathService {
 
   static const int tasteAndTreatsTotalStages = 20;
 
+  static const String natureOfDiscoveryCasePathId =
+      'nature_of_discovery';
+
+  static const int natureOfDiscoveryTotalStages = 20;
+
+  static const String theWrittenWordCasePathId =
+      'the_written_word';
+
+  static const int theWrittenWordTotalStages = 20;
+
+  static const String theCreativeCodeCasePathId =
+      'the_creative_code';
+
+  static const int theCreativeCodeTotalStages = 20;
+
   static const CaseTrackingService _trackingService =
       CaseTrackingService();
 
@@ -40,6 +88,7 @@ class CasePathService {
       CaseProgressService(
     trackingService: _trackingService,
   );
+
 
   static Future<CaseProgress>
       loadAnimalKingdomProgress() async {
@@ -49,7 +98,7 @@ class CasePathService {
     );
 
     if (savedProgress != null) {
-      return savedProgress;
+      return _applyCaseFileTestUnlock(savedProgress);
     }
 
     final CaseProgress initialProgress =
@@ -62,7 +111,7 @@ class CasePathService {
       initialProgress,
     );
 
-    return initialProgress;
+    return _applyCaseFileTestUnlock(initialProgress);
   }
 
   static CaseMission? animalKingdomMissionForStage(
@@ -93,51 +142,50 @@ class CasePathService {
       recordAnimalKingdomResult({
     required GameplayResultEvent event,
   }) async {
-    final CaseProgress currentProgress =
+    final CaseProgress fallbackProgress =
         await loadAnimalKingdomProgress();
 
-    if (currentProgress.isCompleted) {
-      return currentProgress;
-    }
+    return CaseProgressStorageService
+        .updateProgressTransactionally(
+      casePathId: animalKingdomCasePathId,
+      attemptId: event.attemptId,
+      fallbackProgress: fallbackProgress,
+      update: (CaseProgress currentProgress) {
+        if (currentProgress.isCompleted) {
+          return currentProgress;
+        }
 
-    final CaseMission? mission =
-        currentAnimalKingdomMission(
-      currentProgress,
-    );
+        final CaseMission? mission =
+            animalKingdomMissionForStage(
+          currentProgress.currentStage,
+        );
 
-    if (mission == null) {
-      return currentProgress;
-    }
+        if (mission == null) {
+          return currentProgress;
+        }
 
-    final CaseStageProgress updatedStageProgress =
-        _trackingService.applyResult(
-      mission: mission,
-      progress:
+        final CaseStageProgress updatedStageProgress =
+            _trackingService.applyResult(
+          mission: mission,
+          progress: currentProgress.currentStageProgress,
+          event: event,
+        );
+
+        if (_sameStageProgress(
           currentProgress.currentStageProgress,
-      event: event,
-    );
-
-    if (_sameStageProgress(
-      currentProgress.currentStageProgress,
-      updatedStageProgress,
-    )) {
-      return currentProgress;
-    }
-
-    final CaseProgress updatedCaseProgress =
-        _progressService.applyStageProgress(
-      caseProgress: currentProgress,
-      mission: mission,
-      updatedStageProgress:
           updatedStageProgress,
-      updatedAt: event.completedAt,
-    );
+        )) {
+          return currentProgress;
+        }
 
-    await CaseProgressStorageService.saveProgress(
-      updatedCaseProgress,
+        return _progressService.applyStageProgress(
+          caseProgress: currentProgress,
+          mission: mission,
+          updatedStageProgress: updatedStageProgress,
+          updatedAt: event.completedAt,
+        );
+      },
     );
-
-    return updatedCaseProgress;
   }
 
   static bool isAnimalKingdomStageCompleted({
@@ -185,7 +233,7 @@ class CasePathService {
     );
 
     if (savedProgress != null) {
-      return savedProgress;
+      return _applyCaseFileTestUnlock(savedProgress);
     }
 
     final CaseProgress initialProgress =
@@ -198,7 +246,7 @@ class CasePathService {
       initialProgress,
     );
 
-    return initialProgress;
+    return _applyCaseFileTestUnlock(initialProgress);
   }
 
   static CaseMission? roundTheWorldMissionForStage(
@@ -228,51 +276,50 @@ class CasePathService {
       recordRoundTheWorldResult({
     required GameplayResultEvent event,
   }) async {
-    final CaseProgress currentProgress =
+    final CaseProgress fallbackProgress =
         await loadRoundTheWorldProgress();
 
-    if (currentProgress.isCompleted) {
-      return currentProgress;
-    }
+    return CaseProgressStorageService
+        .updateProgressTransactionally(
+      casePathId: roundTheWorldCasePathId,
+      attemptId: event.attemptId,
+      fallbackProgress: fallbackProgress,
+      update: (CaseProgress currentProgress) {
+        if (currentProgress.isCompleted) {
+          return currentProgress;
+        }
 
-    final CaseMission? mission =
-        currentRoundTheWorldMission(
-      currentProgress,
-    );
+        final CaseMission? mission =
+            roundTheWorldMissionForStage(
+          currentProgress.currentStage,
+        );
 
-    if (mission == null) {
-      return currentProgress;
-    }
+        if (mission == null) {
+          return currentProgress;
+        }
 
-    final CaseStageProgress updatedStageProgress =
-        _trackingService.applyResult(
-      mission: mission,
-      progress:
+        final CaseStageProgress updatedStageProgress =
+            _trackingService.applyResult(
+          mission: mission,
+          progress: currentProgress.currentStageProgress,
+          event: event,
+        );
+
+        if (_sameStageProgress(
           currentProgress.currentStageProgress,
-      event: event,
-    );
-
-    if (_sameStageProgress(
-      currentProgress.currentStageProgress,
-      updatedStageProgress,
-    )) {
-      return currentProgress;
-    }
-
-    final CaseProgress updatedCaseProgress =
-        _progressService.applyStageProgress(
-      caseProgress: currentProgress,
-      mission: mission,
-      updatedStageProgress:
           updatedStageProgress,
-      updatedAt: event.completedAt,
-    );
+        )) {
+          return currentProgress;
+        }
 
-    await CaseProgressStorageService.saveProgress(
-      updatedCaseProgress,
+        return _progressService.applyStageProgress(
+          caseProgress: currentProgress,
+          mission: mission,
+          updatedStageProgress: updatedStageProgress,
+          updatedAt: event.completedAt,
+        );
+      },
     );
-
-    return updatedCaseProgress;
   }
 
   static bool isRoundTheWorldStageCompleted({
@@ -320,7 +367,7 @@ class CasePathService {
     );
 
     if (savedProgress != null) {
-      return savedProgress;
+      return _applyCaseFileTestUnlock(savedProgress);
     }
 
     final CaseProgress initialProgress =
@@ -333,7 +380,7 @@ class CasePathService {
       initialProgress,
     );
 
-    return initialProgress;
+    return _applyCaseFileTestUnlock(initialProgress);
   }
 
   static CaseMission? secretsOfThePastMissionForStage(
@@ -363,49 +410,50 @@ class CasePathService {
       recordSecretsOfThePastResult({
     required GameplayResultEvent event,
   }) async {
-    final CaseProgress currentProgress =
+    final CaseProgress fallbackProgress =
         await loadSecretsOfThePastProgress();
 
-    if (currentProgress.isCompleted) {
-      return currentProgress;
-    }
+    return CaseProgressStorageService
+        .updateProgressTransactionally(
+      casePathId: secretsOfThePastCasePathId,
+      attemptId: event.attemptId,
+      fallbackProgress: fallbackProgress,
+      update: (CaseProgress currentProgress) {
+        if (currentProgress.isCompleted) {
+          return currentProgress;
+        }
 
-    final CaseMission? mission =
-        currentSecretsOfThePastMission(
-      currentProgress,
+        final CaseMission? mission =
+            secretsOfThePastMissionForStage(
+          currentProgress.currentStage,
+        );
+
+        if (mission == null) {
+          return currentProgress;
+        }
+
+        final CaseStageProgress updatedStageProgress =
+            _trackingService.applyResult(
+          mission: mission,
+          progress: currentProgress.currentStageProgress,
+          event: event,
+        );
+
+        if (_sameStageProgress(
+          currentProgress.currentStageProgress,
+          updatedStageProgress,
+        )) {
+          return currentProgress;
+        }
+
+        return _progressService.applyStageProgress(
+          caseProgress: currentProgress,
+          mission: mission,
+          updatedStageProgress: updatedStageProgress,
+          updatedAt: event.completedAt,
+        );
+      },
     );
-
-    if (mission == null) {
-      return currentProgress;
-    }
-
-    final CaseStageProgress updatedStageProgress =
-        _trackingService.applyResult(
-      mission: mission,
-      progress: currentProgress.currentStageProgress,
-      event: event,
-    );
-
-    if (_sameStageProgress(
-      currentProgress.currentStageProgress,
-      updatedStageProgress,
-    )) {
-      return currentProgress;
-    }
-
-    final CaseProgress updatedCaseProgress =
-        _progressService.applyStageProgress(
-      caseProgress: currentProgress,
-      mission: mission,
-      updatedStageProgress: updatedStageProgress,
-      updatedAt: event.completedAt,
-    );
-
-    await CaseProgressStorageService.saveProgress(
-      updatedCaseProgress,
-    );
-
-    return updatedCaseProgress;
   }
 
   static bool isSecretsOfThePastStageCompleted({
@@ -453,7 +501,7 @@ class CasePathService {
     );
 
     if (savedProgress != null) {
-      return savedProgress;
+      return _applyCaseFileTestUnlock(savedProgress);
     }
 
     final CaseProgress initialProgress =
@@ -466,7 +514,7 @@ class CasePathService {
       initialProgress,
     );
 
-    return initialProgress;
+    return _applyCaseFileTestUnlock(initialProgress);
   }
 
   static CaseMission? tasteAndTreatsMissionForStage(
@@ -496,49 +544,50 @@ class CasePathService {
       recordTasteAndTreatsResult({
     required GameplayResultEvent event,
   }) async {
-    final CaseProgress currentProgress =
+    final CaseProgress fallbackProgress =
         await loadTasteAndTreatsProgress();
 
-    if (currentProgress.isCompleted) {
-      return currentProgress;
-    }
+    return CaseProgressStorageService
+        .updateProgressTransactionally(
+      casePathId: tasteAndTreatsCasePathId,
+      attemptId: event.attemptId,
+      fallbackProgress: fallbackProgress,
+      update: (CaseProgress currentProgress) {
+        if (currentProgress.isCompleted) {
+          return currentProgress;
+        }
 
-    final CaseMission? mission =
-        currentTasteAndTreatsMission(
-      currentProgress,
+        final CaseMission? mission =
+            tasteAndTreatsMissionForStage(
+          currentProgress.currentStage,
+        );
+
+        if (mission == null) {
+          return currentProgress;
+        }
+
+        final CaseStageProgress updatedStageProgress =
+            _trackingService.applyResult(
+          mission: mission,
+          progress: currentProgress.currentStageProgress,
+          event: event,
+        );
+
+        if (_sameStageProgress(
+          currentProgress.currentStageProgress,
+          updatedStageProgress,
+        )) {
+          return currentProgress;
+        }
+
+        return _progressService.applyStageProgress(
+          caseProgress: currentProgress,
+          mission: mission,
+          updatedStageProgress: updatedStageProgress,
+          updatedAt: event.completedAt,
+        );
+      },
     );
-
-    if (mission == null) {
-      return currentProgress;
-    }
-
-    final CaseStageProgress updatedStageProgress =
-        _trackingService.applyResult(
-      mission: mission,
-      progress: currentProgress.currentStageProgress,
-      event: event,
-    );
-
-    if (_sameStageProgress(
-      currentProgress.currentStageProgress,
-      updatedStageProgress,
-    )) {
-      return currentProgress;
-    }
-
-    final CaseProgress updatedCaseProgress =
-        _progressService.applyStageProgress(
-      caseProgress: currentProgress,
-      mission: mission,
-      updatedStageProgress: updatedStageProgress,
-      updatedAt: event.completedAt,
-    );
-
-    await CaseProgressStorageService.saveProgress(
-      updatedCaseProgress,
-    );
-
-    return updatedCaseProgress;
   }
 
   static bool isTasteAndTreatsStageCompleted({
@@ -578,129 +627,409 @@ class CasePathService {
     );
   }
 
-  /// DEBUG / QA ONLY.
-  ///
-  /// Rebuilds Animal Kingdom entirely in memory to 19/20, then saves
-  /// that single final QA state. This avoids repeatedly reloading an
-  /// older completed cloud copy while the reset is being rebuilt.
-  ///
-  /// Result: Cases 1-19 completed, Case 20 active and fresh at 0.
   static Future<CaseProgress>
-      qaResetAnimalKingdomTo19Of20() async {
-    await resetAnimalKingdomProgress();
-
-    CaseProgress progress =
-        _progressService.createInitialProgress(
-      casePathId: animalKingdomCasePathId,
-      totalStages: animalKingdomTotalStages,
+      loadNatureOfDiscoveryProgress() async {
+    final CaseProgress? savedProgress =
+        await CaseProgressStorageService.loadProgress(
+      casePathId: natureOfDiscoveryCasePathId,
     );
 
-    int eventNumber = 0;
+    if (savedProgress != null) {
+      return _applyCaseFileTestUnlock(savedProgress);
+    }
 
-    while (!progress.isCompleted &&
-        progress.currentStage <
-            animalKingdomTotalStages) {
-      final CaseMission? mission =
-          currentAnimalKingdomMission(progress);
+    final CaseProgress initialProgress =
+        _progressService.createInitialProgress(
+      casePathId: natureOfDiscoveryCasePathId,
+      totalStages: natureOfDiscoveryTotalStages,
+    );
 
-      if (mission == null) {
-        throw StateError(
-          'QA reset could not load Animal Kingdom '
-          'Case ${progress.currentStage}.',
+    await CaseProgressStorageService.saveProgress(
+      initialProgress,
+    );
+
+    return _applyCaseFileTestUnlock(initialProgress);
+  }
+
+  static CaseMission? natureOfDiscoveryMissionForStage(
+    int stage,
+  ) {
+    if (stage < 1 ||
+        stage > natureOfDiscoveryCaseMissions.length) {
+      return null;
+    }
+
+    return natureOfDiscoveryCaseMissions[stage - 1];
+  }
+
+  static CaseMission? currentNatureOfDiscoveryMission(
+    CaseProgress progress,
+  ) {
+    if (progress.isCompleted) {
+      return null;
+    }
+
+    return natureOfDiscoveryMissionForStage(
+      progress.currentStage,
+    );
+  }
+
+  static Future<CaseProgress>
+      recordNatureOfDiscoveryResult({
+    required GameplayResultEvent event,
+  }) async {
+    final CaseProgress fallbackProgress =
+        await loadNatureOfDiscoveryProgress();
+
+    return CaseProgressStorageService
+        .updateProgressTransactionally(
+      casePathId: natureOfDiscoveryCasePathId,
+      attemptId: event.attemptId,
+      fallbackProgress: fallbackProgress,
+      update: (CaseProgress currentProgress) {
+        if (currentProgress.isCompleted) {
+          return currentProgress;
+        }
+
+        final CaseMission? mission =
+            natureOfDiscoveryMissionForStage(
+          currentProgress.currentStage,
         );
-      }
 
-      final int stageBeingCompleted = mission.stage;
-      final String qaSubcategory =
-          mission.subcategory ?? 'mammals';
+        if (mission == null) {
+          return currentProgress;
+        }
 
-      while (!progress.isCompleted &&
-          progress.currentStage ==
-              stageBeingCompleted) {
-        eventNumber++;
-
-        final DateTime completedAt =
-            DateTime.now().add(
-          Duration(milliseconds: eventNumber),
-        );
-
-        final GameplayResultEvent event =
-            GameplayResultEvent(
-          attemptId:
-              'qa_case_${mission.stage}_$eventNumber',
-          questionId:
-              'qa_case_${mission.stage}_question_$eventNumber',
-          category: 'animals',
-          subcategory: qaSubcategory,
-          correct: true,
-          clueNumberSolved: 1,
-          firstGuess: true,
-          practiceMode: true,
-          completedAt: completedAt,
-        );
-
-        final CaseStageProgress
-            updatedStageProgress =
+        final CaseStageProgress updatedStageProgress =
             _trackingService.applyResult(
           mission: mission,
-          progress:
-              progress.currentStageProgress,
+          progress: currentProgress.currentStageProgress,
           event: event,
         );
 
         if (_sameStageProgress(
-          progress.currentStageProgress,
+          currentProgress.currentStageProgress,
           updatedStageProgress,
         )) {
-          throw StateError(
-            'QA reset made no progress on '
-            'Animal Kingdom Case $stageBeingCompleted.',
-          );
+          return currentProgress;
         }
 
-        progress =
-            _progressService.applyStageProgress(
-          caseProgress: progress,
+        return _progressService.applyStageProgress(
+          caseProgress: currentProgress,
           mission: mission,
-          updatedStageProgress:
-              updatedStageProgress,
-          updatedAt: completedAt,
+          updatedStageProgress: updatedStageProgress,
+          updatedAt: event.completedAt,
         );
+      },
+    );
+  }
 
-        if (eventNumber > 1000) {
-          throw StateError(
-            'QA reset exceeded its safety limit.',
-          );
-        }
-      }
-    }
+  static bool isNatureOfDiscoveryStageCompleted({
+    required CaseProgress progress,
+    required int stage,
+  }) {
+    return _progressService.isStageCompleted(
+      caseProgress: progress,
+      stage: stage,
+    );
+  }
 
-    if (progress.isCompleted ||
-        progress.currentStage != 20 ||
-        progress.completedStageCount != 19 ||
-        progress.currentStageProgress.stage != 20 ||
-        progress.currentStageProgress.correctCount != 0 ||
-        progress.currentStageProgress
-                .clueThresholdCount !=
-            0 ||
-        progress.currentStageProgress.firstGuessCount !=
-            0) {
-      throw StateError(
-        'QA reset expected 19/20 with Case 20 '
-        'fresh and active, but got '
-        '${progress.completedStageCount}/'
-        '${progress.totalStages}, '
-        'Case ${progress.currentStage}, '
-        '${progress.currentStageProgress.correctCount} correct.',
-      );
-    }
+  static bool isNatureOfDiscoveryStageCurrent({
+    required CaseProgress progress,
+    required int stage,
+  }) {
+    return _progressService.isStageCurrent(
+      caseProgress: progress,
+      stage: stage,
+    );
+  }
 
-    await CaseProgressStorageService.saveProgress(
-      progress,
+  static bool isNatureOfDiscoveryStageLocked({
+    required CaseProgress progress,
+    required int stage,
+  }) {
+    return _progressService.isStageLocked(
+      caseProgress: progress,
+      stage: stage,
+    );
+  }
+
+  static Future<void>
+      resetNatureOfDiscoveryProgress() async {
+    await CaseProgressStorageService.clearProgress(
+      casePathId: natureOfDiscoveryCasePathId,
+    );
+  }
+
+  static Future<CaseProgress>
+      loadTheWrittenWordProgress() async {
+    final CaseProgress? savedProgress =
+        await CaseProgressStorageService.loadProgress(
+      casePathId: theWrittenWordCasePathId,
     );
 
-    return progress;
+    if (savedProgress != null) {
+      return _applyCaseFileTestUnlock(savedProgress);
+    }
+
+    final CaseProgress initialProgress =
+        _progressService.createInitialProgress(
+      casePathId: theWrittenWordCasePathId,
+      totalStages: theWrittenWordTotalStages,
+    );
+
+    await CaseProgressStorageService.saveProgress(
+      initialProgress,
+    );
+
+    return _applyCaseFileTestUnlock(initialProgress);
   }
+
+  static CaseMission? theWrittenWordMissionForStage(
+    int stage,
+  ) {
+    if (stage < 1 ||
+        stage > theWrittenWordCaseMissions.length) {
+      return null;
+    }
+
+    return theWrittenWordCaseMissions[stage - 1];
+  }
+
+  static CaseMission? currentTheWrittenWordMission(
+    CaseProgress progress,
+  ) {
+    if (progress.isCompleted) {
+      return null;
+    }
+
+    return theWrittenWordMissionForStage(
+      progress.currentStage,
+    );
+  }
+
+  static Future<CaseProgress>
+      recordTheWrittenWordResult({
+    required GameplayResultEvent event,
+  }) async {
+    final CaseProgress fallbackProgress =
+        await loadTheWrittenWordProgress();
+
+    return CaseProgressStorageService
+        .updateProgressTransactionally(
+      casePathId: theWrittenWordCasePathId,
+      attemptId: event.attemptId,
+      fallbackProgress: fallbackProgress,
+      update: (CaseProgress currentProgress) {
+        if (currentProgress.isCompleted) {
+          return currentProgress;
+        }
+
+        final CaseMission? mission =
+            theWrittenWordMissionForStage(
+          currentProgress.currentStage,
+        );
+
+        if (mission == null) {
+          return currentProgress;
+        }
+
+        final CaseStageProgress updatedStageProgress =
+            _trackingService.applyResult(
+          mission: mission,
+          progress: currentProgress.currentStageProgress,
+          event: event,
+        );
+
+        if (_sameStageProgress(
+          currentProgress.currentStageProgress,
+          updatedStageProgress,
+        )) {
+          return currentProgress;
+        }
+
+        return _progressService.applyStageProgress(
+          caseProgress: currentProgress,
+          mission: mission,
+          updatedStageProgress: updatedStageProgress,
+          updatedAt: event.completedAt,
+        );
+      },
+    );
+  }
+
+  static bool isTheWrittenWordStageCompleted({
+    required CaseProgress progress,
+    required int stage,
+  }) {
+    return _progressService.isStageCompleted(
+      caseProgress: progress,
+      stage: stage,
+    );
+  }
+
+  static bool isTheWrittenWordStageCurrent({
+    required CaseProgress progress,
+    required int stage,
+  }) {
+    return _progressService.isStageCurrent(
+      caseProgress: progress,
+      stage: stage,
+    );
+  }
+
+  static bool isTheWrittenWordStageLocked({
+    required CaseProgress progress,
+    required int stage,
+  }) {
+    return _progressService.isStageLocked(
+      caseProgress: progress,
+      stage: stage,
+    );
+  }
+
+  static Future<void>
+      resetTheWrittenWordProgress() async {
+    await CaseProgressStorageService.clearProgress(
+      casePathId: theWrittenWordCasePathId,
+    );
+  }
+
+
+  static Future<CaseProgress>
+      loadTheCreativeCodeProgress() async {
+    final CaseProgress? savedProgress =
+        await CaseProgressStorageService.loadProgress(
+      casePathId: theCreativeCodeCasePathId,
+    );
+
+    if (savedProgress != null) {
+      return _applyCaseFileTestUnlock(savedProgress);
+    }
+
+    final CaseProgress initialProgress =
+        _progressService.createInitialProgress(
+      casePathId: theCreativeCodeCasePathId,
+      totalStages: theCreativeCodeTotalStages,
+    );
+
+    await CaseProgressStorageService.saveProgress(
+      initialProgress,
+    );
+
+    return _applyCaseFileTestUnlock(initialProgress);
+  }
+
+  static CaseMission? theCreativeCodeMissionForStage(
+    int stage,
+  ) {
+    if (stage < 1 ||
+        stage > theCreativeCodeCaseMissions.length) {
+      return null;
+    }
+
+    return theCreativeCodeCaseMissions[stage - 1];
+  }
+
+  static CaseMission? currentTheCreativeCodeMission(
+    CaseProgress progress,
+  ) {
+    if (progress.isCompleted) {
+      return null;
+    }
+
+    return theCreativeCodeMissionForStage(
+      progress.currentStage,
+    );
+  }
+
+  static Future<CaseProgress>
+      recordTheCreativeCodeResult({
+    required GameplayResultEvent event,
+  }) async {
+    final CaseProgress fallbackProgress =
+        await loadTheCreativeCodeProgress();
+
+    return CaseProgressStorageService
+        .updateProgressTransactionally(
+      casePathId: theCreativeCodeCasePathId,
+      attemptId: event.attemptId,
+      fallbackProgress: fallbackProgress,
+      update: (CaseProgress currentProgress) {
+        if (currentProgress.isCompleted) {
+          return currentProgress;
+        }
+
+        final CaseMission? mission =
+            theCreativeCodeMissionForStage(
+          currentProgress.currentStage,
+        );
+
+        if (mission == null) {
+          return currentProgress;
+        }
+
+        final CaseStageProgress updatedStageProgress =
+            _trackingService.applyResult(
+          mission: mission,
+          progress: currentProgress.currentStageProgress,
+          event: event,
+        );
+
+        if (_sameStageProgress(
+          currentProgress.currentStageProgress,
+          updatedStageProgress,
+        )) {
+          return currentProgress;
+        }
+
+        return _progressService.applyStageProgress(
+          caseProgress: currentProgress,
+          mission: mission,
+          updatedStageProgress: updatedStageProgress,
+          updatedAt: event.completedAt,
+        );
+      },
+    );
+  }
+
+  static bool isTheCreativeCodeStageCompleted({
+    required CaseProgress progress,
+    required int stage,
+  }) {
+    return _progressService.isStageCompleted(
+      caseProgress: progress,
+      stage: stage,
+    );
+  }
+
+  static bool isTheCreativeCodeStageCurrent({
+    required CaseProgress progress,
+    required int stage,
+  }) {
+    return _progressService.isStageCurrent(
+      caseProgress: progress,
+      stage: stage,
+    );
+  }
+
+  static bool isTheCreativeCodeStageLocked({
+    required CaseProgress progress,
+    required int stage,
+  }) {
+    return _progressService.isStageLocked(
+      caseProgress: progress,
+      stage: stage,
+    );
+  }
+
+  static Future<void>
+      resetTheCreativeCodeProgress() async {
+    await CaseProgressStorageService.clearProgress(
+      casePathId: theCreativeCodeCasePathId,
+    );
+  }
+
 
   static bool _sameStageProgress(
     CaseStageProgress first,

@@ -101,6 +101,91 @@ class CaseProgressStorageService {
     }
   }
 
+  static Future<CaseProgress> updateProgressTransactionally({
+    required String casePathId,
+    required String attemptId,
+    required CaseProgress fallbackProgress,
+    required CaseProgress Function(CaseProgress currentProgress) update,
+  }) async {
+    final DocumentReference<Map<String, dynamic>>?
+        cloudDocument = _cloudDocument(casePathId);
+
+    if (cloudDocument == null) {
+      final CaseProgress updated = update(fallbackProgress);
+      await _saveLocal(updated);
+      return updated;
+    }
+
+    final DocumentReference<Map<String, dynamic>> attemptDocument =
+        cloudDocument
+            .collection('processed_attempts')
+            .doc(attemptId);
+
+    try {
+      final CaseProgress updated =
+          await _firestore.runTransaction<CaseProgress>(
+        (Transaction transaction) async {
+          final DocumentSnapshot<Map<String, dynamic>>
+              attemptSnapshot =
+              await transaction.get(attemptDocument);
+
+          final DocumentSnapshot<Map<String, dynamic>>
+              progressSnapshot =
+              await transaction.get(cloudDocument);
+
+          final CaseProgress currentProgress =
+              _fromMap(progressSnapshot.data()) ??
+              fallbackProgress;
+
+          if (attemptSnapshot.exists) {
+            return currentProgress;
+          }
+
+          final CaseProgress transactionUpdated =
+              update(currentProgress);
+
+          if (!_sameProgress(
+            currentProgress,
+            transactionUpdated,
+          )) {
+            final Map<String, dynamic> data =
+                _toMap(transactionUpdated);
+
+            data['serverUpdatedAt'] =
+                FieldValue.serverTimestamp();
+
+            transaction.set(
+              cloudDocument,
+              data,
+              SetOptions(merge: true),
+            );
+          }
+
+          transaction.set(
+            attemptDocument,
+            <String, dynamic>{
+              'attemptId': attemptId,
+              'processedAt': FieldValue.serverTimestamp(),
+              'schemaVersion': _schemaVersion,
+            },
+            SetOptions(merge: true),
+          );
+
+          return transactionUpdated;
+        },
+      );
+
+      await _saveLocal(updated);
+      return updated;
+    } on FirebaseException {
+      // Preserve offline/local gameplay without writing a potentially stale
+      // whole-document snapshot back over progress from another device.
+      final CaseProgress updated = update(fallbackProgress);
+      await _saveLocal(updated);
+      return updated;
+    }
+  }
+
   static Future<void> clearProgress({
     required String casePathId,
   }) async {

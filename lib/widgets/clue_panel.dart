@@ -31,7 +31,7 @@ class CluePanel extends StatelessWidget {
       child: Container(
         key: ValueKey(clue),
         width: double.infinity,
-        height: 54,
+        height: 60,
         padding: const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 7,
@@ -49,12 +49,12 @@ class CluePanel extends StatelessWidget {
           clue,
           textAlign: TextAlign.center,
           maxLines: 2,
-          minFontSize: 12,
+          minFontSize: 13,
           stepGranularity: 1,
           overflow: TextOverflow.ellipsis,
           style: AppTextStyles.body.copyWith(
             color: AppColors.white,
-            fontSize: 15,
+            fontSize: 17,
             fontWeight: FontWeight.w500,
             height: 1.15,
           ),

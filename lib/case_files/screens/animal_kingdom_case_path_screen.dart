@@ -9,9 +9,6 @@ import 'animal_kingdom_mission_screen.dart';
 class AnimalKingdomCasePathScreen extends StatefulWidget {
   const AnimalKingdomCasePathScreen({super.key});
 
-  static const String _assetBase =
-      'assets/images/case_paths/animal_kingdom';
-
   @override
   State<AnimalKingdomCasePathScreen> createState() =>
       _AnimalKingdomCasePathScreenState();
@@ -65,16 +62,21 @@ class _AnimalKingdomCasePathScreenState
   Future<void> _openMission(int stage) async {
     final CaseProgress? progress = _progress;
 
-    if (progress == null ||
-        progress.isCompleted ||
-        stage != progress.currentStage) {
+    if (progress == null) {
+      return;
+    }
+
+    final bool isCompletedReplay = progress.isCompleted;
+
+    if (!isCompletedReplay && stage != progress.currentStage) {
       return;
     }
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) =>
-            const AnimalKingdomMissionScreen(),
+        builder: (context) => AnimalKingdomMissionScreen(
+          replayStage: isCompletedReplay ? stage : null,
+        ),
       ),
     );
 
@@ -146,7 +148,11 @@ class _AnimalKingdomCasePathScreenState
             const designWidth = 430.0;
             const designHeight = 1900.0;
 
-            final availableWidth = constraints.maxWidth;
+            final bool isDesktop =
+                constraints.maxWidth >= 1200;
+            final double availableWidth = isDesktop
+                ? 720.0
+                : constraints.maxWidth;
             final scale = availableWidth / designWidth;
 
             return SingleChildScrollView(
@@ -172,6 +178,16 @@ class _AnimalKingdomCasePathScreenState
                           ),
 
                           Positioned(
+                            top: isDesktop ? 108 : 104,
+                            left: isDesktop ? 65 : 90,
+                            width: isDesktop ? 300 : 250,
+                            height: isDesktop ? 64 : 100,
+                            child: _CaseInstructionHeader(
+                              isDesktop: isDesktop,
+                            ),
+                          ),
+
+                          Positioned(
                             left: 12,
                             top: 8,
                             child: _BackButton(
@@ -193,14 +209,6 @@ class _AnimalKingdomCasePathScreenState
                             child: _MapTitle(),
                           ),
 
-                          const Positioned(
-                            left: 72,
-                            right: 72,
-                            top: 118,
-                            height: 88,
-                            child: _AnimalKingdomHeader(),
-                          ),
-
                           const Positioned.fill(
                             child: IgnorePointer(
                               child: CustomPaint(
@@ -209,26 +217,26 @@ class _AnimalKingdomCasePathScreenState
                             ),
                           ),
 
-                          _CaseNode(number: 1, left: 118, top: 278, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(1)),
-                          _CaseNode(number: 2, left: 278, top: 356, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(2)),
-                          _CaseNode(number: 3, left: 148, top: 438, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(3)),
-                          _CaseNode(number: 4, left: 294, top: 520, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(4)),
-                          _CaseNode(number: 5, left: 122, top: 602, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(5)),
-                          _CaseNode(number: 6, left: 282, top: 684, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(6)),
-                          _CaseNode(number: 7, left: 142, top: 766, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(7)),
-                          _CaseNode(number: 8, left: 296, top: 848, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(8)),
-                          _CaseNode(number: 9, left: 124, top: 930, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(9)),
-                          _CaseNode(number: 10, left: 284, top: 1012, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(10)),
-                          _CaseNode(number: 11, left: 144, top: 1094, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(11)),
-                          _CaseNode(number: 12, left: 298, top: 1176, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(12)),
-                          _CaseNode(number: 13, left: 122, top: 1258, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(13)),
-                          _CaseNode(number: 14, left: 282, top: 1340, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(14)),
-                          _CaseNode(number: 15, left: 142, top: 1422, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(15)),
-                          _CaseNode(number: 16, left: 296, top: 1504, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(16)),
-                          _CaseNode(number: 17, left: 124, top: 1586, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(17)),
-                          _CaseNode(number: 18, left: 282, top: 1668, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(18)),
-                          _CaseNode(number: 19, left: 142, top: 1750, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(19)),
-                          _CaseNode(number: 20, left: 278, top: 1828, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, onTap: () => _openMission(20)),
+                          _CaseNode(number: 1, left: 118, top: 228, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(1)),
+                          _CaseNode(number: 2, left: 278, top: 306, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(2)),
+                          _CaseNode(number: 3, left: 148, top: 388, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(3)),
+                          _CaseNode(number: 4, left: 294, top: 470, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(4)),
+                          _CaseNode(number: 5, left: 122, top: 552, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(5)),
+                          _CaseNode(number: 6, left: 282, top: 634, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(6)),
+                          _CaseNode(number: 7, left: 142, top: 716, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(7)),
+                          _CaseNode(number: 8, left: 296, top: 798, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(8)),
+                          _CaseNode(number: 9, left: 124, top: 880, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(9)),
+                          _CaseNode(number: 10, left: 284, top: 962, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(10)),
+                          _CaseNode(number: 11, left: 144, top: 1044, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(11)),
+                          _CaseNode(number: 12, left: 298, top: 1126, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(12)),
+                          _CaseNode(number: 13, left: 122, top: 1208, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(13)),
+                          _CaseNode(number: 14, left: 282, top: 1290, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(14)),
+                          _CaseNode(number: 15, left: 142, top: 1372, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(15)),
+                          _CaseNode(number: 16, left: 296, top: 1454, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(16)),
+                          _CaseNode(number: 17, left: 124, top: 1536, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(17)),
+                          _CaseNode(number: 18, left: 282, top: 1618, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(18)),
+                          _CaseNode(number: 19, left: 142, top: 1700, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(19)),
+                          _CaseNode(number: 20, left: 278, top: 1778, currentStage: currentStage, currentStageHasProgress: currentStageHasProgress, caseCompleted: progress.isCompleted, onTap: () => _openMission(20)),
                         ],
                       ),
                     ),
@@ -248,11 +256,18 @@ class _MapBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      '${AnimalKingdomCasePathScreen._assetBase}/animal_kingdom_map.webp',
-      fit: BoxFit.fill,
-      alignment: Alignment.topCenter,
-      filterQuality: FilterQuality.high,
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(
+            'assets/images/case_paths/new/animalkingdommap.webp',
+          ),
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
+          repeat: ImageRepeat.repeatY,
+          filterQuality: FilterQuality.high,
+        ),
+      ),
     );
   }
 }
@@ -322,17 +337,83 @@ class _MapTitle extends StatelessWidget {
   }
 }
 
-class _AnimalKingdomHeader extends StatelessWidget {
-  const _AnimalKingdomHeader();
+
+
+class _CaseInstructionHeader extends StatelessWidget {
+  final bool isDesktop;
+
+  const _CaseInstructionHeader({
+    required this.isDesktop,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Image.asset(
-        '${AnimalKingdomCasePathScreen._assetBase}/animal_kingdom_header.webp',
-        fit: BoxFit.contain,
+    if (isDesktop) {
+      return Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 8,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xEE111111),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: const Color(0xFFFE5E02),
+            width: 2,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x55000000),
+              blurRadius: 8,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
         alignment: Alignment.center,
-        filterQuality: FilterQuality.high,
+        child: Text(
+          'FOLLOW THE TRAIL · COMPLETE THE MISSIONS\n'
+          'SOLVE THE CASE · EARN YOUR BADGE',
+          maxLines: 2,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.category.copyWith(
+            color: Colors.white,
+            fontSize: 13.5,
+            fontWeight: FontWeight.w700,
+            height: 1.15,
+            letterSpacing: 0.2,
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: const Color(0xFFFE5E02),
+          width: 4,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        'FOLLOW THE TRAIL\n'
+        'COMPLETE THE MISSIONS\n'
+        'SOLVE THE CASE\n'
+        'EARN YOUR BADGE',
+        maxLines: 4,
+        textAlign: TextAlign.center,
+        style: AppTextStyles.category.copyWith(
+          color: Colors.black,
+          fontSize: 15.5,
+          fontWeight: FontWeight.w500,
+          height: 1.12,
+          letterSpacing: 0.15,
+        ),
       ),
     );
   }
@@ -342,26 +423,26 @@ class _CasePathPainter extends CustomPainter {
   const _CasePathPainter();
 
   static const List<Offset> _points = [
-    Offset(147, 307),
-    Offset(307, 385),
-    Offset(177, 467),
-    Offset(323, 549),
-    Offset(151, 631),
-    Offset(311, 713),
-    Offset(171, 795),
-    Offset(325, 877),
-    Offset(153, 959),
-    Offset(313, 1041),
-    Offset(173, 1123),
-    Offset(327, 1205),
-    Offset(151, 1287),
-    Offset(311, 1369),
-    Offset(171, 1451),
-    Offset(325, 1533),
-    Offset(153, 1615),
-    Offset(311, 1697),
-    Offset(171, 1779),
-    Offset(314, 1864),
+    Offset(147, 257),
+    Offset(307, 335),
+    Offset(177, 417),
+    Offset(323, 499),
+    Offset(151, 581),
+    Offset(311, 663),
+    Offset(171, 745),
+    Offset(325, 827),
+    Offset(153, 909),
+    Offset(313, 991),
+    Offset(173, 1073),
+    Offset(327, 1155),
+    Offset(151, 1237),
+    Offset(311, 1319),
+    Offset(171, 1401),
+    Offset(325, 1483),
+    Offset(153, 1565),
+    Offset(311, 1647),
+    Offset(171, 1729),
+    Offset(314, 1814),
   ];
 
   @override
@@ -440,6 +521,7 @@ class _CaseNode extends StatelessWidget {
   final double top;
   final int currentStage;
   final bool currentStageHasProgress;
+  final bool caseCompleted;
   final VoidCallback onTap;
 
   const _CaseNode({
@@ -448,14 +530,15 @@ class _CaseNode extends StatelessWidget {
     required this.top,
     required this.currentStage,
     required this.currentStageHasProgress,
+    required this.caseCompleted,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isCurrent = number == currentStage;
-    final isComplete = number < currentStage;
-    final isLocked = number > currentStage;
+    final isCurrent = !caseCompleted && number == currentStage;
+    final isComplete = caseCompleted || number < currentStage;
+    final isLocked = !caseCompleted && number > currentStage;
     final isFinal = number == 20;
 
     final nodeSize = isFinal
@@ -475,7 +558,7 @@ class _CaseNode extends StatelessWidget {
         children: [
           Center(
             child: GestureDetector(
-            onTap: isCurrent ? onTap : null,
+            onTap: (caseCompleted || isCurrent) ? onTap : null,
             child: Container(
               width: nodeSize,
               height: nodeSize,
