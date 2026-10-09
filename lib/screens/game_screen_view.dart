@@ -6,14 +6,26 @@ extension _GameScreenView on _GameScreenState {
     return isWeb && MediaQuery.sizeOf(context).width >= 1200;
   }
 
+  // This is deliberately restricted to installed phone apps. Flutter web and
+  // tablets retain their existing gameplay presentation.
+  bool _usePhoneKeyboardLayout(BuildContext context) {
+    const bool isWeb = bool.fromEnvironment('dart.library.js_interop');
+    final MediaQueryData media = MediaQuery.of(context);
+    final TargetPlatform platform = Theme.of(context).platform;
+    return !isWeb &&
+        (platform == TargetPlatform.iOS ||
+            platform == TargetPlatform.android) &&
+        media.size.shortestSide < 600 &&
+        media.viewInsets.bottom > 0;
+  }
+
   Future<void> confirmLeaveGame() async {
     const String hideLeaveWarningPreferenceKey =
         'standard_game_hide_leave_warning_v1';
     const String leaveWarningCountPreferenceKey =
         'standard_game_leave_warning_count_v1';
 
-    final SharedPreferences preferences =
-        await SharedPreferences.getInstance();
+    final SharedPreferences preferences = await SharedPreferences.getInstance();
 
     final bool hideLeaveWarning =
         preferences.getBool(hideLeaveWarningPreferenceKey) ?? false;
@@ -36,10 +48,7 @@ extension _GameScreenView on _GameScreenState {
 
     final bool showDontShowAgain = warningCount >= 1;
 
-    await preferences.setInt(
-      leaveWarningCountPreferenceKey,
-      warningCount + 1,
-    );
+    await preferences.setInt(leaveWarningCountPreferenceKey, warningCount + 1);
 
     if (!mounted) {
       return;
@@ -52,10 +61,7 @@ extension _GameScreenView on _GameScreenState {
           backgroundColor: AppColors.panel,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
-            side: const BorderSide(
-              color: AppColors.orange,
-              width: 2,
-            ),
+            side: const BorderSide(color: AppColors.orange, width: 2),
           ),
           icon: Column(
             mainAxisSize: MainAxisSize.min,
@@ -94,12 +100,7 @@ extension _GameScreenView on _GameScreenState {
               fontWeight: FontWeight.w500,
             ),
           ),
-          actionsPadding: const EdgeInsets.fromLTRB(
-            24,
-            0,
-            24,
-            22,
-          ),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 22),
           actions: [
             SizedBox(
               width: double.infinity,
@@ -110,8 +111,7 @@ extension _GameScreenView on _GameScreenState {
                     width: 210,
                     height: 50,
                     child: FilledButton(
-                      onPressed: () =>
-                          Navigator.of(dialogContext).pop(false),
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.orange,
                         foregroundColor: Colors.white,
@@ -135,8 +135,7 @@ extension _GameScreenView on _GameScreenState {
                     width: 210,
                     height: 46,
                     child: OutlinedButton(
-                      onPressed: () =>
-                          Navigator.of(dialogContext).pop(true),
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: const BorderSide(
@@ -211,8 +210,7 @@ extension _GameScreenView on _GameScreenState {
     const String hideLeaveWarningPreferenceKey =
         'standard_game_hide_leave_warning_v1';
 
-    final SharedPreferences preferences =
-        await SharedPreferences.getInstance();
+    final SharedPreferences preferences = await SharedPreferences.getInstance();
 
     final bool hideLeaveWarning =
         preferences.getBool(hideLeaveWarningPreferenceKey) ?? false;
@@ -237,10 +235,7 @@ extension _GameScreenView on _GameScreenState {
           backgroundColor: AppColors.panel,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
-            side: const BorderSide(
-              color: AppColors.orange,
-              width: 2,
-            ),
+            side: const BorderSide(color: AppColors.orange, width: 2),
           ),
           icon: Column(
             mainAxisSize: MainAxisSize.min,
@@ -279,12 +274,7 @@ extension _GameScreenView on _GameScreenState {
               fontWeight: FontWeight.w500,
             ),
           ),
-          actionsPadding: const EdgeInsets.fromLTRB(
-            24,
-            0,
-            24,
-            22,
-          ),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 22),
           actions: [
             SizedBox(
               width: double.infinity,
@@ -295,8 +285,7 @@ extension _GameScreenView on _GameScreenState {
                     width: 210,
                     height: 50,
                     child: FilledButton(
-                      onPressed: () =>
-                          Navigator.of(dialogContext).pop(false),
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.orange,
                         foregroundColor: Colors.white,
@@ -320,8 +309,7 @@ extension _GameScreenView on _GameScreenState {
                     width: 210,
                     height: 46,
                     child: OutlinedButton(
-                      onPressed: () =>
-                          Navigator.of(dialogContext).pop(true),
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: const BorderSide(
@@ -366,101 +354,74 @@ extension _GameScreenView on _GameScreenState {
     final bool isRoundTheWorldCase =
         _countrySubcategoryFromQuestionId(representativeCaseQuestionId) != null;
     final bool isSecretsOfThePastCase =
-        _pastPresentSubcategoryFromQuestionId(
-              representativeCaseQuestionId,
-            ) !=
-            null;
+        _pastPresentSubcategoryFromQuestionId(representativeCaseQuestionId) !=
+        null;
     final bool isTasteAndTreatsCase =
-        _foodDrinkSubcategoryFromQuestionId(
-              representativeCaseQuestionId,
-            ) !=
-            null;
+        _foodDrinkSubcategoryFromQuestionId(representativeCaseQuestionId) !=
+        null;
     final bool isNatureOfDiscoveryCase =
-        _scienceNatureSubcategoryFromQuestionId(
-              representativeCaseQuestionId,
-            ) !=
-            null;
+        _scienceNatureSubcategoryFromQuestionId(representativeCaseQuestionId) !=
+        null;
     final bool isTheWrittenWordCase =
-        _booksAuthorsSubcategoryFromQuestionId(
-              representativeCaseQuestionId,
-            ) !=
-            null;
+        _booksAuthorsSubcategoryFromQuestionId(representativeCaseQuestionId) !=
+        null;
     final bool isTheCreativeCodeCase =
-        _creativeWorldSubcategoryFromQuestionId(
-              representativeCaseQuestionId,
-            ) !=
-            null;
+        _creativeWorldSubcategoryFromQuestionId(representativeCaseQuestionId) !=
+        null;
 
     final mission = activeCaseStage == null
         ? null
         : isRoundTheWorldCase
-            ? CasePathService.roundTheWorldMissionForStage(
-                activeCaseStage!,
-              )
-            : isSecretsOfThePastCase
-                ? CasePathService.secretsOfThePastMissionForStage(
-                    activeCaseStage!,
-                  )
-                : isTasteAndTreatsCase
-                    ? CasePathService.tasteAndTreatsMissionForStage(
-                        activeCaseStage!,
-                      )
-                    : isNatureOfDiscoveryCase
-                        ? CasePathService.natureOfDiscoveryMissionForStage(
-                            activeCaseStage!,
-                          )
-                        : isTheWrittenWordCase
-                            ? CasePathService.theWrittenWordMissionForStage(
-                                activeCaseStage!,
-                              )
-                            : isTheCreativeCodeCase
-                                ? CasePathService.theCreativeCodeMissionForStage(
-                                    activeCaseStage!,
-                                  )
-                                : CasePathService.animalKingdomMissionForStage(
-                                    activeCaseStage!,
-                                  );
+        ? CasePathService.roundTheWorldMissionForStage(activeCaseStage!)
+        : isSecretsOfThePastCase
+        ? CasePathService.secretsOfThePastMissionForStage(activeCaseStage!)
+        : isTasteAndTreatsCase
+        ? CasePathService.tasteAndTreatsMissionForStage(activeCaseStage!)
+        : isNatureOfDiscoveryCase
+        ? CasePathService.natureOfDiscoveryMissionForStage(activeCaseStage!)
+        : isTheWrittenWordCase
+        ? CasePathService.theWrittenWordMissionForStage(activeCaseStage!)
+        : isTheCreativeCodeCase
+        ? CasePathService.theCreativeCodeMissionForStage(activeCaseStage!)
+        : CasePathService.animalKingdomMissionForStage(activeCaseStage!);
 
     final String activeCaseName = isRoundTheWorldCase
         ? 'AROUND THE WORLD'
         : isSecretsOfThePastCase
-            ? 'SECRETS OF THE PAST'
-            : isTasteAndTreatsCase
-                ? 'A TASTE OF MYSTERY'
-                : isNatureOfDiscoveryCase
-                    ? 'NATURE OF DISCOVERY'
-                    : isTheWrittenWordCase
-                        ? 'THE WRITTEN WORD'
-                        : isTheCreativeCodeCase
-                            ? 'THE CREATIVE CODE'
-                            : 'ANIMAL KINGDOM';
+        ? 'SECRETS OF THE PAST'
+        : isTasteAndTreatsCase
+        ? 'A TASTE OF MYSTERY'
+        : isNatureOfDiscoveryCase
+        ? 'NATURE OF DISCOVERY'
+        : isTheWrittenWordCase
+        ? 'THE WRITTEN WORD'
+        : isTheCreativeCodeCase
+        ? 'THE CREATIVE CODE'
+        : 'ANIMAL KINGDOM';
 
     final double caseToolbarHeight = 56;
-    final bool useDesktopWebsiteLayout =
-        _useDesktopWebsiteLayout(context);
+    final bool useDesktopWebsiteLayout = _useDesktopWebsiteLayout(context);
+    final bool usePhoneKeyboardLayout = _usePhoneKeyboardLayout(context);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        toolbarHeight: widget.launchedFromCaseFile
+        toolbarHeight: usePhoneKeyboardLayout
+            ? 56
+            : widget.launchedFromCaseFile
             ? caseToolbarHeight
             : useDesktopWebsiteLayout
-                ? 70
-                : 92,
+            ? 70
+            : 92,
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.white,
         elevation: 0,
         leading: Padding(
-          padding: const EdgeInsets.only(
-            left: 16,
-          ),
+          padding: const EdgeInsets.only(left: 16),
           child: IconButton(
             tooltip: 'Back',
             padding: EdgeInsets.zero,
-            icon: const Icon(
-              Icons.arrow_back_rounded,
-              size: 28,
-            ),
+            icon: const Icon(Icons.arrow_back_rounded, size: 28),
             onPressed: confirmLeaveGame,
           ),
         ),
@@ -468,8 +429,8 @@ extension _GameScreenView on _GameScreenState {
         title: Text(
           widget.launchedFromCaseFile
               ? activeCaseStage != null
-                  ? '$activeCaseName - CASE $activeCaseStage'
-                  : '$activeCaseName - CASE'
+                    ? '$activeCaseName - CASE $activeCaseStage'
+                    : '$activeCaseName - CASE'
               : widget.categoryName,
           maxLines: 1,
           style: TextStyle(
@@ -487,17 +448,12 @@ extension _GameScreenView on _GameScreenState {
         centerTitle: true,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(
-              right: 16,
-            ),
-            child: FirstGuessHomeButton(
-              onPressed: confirmReturnHome,
-            ),
+            padding: const EdgeInsets.only(right: 16),
+            child: FirstGuessHomeButton(onPressed: confirmReturnHome),
           ),
         ],
-        bottom: widget.launchedFromCaseFile &&
-                caseProgressLoaded &&
-                mission != null
+        bottom:
+            widget.launchedFromCaseFile && caseProgressLoaded && mission != null
             ? PreferredSize(
                 preferredSize: const Size.fromHeight(34),
                 child: Padding(
@@ -515,20 +471,27 @@ extension _GameScreenView on _GameScreenState {
           children: [
             SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
-                useDesktopWebsiteLayout ? 28 : 18,
-                8,
-                useDesktopWebsiteLayout ? 28 : 18,
-                28,
+                useDesktopWebsiteLayout
+                    ? 28
+                    : usePhoneKeyboardLayout
+                    ? 12
+                    : 18,
+                usePhoneKeyboardLayout ? 2 : 8,
+                useDesktopWebsiteLayout
+                    ? 28
+                    : usePhoneKeyboardLayout
+                    ? 12
+                    : 18,
+                usePhoneKeyboardLayout ? 12 : 28,
               ),
-              child: useDesktopWebsiteLayout
+              child: usePhoneKeyboardLayout
+                  ? buildPhoneKeyboardGamePanel()
+                  : useDesktopWebsiteLayout
                   ? Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: 1440,
-                        ),
+                        constraints: const BoxConstraints(maxWidth: 1440),
                         child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.stretch,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const SizedBox(height: 0),
                             StatsPanel(
@@ -556,9 +519,7 @@ extension _GameScreenView on _GameScreenState {
                       children: [
                         const SizedBox(height: 4),
                         StatsPanel(
-                          totalScore: statsLoaded
-                              ? playerStats.totalScore
-                              : 0,
+                          totalScore: statsLoaded ? playerStats.totalScore : 0,
                           currentStreak: statsLoaded
                               ? playerStats.currentStreak
                               : 0,
@@ -577,8 +538,10 @@ extension _GameScreenView on _GameScreenState {
             Positioned(
               top: 8,
               left: useDesktopWebsiteLayout
-                  ? ((MediaQuery.sizeOf(context).width - 1440) / 2)
-                      .clamp(28.0, double.infinity)
+                  ? ((MediaQuery.sizeOf(context).width - 1440) / 2).clamp(
+                      28.0,
+                      double.infinity,
+                    )
                   : 10,
               right: useDesktopWebsiteLayout ? null : 10,
               width: useDesktopWebsiteLayout ? 560 : null,
@@ -587,14 +550,11 @@ extension _GameScreenView on _GameScreenState {
                   offset: showSurpriseToast
                       ? Offset.zero
                       : const Offset(0, -0.5),
-                  duration: const Duration(
-                    milliseconds: 250,
-                  ),
+                  duration: const Duration(milliseconds: 250),
                   curve: Curves.easeOut,
                   child: AnimatedOpacity(
                     opacity: showSurpriseToast ? 1 : 0,
-                    duration:
-                        _GameScreenState.surpriseToastFadeDuration,
+                    duration: _GameScreenState.surpriseToastFadeDuration,
                     child: _SurpriseChallengeBanner(
                       categoryName: widget.categoryName,
                       questionId: currentItem.id ?? '',
@@ -645,10 +605,7 @@ extension _GameScreenView on _GameScreenState {
     return FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.center,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: items,
-      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: items),
     );
   }
 
@@ -659,9 +616,7 @@ extension _GameScreenView on _GameScreenState {
   }) {
     final int shownCurrent = current.clamp(0, required);
     final bool complete = current >= required;
-    final Color rowColor = complete
-        ? const Color(0xFF63D44A)
-        : AppColors.white;
+    final Color rowColor = complete ? const Color(0xFF63D44A) : AppColors.white;
 
     return Text(
       '$label - $shownCurrent/$required',
@@ -691,33 +646,22 @@ extension _GameScreenView on _GameScreenState {
     );
   }
 
-
   Widget buildGamePanel() {
     return Stack(
       children: [
         Container(
-          padding: const EdgeInsets.fromLTRB(
-            10,
-            8,
-            10,
-            10,
-          ),
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
           decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: AppColors.border,
-              width: 1.3,
-            ),
+            border: Border.all(color: AppColors.border, width: 1.3),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               buildClueHeaderBlock(),
               const SizedBox(height: 8),
-              CluePanel(
-                clue: currentItem.clues[currentClueIndex],
-              ),
+              CluePanel(clue: currentItem.clues[currentClueIndex]),
               buildGameMessage(),
               const SizedBox(height: 8),
               KeyedSubtree(
@@ -729,11 +673,8 @@ extension _GameScreenView on _GameScreenState {
                   aspectRatio: 1,
                   child: Stack(
                     children: [
-                      Positioned.fill(
-                        child: buildVisualPanel(),
-                      ),
-                      if (isPracticeModeActive &&
-                          !widget.launchedFromCaseFile)
+                      Positioned.fill(child: buildVisualPanel()),
+                      if (isPracticeModeActive && !widget.launchedFromCaseFile)
                         const Positioned(
                           top: 10,
                           right: 10,
@@ -747,10 +688,7 @@ extension _GameScreenView on _GameScreenState {
               GuessPanel(
                 controller: guessController,
                 focusNode: guessFocusNode,
-                enabled:
-                    !roundFinished &&
-                    !showSurpriseToast &&
-                    imageReady,
+                enabled: !roundFinished && !showSurpriseToast && imageReady,
                 isLastClue: isLastClue,
                 onGuess: submitGuess,
                 onNextClue: showNextClue,
@@ -764,14 +702,10 @@ extension _GameScreenView on _GameScreenState {
             child: Center(
               child: AnimatedOpacity(
                 opacity: showTimeUpOverlay ? 1 : 0,
-                duration: const Duration(
-                  milliseconds: 180,
-                ),
+                duration: const Duration(milliseconds: 180),
                 child: AnimatedScale(
                   scale: showTimeUpOverlay ? 1 : 0.9,
-                  duration: const Duration(
-                    milliseconds: 180,
-                  ),
+                  duration: const Duration(milliseconds: 180),
                   child: const SmallTimeUpOverlay(),
                 ),
               ),
@@ -779,6 +713,206 @@ extension _GameScreenView on _GameScreenState {
           ),
         ),
       ],
+    );
+  }
+
+  // Compact composition used only while a native phone keyboard is visible.
+  // All game actions are passed to the same state methods as GuessPanel.
+  Widget buildPhoneKeyboardGamePanel() {
+    final bool canPlay = !roundFinished && !showSurpriseToast && imageReady;
+
+    return Stack(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            buildClueHeaderBlock(),
+            const SizedBox(height: 10),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final double gap = 12;
+                final double imageSide = (constraints.maxWidth - gap) * 0.51;
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: imageSide,
+                      height: imageSide,
+                      child: KeyedSubtree(
+                        key: ValueKey(
+                          'keyboard-${widget.gameType.name}-${currentItem.imagePath}',
+                        ),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: buildVisualPanel(containImage: true),
+                            ),
+                            if (isPracticeModeActive &&
+                                !widget.launchedFromCaseFile)
+                              const Positioned(
+                                top: 5,
+                                right: 5,
+                                child: _PracticeModeRibbon(),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: gap),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _keyboardSideButton(
+                            icon: Icons.lightbulb_outline_rounded,
+                            label: 'Next Clue',
+                            enabled: canPlay && !isLastClue,
+                            onPressed: showNextClue,
+                          ),
+                          const SizedBox(height: 10),
+                          _keyboardSideButton(
+                            icon: Icons.outlined_flag_rounded,
+                            label: 'Give Up',
+                            enabled: canPlay,
+                            onPressed: giveUpRound,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 10),
+            CluePanel(clue: currentItem.clues[currentClueIndex]),
+            buildGameMessage(),
+            const SizedBox(height: 10),
+            TextField(
+              controller: guessController,
+              focusNode: guessFocusNode,
+              enabled: canPlay,
+              onSubmitted: (_) {
+                if (canPlay) submitGuess();
+              },
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.done,
+              scrollPadding: const EdgeInsets.only(bottom: 110),
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                color: AppColors.white,
+                fontSize: 17,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Type your guess...',
+                hintStyle: const TextStyle(
+                  fontFamily: 'Inter',
+                  color: AppColors.white,
+                  fontSize: 17,
+                ),
+                filled: true,
+                fillColor: AppColors.panel,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 15,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: AppColors.orange),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(
+                    color: AppColors.orange,
+                    width: 2,
+                  ),
+                ),
+                disabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: AppColors.darkGrey),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 50,
+              child: FilledButton(
+                onPressed: canPlay ? submitGuess : null,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.orange,
+                  foregroundColor: AppColors.white,
+                  disabledBackgroundColor: AppColors.darkGrey,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Submit Guess',
+                  style: TextStyle(
+                    fontFamily: 'Oswald',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: Center(
+              child: AnimatedOpacity(
+                opacity: showTimeUpOverlay ? 1 : 0,
+                duration: const Duration(milliseconds: 180),
+                child: AnimatedScale(
+                  scale: showTimeUpOverlay ? 1 : 0.9,
+                  duration: const Duration(milliseconds: 180),
+                  child: const SmallTimeUpOverlay(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _keyboardSideButton({
+    required IconData icon,
+    required String label,
+    required bool enabled,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: OutlinedButton.icon(
+        onPressed: enabled ? onPressed : null,
+        icon: Icon(icon, size: 23),
+        label: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.white,
+          disabledForegroundColor: AppColors.darkGrey,
+          padding: const EdgeInsets.symmetric(horizontal: 5),
+          side: BorderSide(
+            color: enabled ? AppColors.orange : AppColors.darkGrey,
+            width: 1.6,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(13),
+          ),
+        ),
+      ),
     );
   }
 
@@ -790,22 +924,13 @@ extension _GameScreenView on _GameScreenState {
           decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: AppColors.border,
-              width: 1.3,
-            ),
+            border: Border.all(color: AppColors.border, width: 1.3),
           ),
           child: LayoutBuilder(
-            builder: (
-              BuildContext context,
-              BoxConstraints constraints,
-            ) {
-              final double viewportHeight =
-                  MediaQuery.sizeOf(context).height;
-              final double widthBasedVisual =
-                  constraints.maxWidth * 0.54;
-              final double heightBasedVisual =
-                  viewportHeight - 245;
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final double viewportHeight = MediaQuery.sizeOf(context).height;
+              final double widthBasedVisual = constraints.maxWidth * 0.54;
+              final double heightBasedVisual = viewportHeight - 245;
               final double visualWidth =
                   (widthBasedVisual < heightBasedVisual
                           ? widthBasedVisual
@@ -826,9 +951,7 @@ extension _GameScreenView on _GameScreenState {
                         aspectRatio: 1,
                         child: Stack(
                           children: [
-                            Positioned.fill(
-                              child: buildVisualPanel(),
-                            ),
+                            Positioned.fill(child: buildVisualPanel()),
                             if (isPracticeModeActive &&
                                 !widget.launchedFromCaseFile)
                               const Positioned(
@@ -848,20 +971,17 @@ extension _GameScreenView on _GameScreenState {
                       children: [
                         buildClueHeaderBlock(),
                         const SizedBox(height: 10),
-                        CluePanel(
-                          clue: currentItem.clues[currentClueIndex],
-                        ),
+                        CluePanel(clue: currentItem.clues[currentClueIndex]),
                         buildGameMessage(),
                         const SizedBox(height: 22),
                         Center(
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: 660,
-                            ),
+                            constraints: const BoxConstraints(maxWidth: 660),
                             child: GuessPanel(
                               controller: guessController,
                               focusNode: guessFocusNode,
-                              enabled: !roundFinished &&
+                              enabled:
+                                  !roundFinished &&
                                   !showSurpriseToast &&
                                   imageReady,
                               isLastClue: isLastClue,
@@ -884,14 +1004,10 @@ extension _GameScreenView on _GameScreenState {
             child: Center(
               child: AnimatedOpacity(
                 opacity: showTimeUpOverlay ? 1 : 0,
-                duration: const Duration(
-                  milliseconds: 180,
-                ),
+                duration: const Duration(milliseconds: 180),
                 child: AnimatedScale(
                   scale: showTimeUpOverlay ? 1 : 0.9,
-                  duration: const Duration(
-                    milliseconds: 180,
-                  ),
+                  duration: const Duration(milliseconds: 180),
                   child: const SmallTimeUpOverlay(),
                 ),
               ),
@@ -902,11 +1018,8 @@ extension _GameScreenView on _GameScreenState {
     );
   }
 
-  Widget buildVisualPanel() {
-    final String visualImagePath =
-        (currentItem.id?.startsWith('who_am_i_') ?? false)
-            ? 'assets/images/categories/who_am_i/whoiam.webp'
-            : currentItem.imagePath;
+  Widget buildVisualPanel({bool containImage = false}) {
+    final String visualImagePath = currentItem.imagePath;
 
     if (!imageReady) {
       return Container(
@@ -915,10 +1028,7 @@ extension _GameScreenView on _GameScreenState {
         decoration: BoxDecoration(
           color: AppColors.panel,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: AppColors.orange,
-            width: 1.8,
-          ),
+          border: Border.all(color: AppColors.orange, width: 1.8),
         ),
         child: const Column(
           mainAxisSize: MainAxisSize.min,
@@ -961,7 +1071,7 @@ extension _GameScreenView on _GameScreenState {
         imagePath: visualImagePath,
         clueIndex: currentClueIndex,
         effect: RevealEffect.none,
-        fit: BoxFit.cover,
+        fit: containImage ? BoxFit.contain : BoxFit.cover,
       );
     }
 
@@ -970,7 +1080,7 @@ extension _GameScreenView on _GameScreenState {
         imagePath: visualImagePath,
         clueIndex: currentClueIndex,
         effect: RevealEffect.none,
-        fit: BoxFit.cover,
+        fit: containImage ? BoxFit.contain : BoxFit.cover,
       );
     }
 
@@ -986,7 +1096,7 @@ extension _GameScreenView on _GameScreenState {
         imagePath: visualImagePath,
         clueIndex: currentClueIndex,
         effect: RevealEffect.blur,
-        fit: BoxFit.cover,
+        fit: containImage ? BoxFit.contain : BoxFit.cover,
       );
     }
 
@@ -994,25 +1104,17 @@ extension _GameScreenView on _GameScreenState {
       imagePath: visualImagePath,
       clueIndex: currentClueIndex,
       effect: RevealEffect.none,
-      fit: BoxFit.cover,
+      fit: containImage ? BoxFit.contain : BoxFit.cover,
     );
   }
 
   Widget buildClueHeaderBlock() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        10,
-        8,
-        10,
-        8,
-      ),
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: const Color(0xFF444444),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFF444444), width: 1),
       ),
       child: Column(
         children: [
@@ -1043,8 +1145,7 @@ extension _GameScreenView on _GameScreenState {
               const SizedBox(width: 6),
               LivesDisplay(
                 lives: lives,
-                maximumLives:
-                    _GameScreenState.maximumLives,
+                maximumLives: _GameScreenState.maximumLives,
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -1065,44 +1166,41 @@ extension _GameScreenView on _GameScreenState {
                             ),
                           )
                         : currentClueIndex == 0
-                            ? Text.rich(
-                                const TextSpan(
-                                  children: [
-                                    TextSpan(
-                                      text: '100 XP',
-                                      style: TextStyle(
-                                        fontFamily: 'Oswald',
-                                        color: AppColors.white,
-                                        fontSize: 11,
-                                        fontWeight:
-                                            FontWeight.w600,
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: ' +50',
-                                      style: TextStyle(
-                                        fontFamily: 'Oswald',
-                                        color: AppColors.orange,
-                                        fontSize: 11,
-                                        fontWeight:
-                                            FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
+                        ? Text.rich(
+                            const TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '100 XP',
+                                  style: TextStyle(
+                                    fontFamily: 'Oswald',
+                                    color: AppColors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                                maxLines: 1,
-                              )
-                            : Text(
-                                '$pointsAvailable PTS',
-                                maxLines: 1,
-                                style: const TextStyle(
-                                  fontFamily: 'Oswald',
-                                  color: AppColors.white,
-                                  fontSize: 12,
-                                  fontWeight:
-                                      FontWeight.w600,
+                                TextSpan(
+                                  text: ' +50',
+                                  style: TextStyle(
+                                    fontFamily: 'Oswald',
+                                    color: AppColors.orange,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                              ),
+                              ],
+                            ),
+                            maxLines: 1,
+                          )
+                        : Text(
+                            '$pointsAvailable PTS',
+                            maxLines: 1,
+                            style: const TextStyle(
+                              fontFamily: 'Oswald',
+                              color: AppColors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -1116,67 +1214,42 @@ extension _GameScreenView on _GameScreenState {
   }
 
   Widget buildClueProgressSegments() {
-    final int clueCount =
-        currentItem.clues.length;
+    final int clueCount = currentItem.clues.length;
 
     return Row(
-      children: List.generate(
-        clueCount,
-        (index) {
-          final bool reached =
-              index <= currentClueIndex;
+      children: List.generate(clueCount, (index) {
+        final bool reached = index <= currentClueIndex;
 
-          return Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                right:
-                    index == clueCount - 1 ? 0 : 3,
-              ),
-              child: Container(
-                height: 5,
-                decoration: BoxDecoration(
-                  color: reached
-                      ? AppColors.orange
-                      : const Color(0xFF2C2C2C),
-                  borderRadius:
-                      BorderRadius.circular(3),
-                ),
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: index == clueCount - 1 ? 0 : 3),
+            child: Container(
+              height: 5,
+              decoration: BoxDecoration(
+                color: reached ? AppColors.orange : const Color(0xFF2C2C2C),
+                borderRadius: BorderRadius.circular(3),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      }),
     );
   }
 
   Widget buildGameMessage() {
     return AnimatedSwitcher(
-      duration: const Duration(
-        milliseconds: 250,
-      ),
-      transitionBuilder: (
-        Widget child,
-        Animation<double> animation,
-      ) {
+      duration: const Duration(milliseconds: 250),
+      transitionBuilder: (Widget child, Animation<double> animation) {
         return FadeTransition(
           opacity: animation,
-          child: SizeTransition(
-            sizeFactor: animation,
-            child: child,
-          ),
+          child: SizeTransition(sizeFactor: animation, child: child),
         );
       },
       child: gameMessage == null
-          ? const SizedBox(
-              key: ValueKey('empty-message'),
-            )
+          ? const SizedBox(key: ValueKey('empty-message'))
           : Padding(
-              key: ValueKey(
-                '${gameMessageType.name}-$gameMessage',
-              ),
-              padding: const EdgeInsets.only(
-                top: 14,
-              ),
+              key: ValueKey('${gameMessageType.name}-$gameMessage'),
+              padding: const EdgeInsets.only(top: 14),
               child: GameMessagePanel(
                 message: gameMessage!,
                 type: gameMessageType,
@@ -1192,19 +1265,12 @@ class _PracticeModeRibbon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
         color: AppColors.orange,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
-          BoxShadow(
-            color: Colors.black54,
-            blurRadius: 8,
-            offset: Offset(0, 3),
-          ),
+          BoxShadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 3)),
         ],
       ),
       child: const Text(
@@ -1358,7 +1424,8 @@ class _SurpriseChallengeBanner extends StatelessWidget {
       'reptiles_amphibians': 'REPTILES & AMPHIBIANS',
       'rocks_minerals_volcanoes': 'ROCKS, MINERALS & VOLCANOES',
       'royalty_leaders': 'ROYALTY & POLITICAL LEADERS',
-      'scientific_discoveries_experiments_theories': 'SCIENTIFIC DISCOVERIES, EXPERIMENTS & THEORIES',
+      'scientific_discoveries_experiments_theories':
+          'SCIENTIFIC DISCOVERIES, EXPERIMENTS & THEORIES',
       'scientists_inventors': 'SCIENTISTS & INVENTORS',
       'screen_characters': 'SCREEN CHARACTERS',
       'sea_creatures': 'SEA CREATURES',
@@ -1409,40 +1476,26 @@ class _SurpriseChallengeBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDesktop =
-        MediaQuery.sizeOf(context).width >= 1200;
+    final bool isDesktop = MediaQuery.sizeOf(context).width >= 1200;
 
     return Align(
       alignment: alignLeft ? Alignment.centerLeft : Alignment.center,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: 560,
-        ),
+        constraints: const BoxConstraints(maxWidth: 560),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: AppColors.panel,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: AppColors.border,
-              width: 1.2,
-            ),
+            border: Border.all(color: AppColors.border, width: 1.2),
             boxShadow: const [
-              BoxShadow(
-                color: Colors.black54,
-                blurRadius: 18,
-                spreadRadius: 2,
-              ),
+              BoxShadow(color: Colors.black54, blurRadius: 18, spreadRadius: 2),
             ],
           ),
           child: LayoutBuilder(
-            builder: (
-              BuildContext context,
-              BoxConstraints constraints,
-            ) {
-              final bool isVeryNarrow =
-                  constraints.maxWidth < 360;
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final bool isVeryNarrow = constraints.maxWidth < 360;
 
               return Row(
                 children: [
@@ -1451,13 +1504,11 @@ class _SurpriseChallengeBanner extends StatelessWidget {
                     child: Container(
                       height: 48,
                       padding: EdgeInsets.symmetric(
-                        horizontal:
-                            isVeryNarrow ? 10 : 14,
+                        horizontal: isVeryNarrow ? 10 : 14,
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.orange,
-                        borderRadius:
-                            BorderRadius.circular(28),
+                        borderRadius: BorderRadius.circular(28),
                         boxShadow: const [
                           BoxShadow(
                             color: Color(0x66FE5E02),
@@ -1467,52 +1518,37 @@ class _SurpriseChallengeBanner extends StatelessWidget {
                         ],
                       ),
                       child: Row(
-                        mainAxisSize:
-                            MainAxisSize.min,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             width: 34,
                             height: 34,
-                            alignment:
-                                Alignment.center,
+                            alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: Colors.black,
-                              borderRadius:
-                                  BorderRadius.circular(
-                                11,
-                              ),
+                              borderRadius: BorderRadius.circular(11),
                             ),
                             child: Image.asset(
                               'assets/images/stats/surprise_dice.png',
                               width: 28,
                               height: 28,
                               fit: BoxFit.contain,
-                              filterQuality:
-                                  FilterQuality.high,
+                              filterQuality: FilterQuality.high,
                             ),
                           ),
-                          SizedBox(
-                            width:
-                                isVeryNarrow ? 8 : 10,
-                          ),
+                          SizedBox(width: isVeryNarrow ? 8 : 10),
                           Flexible(
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
-                              alignment:
-                                  Alignment.centerLeft,
+                              alignment: Alignment.centerLeft,
                               child: Text(
-                                isVeryNarrow
-                                    ? 'SURPRISE'
-                                    : 'SURPRISE ME',
+                                isVeryNarrow ? 'SURPRISE' : 'SURPRISE ME',
                                 maxLines: 1,
-                                style:
-                                    const TextStyle(
+                                style: const TextStyle(
                                   fontFamily: 'Inter',
-                                  color:
-                                      AppColors.white,
+                                  color: AppColors.white,
                                   fontSize: 14,
-                                  fontWeight:
-                                      FontWeight.w500,
+                                  fontWeight: FontWeight.w500,
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -1531,11 +1567,7 @@ class _SurpriseChallengeBanner extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Container(
-                    width: 1,
-                    height: 36,
-                    color: AppColors.border,
-                  ),
+                  Container(width: 1, height: 36, color: AppColors.border),
                   const SizedBox(width: 10),
                   Expanded(
                     flex: isVeryNarrow ? 6 : 7,
@@ -1547,17 +1579,14 @@ class _SurpriseChallengeBanner extends StatelessWidget {
                           child: Image.asset(
                             categoryImagePath,
                             fit: BoxFit.contain,
-                            filterQuality:
-                                FilterQuality.high,
+                            filterQuality: FilterQuality.high,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Column(
-                            mainAxisSize:
-                                MainAxisSize.min,
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 nowPlayingName,
