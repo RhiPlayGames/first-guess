@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../daily_flash/screens/daily_flash_home_screen.dart';
 import '../daily_flash/services/daily_flash_schedule_service.dart';
 import '../services/avatar_preferences_service.dart';
-import '../services/feature_flag_service.dart';
 import '../services/player_stats_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -32,27 +31,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   PlayerStats _playerStats = const PlayerStats();
   bool _statsLoaded = false;
-  bool _firstConnectionEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _loadSelectedAvatar();
     _loadPlayerStats();
-    _loadFeatureFlags();
-  }
-
-  Future<void> _loadFeatureFlags() async {
-    final bool firstConnectionEnabled =
-        await FeatureFlagService.isFirstConnectionEnabled();
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _firstConnectionEnabled = firstConnectionEnabled;
-    });
   }
 
   Future<void> _loadPlayerStats() async {
@@ -198,11 +182,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isDesktop = MediaQuery.sizeOf(context).width >= 1200;
+    // Short descriptions only on phone-sized screens (app and mobile web).
+    final bool isPhone = MediaQuery.sizeOf(context).shortestSide < 600;
 
     final List<_CategoryData> modes = <_CategoryData>[
       _CategoryData(
         title: 'Classic First Guess',
-        subtitle: 'Ten clues. One trivia test. Can you find the answer?',
+        subtitle: isPhone
+            ? '10 clues. Can you solve it?'
+            : 'Ten clues. One trivia test. Can you find the answer?',
         imagePath:
             'assets/images/categories/classic_firstguess/First Guessicon128.webp',
         isAvailable: true,
@@ -211,7 +199,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       _CategoryData(
         title: 'First Date',
-        subtitle: 'Five events. One date. Can you piece it together?',
+        subtitle: isPhone
+            ? '5 events. Know the year?'
+            : 'Ten events. One date. Can you piece it together?',
         imagePath:
             'assets/images/categories/first_date/firstdateicon128.webp',
         isAvailable: true,
@@ -220,7 +210,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       _CategoryData(
         title: 'First Match',
-        subtitle: 'Six pairs. One perfect board. Can you match them all?',
+        subtitle: isPhone
+            ? '6 pairs. Can you link them?'
+            : 'Six pairs. One perfect board. Can you match them all?',
         imagePath:
             'assets/images/categories/first_match/firstmatch_icon128.webp',
         isAvailable: true,
@@ -229,7 +221,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       _CategoryData(
         title: 'First Order',
-        subtitle: 'Five choices. One correct order. Can you rank them all?',
+        subtitle: isPhone
+            ? '5 choices. Can you rank them?'
+            : 'Five choices. One correct order. Can you rank them all?',
         imagePath:
             'assets/images/categories/first_order/firstorder_icon128.webp',
         isAvailable: true,
@@ -238,7 +232,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       _CategoryData(
         title: 'First Word',
-        subtitle: 'Five clues. One hidden word. How soon can you uncover it?',
+        subtitle: isPhone
+            ? '5 clues. Can you uncover it?'
+            : 'Five clues. One hidden word. How soon can you uncover it?',
         imagePath:
             'assets/images/categories/first_word/firstword_128.webp',
         isAvailable: true,
@@ -247,10 +243,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       _CategoryData(
         title: 'First Connection',
-        subtitle: 'Six clues. One hidden link. Can you find the connection?',
+        subtitle: isPhone
+            ? '6 clues. Can you find the link?'
+            : 'Six clues. One hidden link. Can you find the connection?',
         imagePath:
             'assets/images/categories/first_connection/firstconnections_icon128.webp',
-        isAvailable: _firstConnectionEnabled,
+        isAvailable: false,
         onPressed: _openFirstConnection,
         ctaLabel: 'PLAY',
       ),
@@ -542,6 +540,66 @@ class _DailyFlashHomeBannerState
         BoxConstraints constraints,
       ) {
         final bool isDesktop = constraints.maxWidth >= 900;
+        // Only installed iOS/Android phones use the new, taller artwork.
+        // Tablets and all website layouts retain their original banner.
+        const bool isWeb = bool.fromEnvironment('dart.library.js_interop');
+        final TargetPlatform platform = Theme.of(context).platform;
+        final bool isNativePhone = !isWeb &&
+            (platform == TargetPlatform.iOS ||
+                platform == TargetPlatform.android) &&
+            MediaQuery.sizeOf(context).shortestSide < 600;
+
+        if (isNativePhone) {
+          final double width = constraints.maxWidth;
+          return Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: widget.onPressed,
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                width: double.infinity,
+                height: width / 2, // Mobile artwork supplied at 2:1.
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    Image.asset(
+                      'assets/images/daily_flash5/new/Daily Flash 5_ Double XP.webp',
+                      fit: BoxFit.fill,
+                      filterQuality: FilterQuality.high,
+                    ),
+                    // "ENDS IN" is already printed on the artwork.
+                    // Overlay *only* the live value in its empty black area.
+                    Positioned(
+                      left: width * 0.59,
+                      width: width * 0.36,
+                      top: width * 0.285,
+                      height: width * 0.065,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
+                        child: Text(
+                          _countdownText,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Oswald',
+                            color: Color(0xFFFFC94A),
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.2,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
 
         final String bannerAsset = isDesktop
             ? 'assets/images/daily_flash5/new/dailyflashfive_homescreen_desktop.webp'

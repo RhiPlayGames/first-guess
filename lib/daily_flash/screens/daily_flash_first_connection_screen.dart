@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../services/analytics_service.dart';
 import '../../services/player_stats_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/stats_panel.dart';
 import '../../widgets/app_home_button.dart';
 import '../../widgets/game_dialogs.dart';
 import '../../widgets/lives_display.dart';
@@ -73,7 +74,19 @@ class _DailyFlashFirstConnectionScreenState
   @override
   void initState() {
     super.initState();
+    unawaited(_loadDisplayStats());
     _loadDailyFlash();
+  }
+
+  PlayerStats _displayStats = const PlayerStats();
+
+  Future<void> _loadDisplayStats() async {
+    try {
+      final PlayerStats result = await PlayerStatsService.loadStats();
+      if (mounted) setState(() => _displayStats = result);
+    } catch (_) {
+      // Display-only stats must not interrupt a Daily Flash question.
+    }
   }
 
   @override
@@ -983,8 +996,7 @@ class _DailyFlashFirstConnectionScreenState
   }
 
   Widget _buildGame() {
-    final _FirstConnectionQuestion question =
-        _question!;
+    final _FirstConnectionQuestion question = _question!;
     final bool isDesktop =
         MediaQuery.sizeOf(context).width >= 900;
 
@@ -997,51 +1009,51 @@ class _DailyFlashFirstConnectionScreenState
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints:
-              const BoxConstraints(maxWidth: 880),
+          constraints: const BoxConstraints(maxWidth: 880),
           child: Container(
-            padding:
-                MediaQuery.sizeOf(context).width >= 600
-                    ? const EdgeInsets.all(14)
-                    : EdgeInsets.zero,
-            decoration:
-                MediaQuery.sizeOf(context).width >= 600
-                    ? BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius:
-                            BorderRadius.circular(22),
-                        border: Border.all(
-                          color: AppColors.border,
-                          width: 1.3,
-                        ),
-                      )
-                    : null,
+            padding: MediaQuery.sizeOf(context).width >= 600
+                ? const EdgeInsets.all(14)
+                : EdgeInsets.zero,
+            decoration: MediaQuery.sizeOf(context).width >= 600
+                ? BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: AppColors.border,
+                      width: 1.3,
+                    ),
+                  )
+                : null,
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                _buildDailyProgressStrip(),
-                const SizedBox(height: 10),
-                _buildClueHeaderBlock(),
+              StatsPanel(
+                totalScore: _displayStats.totalScore,
+                currentStreak: _displayStats.currentStreak,
+                firstGuesses: _displayStats.firstGuesses,
+                gamesPlayed: _displayStats.gamesPlayed,
+                showWebBorder: false,
+              ),
+              const SizedBox(height: 10),
+              _buildClueHeaderBlock(),
+              const SizedBox(height: 12),
+              _buildInstructionStrip(),
+              if (_message != null) ...<Widget>[
                 const SizedBox(height: 12),
-                _buildInstructionStrip(),
-                if (_message != null) ...<Widget>[
-                  const SizedBox(height: 12),
-                  GameMessagePanel(
-                    message: _message!,
-                    type: _messageColor ==
-                            const Color(0xFFE14B4B)
-                        ? GameMessageType.error
-                        : GameMessageType.info,
-                  ),
-                ],
-                const SizedBox(height: 12),
-                _buildConnectionGrid(
-                  question,
-                  isDesktop: isDesktop,
+                GameMessagePanel(
+                  message: _message!,
+                  type: _messageColor == const Color(0xFFE14B4B)
+                      ? GameMessageType.error
+                      : GameMessageType.info,
                 ),
-                const SizedBox(height: 14),
-                _buildGuessPanel(),
+              ],
+              const SizedBox(height: 12),
+              _buildConnectionGrid(
+                question,
+                isDesktop: isDesktop,
+              ),
+              const SizedBox(height: 14),
+              _buildGuessPanel(),
               ],
             ),
           ),
@@ -1050,55 +1062,7 @@ class _DailyFlashFirstConnectionScreenState
     );
   }
 
-  Widget _buildDailyProgressStrip() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 10,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFF151515),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.orange,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: <Widget>[
-          const Icon(
-            Icons.hub_rounded,
-            color: AppColors.orange,
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'FIRST CONNECTION • QUESTION ${_dailyQuestionIndex + 1} OF 5',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontFamily: 'Oswald',
-                color: AppColors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            '2× XP',
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.orange,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildConnectionGrid(
     _FirstConnectionQuestion question, {

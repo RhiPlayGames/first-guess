@@ -542,8 +542,16 @@ class DailyFlashProgressService {
         cloudDocument = _cloudProgressDocument;
 
     if (cloudDocument == null) {
+      // Only the currently unattempted question can be completed. This keeps
+      // retries/idempotency safe and means merely opening a question never
+      // advances Daily Flash progress.
+      if (questionIndex != progress.nextQuestionIndex) {
+        return progress;
+      }
+
       final DailyFlashProgress updated =
           progress.copyWith(
+        nextQuestionIndex: (questionIndex + 1).clamp(0, 5),
         totalXp: progress.totalXp + xpEarned,
         questionsCorrect: progress.questionsCorrect + 1,
         firstGuesses:
@@ -584,8 +592,13 @@ class DailyFlashProgressService {
             return cloudProgress;
           }
 
+          if (questionIndex != cloudProgress.nextQuestionIndex) {
+            return cloudProgress;
+          }
+
           final DailyFlashProgress transactionUpdated =
               cloudProgress.copyWith(
+            nextQuestionIndex: (questionIndex + 1).clamp(0, 5),
             totalXp: cloudProgress.totalXp + xpEarned,
             questionsCorrect:
                 cloudProgress.questionsCorrect + 1,
@@ -607,6 +620,7 @@ class DailyFlashProgressService {
               'questionIndex': questionIndex,
               'xpEarned': xpEarned,
               'wasFirstGuess': wasFirstGuess,
+              'correct': true,
               'processedAt': FieldValue.serverTimestamp(),
               'schemaVersion': _cloudSchemaVersion,
             },
@@ -622,8 +636,13 @@ class DailyFlashProgressService {
     } on FirebaseException {
       // Keep local gameplay working if Firestore is unavailable.
       // Avoid writing a potentially stale aggregate snapshot to cloud.
+      if (questionIndex != progress.nextQuestionIndex) {
+        return progress;
+      }
+
       final DailyFlashProgress updated =
           progress.copyWith(
+        nextQuestionIndex: (questionIndex + 1).clamp(0, 5),
         totalXp: progress.totalXp + xpEarned,
         questionsCorrect: progress.questionsCorrect + 1,
         firstGuesses:

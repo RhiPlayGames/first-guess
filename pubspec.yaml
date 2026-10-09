@@ -2,7 +2,7 @@ name: first_guess
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+4
+version: 1.0.0+5
 
 environment:
   sdk: ">=3.12.2 <4.0.0"
@@ -26,6 +26,7 @@ dependencies:
   firebase_remote_config: 6.5.6
   integration_test:
     sdk: flutter
+  firebase_app_check: 0.4.6
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +59,20 @@ flutter:
     - assets/images/daily_flash5/
     - assets/images/daily_flash5/new/
     - assets/images/daily_flash5/challenges/planets/
+    - assets/images/daily_flash5/classic/2026-10-07/
+    - assets/images/daily_flash5/classic/2026-10-08/
+    - assets/images/daily_flash5/classic/2026-10-09/
+    - assets/images/daily_flash5/classic/2026-10-10/
+    - assets/images/daily_flash5/classic/2026-10-11/
+    - assets/images/daily_flash5/classic/2026-10-12/
+    - assets/images/daily_flash5/classic/2026-10-13/
+    - assets/images/daily_flash5/classic/2026-10-14/
+    - assets/images/daily_flash5/classic/2026-10-15/
+    - assets/images/daily_flash5/classic/2026-10-16/
+    - assets/images/daily_flash5/classic/2026-10-17/
+    - assets/images/daily_flash5/classic/2026-10-18/
+    - assets/images/daily_flash5/classic/2026-10-19/
+    - assets/images/daily_flash5/classic/2026-10-20/
     - assets/images/case_files/topics/
     - assets/images/case_paths/animal_kingdom/
     - assets/images/stats/tiers/

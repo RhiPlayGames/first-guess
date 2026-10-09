@@ -2496,13 +2496,24 @@ extension _GameScreenLogic on _GameScreenState {
         return;
       }
 
+      final String? scopedCategory = widget.surpriseCategory?.trim();
+
       final FirebaseSurpriseSelection? selected =
-          await FirebaseChallengeService.loadRandomLiveSurpriseQuestion(
-        playedQuestionIds: playedIds,
-        previousCategory: currentCategory,
-        previousSubcategory: currentSubcategory,
-        excludedQuestionId: currentId,
-      );
+          scopedCategory != null && scopedCategory.isNotEmpty
+              ? await FirebaseChallengeService
+                  .loadRandomLiveCategorySurpriseQuestion(
+                  category: scopedCategory,
+                  playedQuestionIds: <String>{
+                    ...playedIds,
+                    if (currentId.isNotEmpty) currentId,
+                  },
+                )
+              : await FirebaseChallengeService.loadRandomLiveSurpriseQuestion(
+                  playedQuestionIds: playedIds,
+                  previousCategory: currentCategory,
+                  previousSubcategory: currentSubcategory,
+                  excludedQuestionId: currentId,
+                );
 
       if (!mounted) {
         return;
@@ -2528,6 +2539,7 @@ extension _GameScreenLogic on _GameScreenState {
             initialItem: selected.item,
             launchedFromSurpriseMe: true,
             showSurpriseToast: true,
+            surpriseCategory: widget.surpriseCategory,
           ),
         ),
       );

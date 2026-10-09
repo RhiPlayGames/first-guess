@@ -50,6 +50,7 @@ class GameScreen extends StatefulWidget {
   final bool launchedFromCaseFile;
   final bool caseFileReplay;
   final String? subcategoryTitle;
+  final String? surpriseCategory;
 
   const GameScreen.capitalCities({
     super.key,
@@ -60,7 +61,8 @@ class GameScreen extends StatefulWidget {
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
   }) : gameType = QuizGameType.capitalCities,
-       subcategoryTitle = null;
+       subcategoryTitle = null,
+       surpriseCategory = null;
 
   const GameScreen.countrySilhouettes({
     super.key,
@@ -71,7 +73,8 @@ class GameScreen extends StatefulWidget {
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
   }) : gameType = QuizGameType.countrySilhouettes,
-       subcategoryTitle = null;
+       subcategoryTitle = null,
+       surpriseCategory = null;
 
   const GameScreen.currencies({
     super.key,
@@ -82,7 +85,8 @@ class GameScreen extends StatefulWidget {
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
   }) : gameType = QuizGameType.currencies,
-       subcategoryTitle = null;
+       subcategoryTitle = null,
+       surpriseCategory = null;
 
   const GameScreen.majorCities({
     super.key,
@@ -93,7 +97,8 @@ class GameScreen extends StatefulWidget {
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
   }) : gameType = QuizGameType.majorCities,
-       subcategoryTitle = null;
+       subcategoryTitle = null,
+       surpriseCategory = null;
 
   const GameScreen.birds({
     super.key,
@@ -104,7 +109,8 @@ class GameScreen extends StatefulWidget {
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
   }) : gameType = QuizGameType.birds,
-       subcategoryTitle = null;
+       subcategoryTitle = null,
+       surpriseCategory = null;
 
   const GameScreen.dinosaurs({
     super.key,
@@ -115,7 +121,8 @@ class GameScreen extends StatefulWidget {
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
   }) : gameType = QuizGameType.dinosaurs,
-       subcategoryTitle = null;
+       subcategoryTitle = null,
+       surpriseCategory = null;
 
   const GameScreen.breakfastFoods({
     super.key,
@@ -126,7 +133,8 @@ class GameScreen extends StatefulWidget {
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
   }) : gameType = QuizGameType.breakfastFoods,
-       subcategoryTitle = null;
+       subcategoryTitle = null,
+       surpriseCategory = null;
 
   const GameScreen.dessertsCakesSweets({
     super.key,
@@ -137,7 +145,8 @@ class GameScreen extends StatefulWidget {
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
   }) : gameType = QuizGameType.dessertsCakesSweets,
-       subcategoryTitle = null;
+       subcategoryTitle = null,
+       surpriseCategory = null;
 
 
   const GameScreen.firebaseDynamic({
@@ -149,6 +158,7 @@ class GameScreen extends StatefulWidget {
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
     this.subcategoryTitle,
+    this.surpriseCategory,
   }) : gameType = QuizGameType.firebaseDynamic;
 
   bool get isFlagGame =>
@@ -505,12 +515,6 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   ImageProvider<Object> imageProviderForPath(String imagePath) {
-    if (currentItem.id?.startsWith('who_am_i_') ?? false) {
-      return const AssetImage(
-        'assets/images/categories/who_am_i/whoiam.webp',
-      );
-    }
-
     final Uri? uri = Uri.tryParse(imagePath);
     final bool isNetworkImage =
         uri != null &&

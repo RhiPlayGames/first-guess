@@ -558,19 +558,26 @@ class _AchievementCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      achievement.title.toUpperCase(),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'Oswald',
-                        color: isCompleted || isInProgress
-                            ? AppColors.white
-                            : AppColors.grey,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.4,
-                        height: 1.05,
+                    SizedBox(
+                      width: double.infinity,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          achievement.title.toUpperCase(),
+                          maxLines: 1,
+                          softWrap: false,
+                          style: TextStyle(
+                            fontFamily: 'Oswald',
+                            color: isCompleted || isInProgress
+                                ? AppColors.white
+                                : AppColors.grey,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.4,
+                            height: 1.05,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 6),

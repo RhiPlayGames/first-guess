@@ -661,8 +661,12 @@ class _ClassicCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDesktop =
-        MediaQuery.sizeOf(context).width >= 1200;
+    final double screenWidth = MediaQuery.sizeOf(context).width;
+    final bool isDesktop = screenWidth >= 1200;
+    final bool isPhone = screenWidth < 600;
+    final bool isLongPhoneTitle =
+        category.title == 'Books & Authors' ||
+        category.title == 'Science & Nature';
     final double radius = isDesktop ? 16 : 22;
 
     return Material(
@@ -723,29 +727,50 @@ class _ClassicCategoryCard extends StatelessWidget {
                 SizedBox(width: isDesktop ? 12 : 15),
                 Expanded(
                   child: Column(
+                    mainAxisAlignment: isPhone
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        category.title.toUpperCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.category.copyWith(
-                          color: AppColors.white,
-                          fontSize: isDesktop ? 20 : 17,
-                          letterSpacing: 0.15,
+                      if (isPhone && isLongPhoneTitle)
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            category.title.toUpperCase(),
+                            maxLines: 1,
+                            softWrap: false,
+                            style: AppTextStyles.category.copyWith(
+                              color: AppColors.white,
+                              fontSize: 15,
+                              letterSpacing: 0.15,
+                            ),
+                          ),
+                        )
+                      else
+                        Text(
+                          category.title.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.category.copyWith(
+                            color: AppColors.white,
+                            fontSize: isDesktop ? 20 : 17,
+                            letterSpacing: 0.15,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        category.subtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.white,
-                          fontSize: isDesktop ? 14.5 : 12,
-                          height: 1.25,
+                      if (!isPhone) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          category.subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.white,
+                            fontSize: isDesktop ? 14.5 : 12,
+                            height: 1.25,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

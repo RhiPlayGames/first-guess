@@ -203,6 +203,7 @@ class FirebaseChallengeService {
     final List<QueryDocumentSnapshot<Map<String, dynamic>>> documents =
         await loadLiveCategoryDocuments(
       category: category,
+      forceRefresh: true,
     );
 
     if (documents.isEmpty) {

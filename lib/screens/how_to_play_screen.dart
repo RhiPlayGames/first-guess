@@ -32,31 +32,37 @@ class HowToPlayScreen extends StatelessWidget {
             _RuleCard(
               title: 'CLASSIC FIRST GUESS',
               text:
-                  'Work out the answer from 10 clues, starting difficult and getting easier. You have 3 lives and can make one guess per clue — or skip to the next clue. Solve earlier for more XP. Getting Clue 1 correct earns the First Guess bonus.',
+                  'Work out the answer from 10 clues, starting difficult and getting easier. You have 3 lives and can make one guess per clue — or skip if you are unsure.',
             ),
             SizedBox(height: 12),
             _RuleCard(
               title: 'FIRST WORD',
               text:
-                  'Reveal the hidden word across 5 clues. You have 3 guesses total for the whole challenge, and more letters are revealed as you move through the clues. Solve earlier for more XP.',
+                  'Solve the hidden word across 5 clues. You have 3 guesses for the whole challenge, with more letters revealed as you progress.',
+            ),
+            SizedBox(height: 12),
+            _RuleCard(
+              title: 'FIRST CONNECTION',
+              text:
+                  'Six clues share one hidden connection. Work out what links them together and solve it in as few clues as possible.',
             ),
             SizedBox(height: 12),
             _RuleCard(
               title: 'FIRST DATE',
               text:
-                  'Five events all point to one date. Use the clues to work out the correct year or month, then submit your answer.',
+                  'Ten events point to one year or one month. Use the clues to work out the date they all have in common.',
             ),
             SizedBox(height: 12),
             _RuleCard(
               title: 'FIRST MATCH',
               text:
-                  'Match 6 items with their correct partners. Submit your matches and complete the board before your lives run out.',
+                  'Match 6 items with their correct partners. Submit your matches and try to complete the whole board before you run out of lives.',
             ),
             SizedBox(height: 12),
             _RuleCard(
               title: 'FIRST ORDER',
               text:
-                  'Put 5 items into the correct order. Rearrange them, submit your answer, and try to solve it in as few attempts as possible.',
+                  'Put 5 items into the correct order. Arrange them carefully and solve the sequence in as few attempts as possible.',
             ),
             SizedBox(height: 12),
             _RuleCard(
@@ -74,7 +80,7 @@ class HowToPlayScreen extends StatelessWidget {
             _RuleCard(
               title: 'NO TIMER',
               text:
-                  'The games are not timed, so you can think before you answer.',
+                  'All games, including Daily Flash 5, are not timed, so you can think before you answer.',
             ),
             SizedBox(height: 12),
             _HighlightCard(
@@ -120,7 +126,7 @@ class _IntroCard extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'Five different games. Each one tests you in a different way. Solve the challenge as early as you can to earn the most XP.',
+            'Six different games. Each one tests you in a different way. Solve the challenge as early as you can to earn the most points.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Inter',

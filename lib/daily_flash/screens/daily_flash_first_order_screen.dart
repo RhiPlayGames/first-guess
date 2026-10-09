@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +7,71 @@ import 'package:flutter/material.dart';
 import '../../services/analytics_service.dart';
 import '../../services/player_stats_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/stats_panel.dart';
+import '../../widgets/lives_display.dart';
 import '../../widgets/app_home_button.dart';
+import '../../widgets/game_dialogs.dart';
 import '../services/daily_flash_game_progress_service.dart';
+import '../widgets/daily_flash_results_dialog.dart';
+
+class _SixDotDragGrip extends StatelessWidget {
+  final Color color;
+
+  const _SixDotDragGrip({
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const double dotSize = 4.2;
+    const double gap = 3.2;
+
+    return SizedBox(
+      width: 22,
+      height: 30,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            for (int row = 0; row < 3; row++) ...<Widget>[
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  _GripDot(size: dotSize, color: color),
+                  const SizedBox(width: gap),
+                  _GripDot(size: dotSize, color: color),
+                ],
+              ),
+              if (row < 2) const SizedBox(height: gap),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GripDot extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const _GripDot({
+    required this.size,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+}
 
 class DailyFlashFirstOrderScreen extends StatefulWidget {
   final VoidCallback? onChallengeFinished;
@@ -75,7 +139,19 @@ class _DailyFlashFirstOrderScreenState
   @override
   void initState() {
     super.initState();
+    unawaited(_loadDisplayStats());
     _loadDailyFlash();
+  }
+
+  PlayerStats _displayStats = const PlayerStats();
+
+  Future<void> _loadDisplayStats() async {
+    try {
+      final PlayerStats result = await PlayerStatsService.loadStats();
+      if (mounted) setState(() => _displayStats = result);
+    } catch (_) {
+      // Display-only stats must not interrupt a Daily Flash question.
+    }
   }
 
   @override
@@ -572,65 +648,24 @@ class _DailyFlashFirstOrderScreenState
     required String message,
     required bool success,
   }) {
-    return showDialog<void>(
+    return showGameResultDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppColors.panel,
-          title: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          content: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.white,
-              height: 1.45,
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: <Widget>[
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.orange,
-                foregroundColor: AppColors.white,
-              ),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                unawaited(_advanceAfterResult());
-              },
-              child: const Text(
-                'NEXT QUESTION',
-                style: TextStyle(
-                  fontFamily: 'Oswald',
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                Navigator.of(context).maybePop();
-              },
-              child: const Text(
-                'BACK TO DAILY FLASH',
-                style: TextStyle(
-                  fontFamily: 'Oswald',
-                  color: AppColors.grey,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
+      title: title,
+      message: message,
+      imageAsset: title == 'YOU GAVE UP!'
+          ? 'assets/images/ui/popups/give_up.webp'
+          : null,
+      onPlayAgain: () {
+        unawaited(_advanceAfterResult());
       },
+      onHome: () {
+        Navigator.of(context, rootNavigator: true).pop();
+        if (mounted) {
+          Navigator.of(context).maybePop();
+        }
+      },
+      primaryButtonLabel: 'NEXT QUESTION',
+      secondaryButtonLabel: 'BACK TO DAILY FLASH',
     );
   }
 
@@ -684,51 +719,23 @@ class _DailyFlashFirstOrderScreenState
       return;
     }
 
+    final int baseXp = progress.totalXp ~/ 2;
+    final int bonusXp = progress.totalXp - baseXp;
+
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppColors.panel,
-          title: Text(
-            perfect
-                ? 'PERFECT 5!'
-                : 'DAILY FLASH 5 COMPLETE',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          content: Text(
-            '${progress.questionsCorrect}/5 correct\n'
-            '${progress.firstGuesses} First Guesses\n\n'
-            '${progress.totalXp} XP earned',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.white,
-              height: 1.45,
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: <Widget>[
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.orange,
-                foregroundColor: AppColors.white,
-              ),
-              onPressed: () =>
-                  Navigator.of(dialogContext).pop(),
-              child: const Text(
-                'CONTINUE',
-                style: TextStyle(
-                  fontFamily: 'Oswald',
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
+        return DailyFlashResultsDialog(
+          perfect: perfect,
+          score: progress.questionsCorrect,
+          baseXp: baseXp,
+          bonusXp: bonusXp,
+          totalXp: progress.totalXp,
+          hasMilestone: false,
+          onContinue: () {
+            Navigator.of(dialogContext).pop();
+          },
         );
       },
     );
@@ -801,33 +808,43 @@ class _DailyFlashFirstOrderScreenState
     Navigator.of(context).maybePop();
   }
 
-  void _moveItem(
-    int oldIndex,
-    int newIndex,
-  ) {
-    if (_roundFinished) {
+  void _moveCardToSlot(int fromIndex, int targetSlot) {
+    if (_roundFinished || _lockedPositions.contains(fromIndex)) {
       return;
     }
 
-    if (_lockedPositions.contains(oldIndex)) {
-      return;
-    }
+    final List<int> unlockedPositions = <int>[
+      for (int index = 0; index < _currentOrder.length; index++)
+        if (!_lockedPositions.contains(index)) index,
+    ];
 
-    if (newIndex < 0 ||
-        newIndex >= _currentOrder.length) {
-      return;
-    }
-
-    if (_lockedPositions.contains(newIndex)) {
+    final int fromSlot = unlockedPositions.indexOf(fromIndex);
+    if (fromSlot == -1) {
       return;
     }
 
     setState(() {
-      final String item =
-          _currentOrder.removeAt(oldIndex);
-      _currentOrder.insert(newIndex, item);
+      final List<String> movableItems = <String>[
+        for (final int index in unlockedPositions) _currentOrder[index],
+      ];
+
+      final String movingItem = movableItems.removeAt(fromSlot);
+
+      int insertAt = targetSlot;
+      if (fromSlot < targetSlot) {
+        insertAt -= 1;
+      }
+
+      insertAt = insertAt.clamp(0, movableItems.length).toInt();
+      movableItems.insert(insertAt, movingItem);
+
+      for (int slot = 0; slot < unlockedPositions.length; slot++) {
+        _currentOrder[unlockedPositions[slot]] = movableItems[slot];
+      }
     });
   }
+
+
 
   void _goBack() {
     Navigator.of(context).maybePop();
@@ -907,189 +924,106 @@ class _DailyFlashFirstOrderScreenState
   }
 
   Widget _buildGame() {
-    final _DailyFlashFirstOrderQuestion question =
-        _question!;
-    final bool isDesktop =
-        MediaQuery.sizeOf(context).width >= 900;
+    final _DailyFlashFirstOrderQuestion question = _question!;
+    final Size screenSize = MediaQuery.sizeOf(context);
+    final bool isDesktop = screenSize.width >= 900;
+    final bool compactHeight =
+        screenSize.width >= 600 && screenSize.height < 820;
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         isDesktop ? 32 : 16,
-        6,
+        compactHeight ? 2 : 6,
         isDesktop ? 32 : 16,
-        28,
+        compactHeight ? 6 : 28,
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints:
-              const BoxConstraints(maxWidth: 880),
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.stretch,
-            children: <Widget>[
-              _buildDailyProgressStrip(),
-              const SizedBox(height: 10),
-              if (_message != null) ...<Widget>[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF151515),
-                    borderRadius:
-                        BorderRadius.circular(12),
+          constraints: const BoxConstraints(maxWidth: 880),
+          child: Container(
+            padding: MediaQuery.sizeOf(context).width >= 600
+                ? EdgeInsets.all(compactHeight ? 10 : 14)
+                : EdgeInsets.zero,
+            decoration: MediaQuery.sizeOf(context).width >= 600
+                ? BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(22),
                     border: Border.all(
-                      color: AppColors.orange,
+                      color: AppColors.border,
+                      width: 1.3,
                     ),
-                  ),
-                  child: Text(
-                    _message!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  )
+                : null,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                StatsPanel(
+                  totalScore: _displayStats.totalScore,
+                  currentStreak: _displayStats.currentStreak,
+                  firstGuesses: _displayStats.firstGuesses,
+                  gamesPlayed: _displayStats.gamesPlayed,
+                  showWebBorder: false,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: compactHeight ? 6 : 12),
+                _buildStatusBlock(),
+                SizedBox(height: compactHeight ? 8 : 16),
+                _buildPrompt(question),
+                _buildGameMessage(),
+                SizedBox(height: compactHeight ? 7 : 14),
+                _buildOrderList(isDesktop: isDesktop),
+                SizedBox(height: compactHeight ? 8 : 16),
+                _buildActionButtons(),
               ],
-              _buildStatusBlock(),
-              const SizedBox(height: 12),
-              _buildPromptCard(question.prompt),
-              const SizedBox(height: 12),
-              ReorderableListView.builder(
-                shrinkWrap: true,
-                physics:
-                    const NeverScrollableScrollPhysics(),
-                itemCount: _currentOrder.length,
-                onReorderItem: _moveItem,
-                buildDefaultDragHandles: false,
-                itemBuilder:
-                    (BuildContext context, int index) {
-                  final bool locked =
-                      _lockedPositions.contains(index);
-
-                  return Container(
-                    key: ValueKey<String>(
-                      '${_currentOrder[index]}-$index',
-                    ),
-                    margin:
-                        const EdgeInsets.only(bottom: 8),
-                    decoration: BoxDecoration(
-                      color: locked
-                          ? const Color(0xFF1B3A24)
-                          : const Color(0xFF151515),
-                      borderRadius:
-                          BorderRadius.circular(12),
-                      border: Border.all(
-                        color: locked
-                            ? Colors.green
-                            : const Color(0xFF444444),
-                        width: 1,
-                      ),
-                    ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        radius: 16,
-                        backgroundColor:
-                            AppColors.orange,
-                        child: Text(
-                          '${index + 1}',
-                          style: const TextStyle(
-                            color: AppColors.white,
-                            fontFamily: 'Oswald',
-                            fontWeight:
-                                FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      title: Text(
-                        _currentOrder[index],
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontWeight:
-                              FontWeight.w600,
-                        ),
-                      ),
-                      trailing: locked
-                          ? const Icon(
-                              Icons.check_circle_rounded,
-                              color: Colors.green,
-                            )
-                          : ReorderableDragStartListener(
-                              index: index,
-                              child: const Icon(
-                                Icons.drag_indicator_rounded,
-                                color: AppColors.grey,
-                              ),
-                            ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 8),
-              _buildButtons(),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildDailyProgressStrip() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 10,
+
+
+  Widget _buildGameMessage() {
+    return AnimatedSwitcher(
+      duration: const Duration(
+        milliseconds: 250,
       ),
-      decoration: BoxDecoration(
-        color: const Color(0xFF151515),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.orange,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: <Widget>[
-          const Icon(
-            Icons.format_list_numbered_rounded,
-            color: AppColors.orange,
-            size: 20,
+      transitionBuilder: (
+        Widget child,
+        Animation<double> animation,
+      ) {
+        return FadeTransition(
+          opacity: animation,
+          child: SizeTransition(
+            sizeFactor: animation,
+            child: child,
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'FIRST ORDER • QUESTION ${_dailyQuestionIndex + 1} OF 5',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontFamily: 'Oswald',
-                color: AppColors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+        );
+      },
+      child: _message == null
+          ? const SizedBox(
+              key: ValueKey('empty-message'),
+            )
+          : Padding(
+              key: ValueKey(
+                'error-$_message',
+              ),
+              padding: const EdgeInsets.only(
+                top: 14,
+              ),
+              child: GameMessagePanel(
+                message: _message!,
+                type: GameMessageType.error,
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            '2× XP',
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.orange,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildStatusBlock() {
+    final int points = _pointsAvailable * 2;
+
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 10,
-      ),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(15),
@@ -1099,40 +1033,32 @@ class _DailyFlashFirstOrderScreenState
         ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Expanded(
-            child: Text(
-              'ATTEMPT $_currentAttemptNumber / $_maximumSubmissions',
-              style: const TextStyle(
-                fontFamily: 'Oswald',
-                color: AppColors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'GUESS ${(_submittedOrderCount + 1).clamp(1, _maximumSubmissions)} / $_maximumSubmissions',
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontFamily: 'Oswald',
+                    color: AppColors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
+                ),
               ),
             ),
           ),
           const SizedBox(width: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              for (int index = 0;
-                  index < _maximumSubmissions;
-                  index++)
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(
-                    horizontal: 2,
-                  ),
-                  child: Icon(
-                    Icons.favorite_rounded,
-                    size: 22,
-                    color:
-                        index < _submissionsRemaining
-                            ? AppColors.orange
-                            : const Color(0xFF555555),
-                  ),
-                ),
-            ],
+          LivesDisplay(
+            lives: _submissionsRemaining,
+            maximumLives: _maximumSubmissions,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -1140,43 +1066,43 @@ class _DailyFlashFirstOrderScreenState
               alignment: Alignment.centerRight,
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: _currentAttemptNumber == 1
-                    ? Text.rich(
-                        const TextSpan(
-                          children: <InlineSpan>[
-                            TextSpan(
-                              text: '200 XP',
-                              style: TextStyle(
-                                fontFamily: 'Oswald',
-                                color: AppColors.white,
-                                fontSize: 15,
-                                fontWeight:
-                                    FontWeight.w600,
-                              ),
+                alignment: Alignment.centerRight,
+                child: _submittedOrderCount == 0
+                        ? Text.rich(
+                            const TextSpan(
+                              children: <InlineSpan>[
+                                TextSpan(
+                                  text: '200 XP',
+                                  style: TextStyle(
+                                    fontFamily: 'Oswald',
+                                    color: AppColors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' +100',
+                                  style: TextStyle(
+                                    fontFamily: 'Oswald',
+                                    color: AppColors.orange,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ),
-                            TextSpan(
-                              text: ' +100',
-                              style: TextStyle(
-                                fontFamily: 'Oswald',
-                                color: AppColors.orange,
-                                fontSize: 15,
-                                fontWeight:
-                                    FontWeight.w700,
-                              ),
+                            maxLines: 1,
+                          )
+                        : Text(
+                            '$points XP',
+                            maxLines: 1,
+                            style: const TextStyle(
+                              fontFamily: 'Oswald',
+                              color: AppColors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
-                          ],
-                        ),
-                      )
-                    : Text(
-                        '${_pointsAvailable * 2} XP',
-                        style: const TextStyle(
-                          fontFamily: 'Oswald',
-                          color: AppColors.white,
-                          fontSize: 16,
-                          fontWeight:
-                              FontWeight.w600,
-                        ),
-                      ),
+                          ),
               ),
             ),
           ),
@@ -1185,72 +1111,363 @@ class _DailyFlashFirstOrderScreenState
     );
   }
 
-  Widget _buildPromptCard(String prompt) {
+  Widget _buildPrompt(_DailyFlashFirstOrderQuestion question) {
+    final bool isDesktop = MediaQuery.sizeOf(context).width >= 900;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 18,
-        vertical: 16,
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 18 : 14,
+        vertical: isDesktop ? 14 : 12,
       ),
       decoration: BoxDecoration(
-        color: AppColors.panel,
-        borderRadius: BorderRadius.circular(14),
+        color: const Color(0xFF151515),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.orange,
+          color: const Color(0xFF414141),
           width: 1.2,
         ),
       ),
       child: Text(
-        prompt,
+        question.prompt.toUpperCase(),
         textAlign: TextAlign.center,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: 'Oswald',
           color: AppColors.white,
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          height: 1.25,
+          fontSize: isDesktop ? 17 : 15,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.25,
+          height: 1.18,
         ),
       ),
     );
   }
 
-  Widget _buildButtons() {
-    return Column(
-      children: <Widget>[
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.orange,
-              foregroundColor: AppColors.white,
-              padding: const EdgeInsets.symmetric(
-                vertical: 14,
+
+
+  Widget _buildOrderList({
+    required bool isDesktop,
+  }) {
+    final bool compactHeight =
+        MediaQuery.sizeOf(context).width >= 600 &&
+        MediaQuery.sizeOf(context).height < 820;
+
+    final List<int> unlockedPositions = <int>[
+      for (int index = 0; index < _currentOrder.length; index++)
+        if (!_lockedPositions.contains(index)) index,
+    ];
+
+    Widget buildDropZone({
+      required int slot,
+      required double idleHeight,
+    }) {
+      return DragTarget<int>(
+        onWillAcceptWithDetails: (DragTargetDetails<int> details) {
+          return !_roundFinished &&
+              !_lockedPositions.contains(details.data);
+        },
+        onAcceptWithDetails: (DragTargetDetails<int> details) {
+          _moveCardToSlot(details.data, slot);
+        },
+        builder: (
+          BuildContext context,
+          List<int?> candidateData,
+          List<dynamic> rejectedData,
+        ) {
+          final bool active = candidateData.isNotEmpty;
+
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            height: active ? max(28, idleHeight) : idleHeight,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              color: active
+                  ? const Color(0x22FE5E02)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              border: active
+                  ? Border.all(
+                      color: AppColors.orange,
+                      width: 1.5,
+                    )
+                  : null,
+            ),
+          );
+        },
+      );
+    }
+
+    Widget buildCard({
+      required int index,
+      required String item,
+      required bool locked,
+      required bool dragging,
+    }) {
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        constraints: BoxConstraints(
+          minHeight: compactHeight ? 48 : (isDesktop ? 58 : 54),
+        ),
+        decoration: BoxDecoration(
+          color: locked
+              ? const Color(0xFF12311D)
+              : const Color(0xFF191919),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: locked
+                ? const Color(0xFF3CB963)
+                : AppColors.orange,
+            width: locked ? 2 : (dragging ? 1.5 : 1.0),
+          ),
+        ),
+        child: Row(
+          children: <Widget>[
+            Padding(
+              padding: EdgeInsets.only(
+                left: isDesktop ? 12 : 10,
+                right: isDesktop ? 8 : 6,
+              ),
+              child: locked
+                  ? const SizedBox(
+                      width: 22,
+                      height: 30,
+                      child: Center(
+                        child: Icon(
+                          Icons.lock_rounded,
+                          color: Color(0xFF57D47A),
+                          size: 22,
+                        ),
+                      ),
+                    )
+                  : const _SixDotDragGrip(
+                      color: Color(0xFFD8D8D8),
+                    ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop ? 34 : 28,
+                  vertical: compactHeight ? 5 : 8,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    item,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      color: AppColors.white,
+                      fontSize: isDesktop ? 18 : 16,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
               ),
             ),
-            onPressed: _roundFinished
-                ? null
-                : () => unawaited(_submitOrder()),
-            child: const Text(
-              'SUBMIT ORDER',
-              style: TextStyle(
-                fontFamily: 'Oswald',
-                fontWeight: FontWeight.w700,
-                fontSize: 17,
+            SizedBox(width: isDesktop ? 40 : 36),
+          ],
+        ),
+      );
+    }
+
+    final List<Widget> children = <Widget>[];
+
+    if (unlockedPositions.isNotEmpty) {
+      children.add(
+        buildDropZone(
+          slot: 0,
+          idleHeight: compactHeight ? 20 : 40,
+        ),
+      );
+    }
+
+    for (int index = 0; index < _currentOrder.length; index++) {
+      final String item = _currentOrder[index];
+
+      // IMPORTANT:
+      // Ending the round must NOT automatically make every card
+      // appear green/correct. Only positions previously confirmed
+      // as correct are displayed as locked/green.
+      final bool locked = _lockedPositions.contains(index);
+
+      Widget card = buildCard(
+        index: index,
+        item: item,
+        locked: locked,
+        dragging: false,
+      );
+
+      if (!locked) {
+        final int targetSlot = unlockedPositions.indexOf(index);
+
+        final Widget target = DragTarget<int>(
+          onWillAcceptWithDetails: (DragTargetDetails<int> details) {
+            return details.data != index &&
+                !_roundFinished &&
+                !_lockedPositions.contains(details.data);
+          },
+          onAcceptWithDetails: (DragTargetDetails<int> details) {
+            final int fromSlot = unlockedPositions.indexOf(details.data);
+
+            int slot = targetSlot;
+            if (fromSlot >= 0 && fromSlot < targetSlot) {
+              slot += 1;
+            }
+
+            _moveCardToSlot(details.data, slot);
+          },
+          builder: (
+            BuildContext context,
+            List<int?> candidateData,
+            List<dynamic> rejectedData,
+          ) {
+            return buildCard(
+              index: index,
+              item: item,
+              locked: false,
+              dragging: candidateData.isNotEmpty,
+            );
+          },
+        );
+
+        card = Draggable<int>(
+          data: index,
+          axis: Axis.vertical,
+          feedback: Material(
+            color: Colors.transparent,
+            child: SizedBox(
+              width: min(
+                MediaQuery.sizeOf(context).width -
+                    (isDesktop ? 64 : 32),
+                880,
+              ),
+              child: Opacity(
+                opacity: 0.94,
+                child: buildCard(
+                  index: index,
+                  item: item,
+                  locked: false,
+                  dragging: true,
+                ),
+              ),
+            ),
+          ),
+          childWhenDragging: Opacity(
+            opacity: 0.25,
+            child: target,
+          ),
+          child: MouseRegion(
+            cursor: SystemMouseCursors.grab,
+            child: target,
+          ),
+        );
+      }
+
+      children.add(
+        Padding(
+          key: ValueKey<String>(item),
+          padding: EdgeInsets.zero,
+          child: card,
+        ),
+      );
+
+      if (index < _currentOrder.length - 1) {
+        if (!locked) {
+          final int slotAfter = unlockedPositions.indexOf(index) + 1;
+
+          children.add(
+            buildDropZone(
+              slot: slotAfter,
+              idleHeight: compactHeight ? 6 : 12,
+            ),
+          );
+        } else {
+          // Locked/correct cards keep exactly the same visual spacing
+          // as movable cards so the stack never collapses together.
+          children.add(
+            SizedBox(height: compactHeight ? 6 : 12),
+          );
+        }
+      } else if (!locked) {
+        // Keep a larger bottom-edge target for easier dragging without
+        // affecting the spacing between cards.
+        final int slotAfter = unlockedPositions.indexOf(index) + 1;
+
+        children.add(
+          buildDropZone(
+            slot: slotAfter,
+            idleHeight: compactHeight ? 20 : 40,
+          ),
+        );
+      }
+    }
+
+    return Column(children: children);
+  }
+
+  Widget _buildActionButtons() {
+    final bool enabled = !_roundFinished &&
+        _submittedOrderCount < _maximumSubmissions;
+
+    final bool compactHeight =
+        MediaQuery.sizeOf(context).width >= 600 &&
+        MediaQuery.sizeOf(context).height < 820;
+
+    final double buttonHeight = compactHeight ? 44 : 48;
+
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: SizedBox(
+            height: buttonHeight,
+            child: FilledButton(
+              onPressed: enabled ? _submitOrder : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.orange,
+                foregroundColor: AppColors.white,
+                disabledBackgroundColor: AppColors.darkGrey,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text(
+                'SUBMIT ORDER',
+                maxLines: 1,
+                style: TextStyle(
+                  fontFamily: 'Oswald',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: _roundFinished
-              ? null
-              : () => unawaited(_giveUp()),
-          child: const Text(
-            'GIVE UP',
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.grey,
-              fontWeight: FontWeight.w600,
+        const SizedBox(width: 12),
+        Expanded(
+          child: SizedBox(
+            height: buttonHeight,
+            child: FilledButton(
+              onPressed: enabled ? _giveUp : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFD32F2F),
+                foregroundColor: AppColors.white,
+                disabledBackgroundColor: AppColors.darkGrey,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text(
+                'GIVE UP',
+                maxLines: 1,
+                style: TextStyle(
+                  fontFamily: 'Oswald',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
             ),
           ),
         ),

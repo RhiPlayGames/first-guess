@@ -987,7 +987,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           ),
           SizedBox(
-            width: isDesktop ? 90 : 68,
+            width: isDesktop ? 90 : 61,
             child: Text(
               'SCORE',
               textAlign: TextAlign.right,
@@ -1000,9 +1000,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           ),
           SizedBox(
-            width: isDesktop ? 100 : 78,
+            width: isDesktop ? 100 : 49,
             child: Text(
-              'FIRST GUESS',
+              isDesktop ? 'FIRST GUESS' : 'FG',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Oswald',
@@ -1013,7 +1013,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           ),
           SizedBox(
-            width: isDesktop ? 70 : 50,
+            width: isDesktop ? 70 : 43,
             child: Text(
               'CHANGE',
               textAlign: TextAlign.center,
@@ -1077,19 +1077,34 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           _buildSmallAvatar(player),
           SizedBox(width: isDesktop ? 12 : 8),
           Expanded(
-            child: Text(
-              player.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: isDesktop ? 16.5 : 13.5,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            child: isDesktop
+                ? Text(
+                    player.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  )
+                : FittedBox(
+                    alignment: Alignment.centerLeft,
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      player.name,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
           ),
           SizedBox(
-            width: isDesktop ? 90 : 68,
+            width: isDesktop ? 90 : 61,
             child: Text(
               _formatScore(
                 player.score,
@@ -1104,7 +1119,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           ),
           SizedBox(
-            width: isDesktop ? 100 : 78,
+            width: isDesktop ? 100 : 49,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -1126,7 +1141,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           ),
           SizedBox(
-            width: isDesktop ? 70 : 50,
+            width: isDesktop ? 70 : 43,
             child: _buildMovement(
               player.movement,
             ),
@@ -1259,19 +1274,34 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           _buildSmallAvatar(player),
           SizedBox(width: isDesktop ? 12 : 8),
           Expanded(
-            child: Text(
-              'You: ${player.name}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: isDesktop ? 16.5 : 13.5,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            child: isDesktop
+                ? Text(
+                    'You: ${player.name}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  )
+                : FittedBox(
+                    alignment: Alignment.centerLeft,
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'You: ${player.name}',
+                      maxLines: 1,
+                      softWrap: false,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
           ),
           SizedBox(
-            width: isDesktop ? 90 : 68,
+            width: isDesktop ? 90 : 61,
             child: Text(
               _formatScore(player.score),
               textAlign: TextAlign.right,
@@ -1284,7 +1314,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           ),
           SizedBox(
-            width: isDesktop ? 100 : 78,
+            width: isDesktop ? 100 : 49,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -1302,7 +1332,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           ),
           SizedBox(
-            width: isDesktop ? 70 : 50,
+            width: isDesktop ? 70 : 43,
             child: _buildMovement(player.movement),
           ),
         ],
@@ -1355,13 +1385,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       ),
                       SizedBox(height: isDesktop ? 4 : 3),
                       Text(
-                        'Times answered correctly on the first clue.',
-                        maxLines: 1,
+                        isDesktop
+                            ? 'Times answered correctly on the first clue.'
+                            : 'Correct on your first guess.',
+                        maxLines: isDesktop ? 1 : 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: isDesktop ? 13.5 : 10.5,
-                          height: 1.3,
+                          fontSize: isDesktop ? 13.5 : 10,
+                          height: 1.2,
                         ),
                       ),
                     ],
@@ -1372,7 +1404,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           ),
           Container(
             width: 1,
-            height: isDesktop ? 64 : 58,
+            height: isDesktop ? 64 : 54,
             margin: EdgeInsets.symmetric(
               horizontal: isDesktop ? 18 : 10,
             ),
@@ -1413,13 +1445,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       ),
                       SizedBox(height: isDesktop ? 4 : 3),
                       Text(
-                        'How many leaderboard places the player moved.',
-                        maxLines: 1,
+                        isDesktop
+                            ? 'How many leaderboard places the player moved.'
+                            : 'Places moved up or down.',
+                        maxLines: isDesktop ? 1 : 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: isDesktop ? 13.5 : 10.5,
-                          height: 1.3,
+                          fontSize: isDesktop ? 13.5 : 10,
+                          height: 1.2,
                         ),
                       ),
                     ],

@@ -918,9 +918,10 @@ class GameMessagePanel extends StatelessWidget {
             child: Text(
               message,
               style: TextStyle(
+                fontFamily: 'Inter',
                 color: messageColor,
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),

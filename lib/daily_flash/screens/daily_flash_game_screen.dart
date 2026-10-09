@@ -9,6 +9,7 @@ import '../../services/player_stats_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/game_dialogs.dart';
+import '../../widgets/guess_panel.dart';
 import '../../widgets/game_error_screen.dart';
 import '../../widgets/app_home_button.dart';
 import '../../widgets/milestone_reached_dialog.dart';
@@ -330,10 +331,17 @@ class _DailyFlashGameScreenState
         loadingProgress = false;
       });
 
-      await _consumeCurrentQuestion();
+      // Do not mark a Daily Flash question as attempted just because it
+      // has opened. It is only advanced after a correct answer or a genuine
+      // failed/give-up result. A technical load/image failure therefore keeps
+      // the same question available to retry.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          guessFocusNode.requestFocus();
+        }
+      });
 
-      if (startingNewDailyFlash &&
-          savedProgress?.nextQuestionIndex == 1) {
+      if (startingNewDailyFlash) {
         await AnalyticsService.logDailyFlashStarted(
           dateKey: progress.dateKey,
         );
@@ -380,88 +388,6 @@ class _DailyFlashGameScreenState
     });
   }
 
-  Future<void> _consumeCurrentQuestion() async {
-    DailyFlashProgress? progress = savedProgress;
-
-    if (progress == null || progress.allQuestionsAttempted) {
-      return;
-    }
-
-    while (mounted && !progress!.allQuestionsAttempted) {
-      final int requestedQuestionIndex = questionIndex;
-
-      final DailyFlashProgress updated =
-          await DailyFlashProgressService.consumeQuestion(
-        progress: progress,
-        questionIndex: requestedQuestionIndex,
-      );
-
-      if (!mounted) {
-        return;
-      }
-
-      final bool claimedRequestedQuestion =
-          updated.nextQuestionIndex ==
-              requestedQuestionIndex + 1;
-
-      if (claimedRequestedQuestion) {
-        setState(() {
-          savedProgress = updated;
-          totalXp = updated.totalXp;
-          questionsCorrect = updated.questionsCorrect;
-          firstGuesses = updated.firstGuesses;
-        });
-
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            guessFocusNode.requestFocus();
-          }
-        });
-
-        return;
-      }
-
-      progress = updated;
-
-      if (updated.allQuestionsAttempted) {
-        setState(() {
-          savedProgress = updated;
-          totalXp = updated.totalXp;
-          questionsCorrect = updated.questionsCorrect;
-          firstGuesses = updated.firstGuesses;
-          challengeFinished = true;
-          questionFinished = true;
-        });
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            showCompletedTodayScreen();
-          }
-        });
-
-        return;
-      }
-
-      setState(() {
-        savedProgress = updated;
-        questionIndex = updated.nextQuestionIndex;
-        clueIndex = 0;
-        lives = maximumLives;
-        millisecondsRemaining = clueDurationMilliseconds;
-        closeGuessesThisClue = 0;
-        guessesThisQuestion = 0;
-        questionFinished = false;
-        showTimeUpOverlay = false;
-        gameMessage = null;
-        gameMessageType = GameMessageType.info;
-        guessController.clear();
-        totalXp = updated.totalXp;
-        questionsCorrect = updated.questionsCorrect;
-        firstGuesses = updated.firstGuesses;
-      });
-    }
-  }
 
   @override
   void dispose() {
@@ -1256,10 +1182,32 @@ class _DailyFlashGameScreenState
     messageTimer?.cancel();
     timeUpOverlayTimer?.cancel();
 
+    // This is a real attempted question (timeout, lives exhausted or Give Up),
+    // so advance Daily Flash progress now. Technical load/image errors never
+    // call this method and therefore do NOT count as attempted.
+    DailyFlashProgress? progress = savedProgress;
+    if (progress != null && !progress.allQuestionsAttempted) {
+      progress = await DailyFlashProgressService.consumeQuestion(
+        progress: progress,
+        questionIndex: questionIndex,
+      );
+    }
+
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       questionFinished = true;
       showTimeUpOverlay = false;
       gameMessage = null;
+
+      if (progress != null) {
+        savedProgress = progress;
+        totalXp = progress.totalXp;
+        questionsCorrect = progress.questionsCorrect;
+        firstGuesses = progress.firstGuesses;
+      }
     });
 
     bool continuePressed = false;
@@ -1319,13 +1267,16 @@ class _DailyFlashGameScreenState
     messageTimer?.cancel();
     timeUpOverlayTimer?.cancel();
 
-    if (isLastQuestion) {
+    final int nextQuestionIndex =
+        savedProgress?.nextQuestionIndex ?? (questionIndex + 1);
+
+    if (nextQuestionIndex >= dailyQuestions.length) {
       await finishDailyFlash();
       return;
     }
 
     setState(() {
-      questionIndex++;
+      questionIndex = nextQuestionIndex;
       clueIndex = 0;
 
       lives = maximumLives;
@@ -1347,7 +1298,14 @@ class _DailyFlashGameScreenState
       guessController.clear();
     });
 
-    await _consumeCurrentQuestion();
+    // Opening the next question does not consume it. It remains the current
+    // unattempted question until the player answers, times out, loses all
+    // lives or gives up.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        guessFocusNode.requestFocus();
+      }
+    });
   }
 
   // =========================================================
@@ -1968,53 +1926,14 @@ class _DailyFlashGameScreenState
                                     isSmall: false,
                                   ),
                                   const SizedBox(height: 22),
-                                  _GuessField(
-                                    controller:
-                                        guessController,
-                                    focusNode:
-                                        guessFocusNode,
-                                    enabled:
-                                        !questionFinished &&
-                                        !challengeFinished,
-                                    onSubmitted: (_) {
-                                      submitGuess();
-                                    },
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _GuessButton(
-                                          onPressed:
-                                              questionFinished ||
-                                                      challengeFinished
-                                                  ? null
-                                                  : submitGuess,
-                                          isSmall: false,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child:
-                                            _NextClueButton(
-                                          onPressed:
-                                              questionFinished ||
-                                                      challengeFinished
-                                                  ? null
-                                                  : nextCluePressed,
-                                          isSmall: false,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  _GiveUpButton(
-                                    onPressed:
-                                        questionFinished ||
-                                                challengeFinished
-                                            ? null
-                                            : finishFailedQuestion,
-                                    isSmall: false,
+                                  GuessPanel(
+                                    controller: guessController,
+                                    focusNode: guessFocusNode,
+                                    enabled: !questionFinished && !challengeFinished,
+                                    isLastClue: isLastClue,
+                                    onGuess: submitGuess,
+                                    onNextClue: nextCluePressed,
+                                    onGiveUp: finishFailedQuestion,
                                   ),
                                 ],
                               ),
@@ -2143,74 +2062,15 @@ class _DailyFlashGameScreenState
                                 : 10,
                       ),
 
-                      _GuessField(
-                        controller:
-                            guessController,
-                        focusNode:
-                            guessFocusNode,
-                        enabled:
-                            !questionFinished &&
-                                !challengeFinished,
-                        onSubmitted: (_) {
-                          submitGuess();
-                        },
-                      ),
-
-                      SizedBox(
-                        height:
-                            isSmall
-                                ? 7
-                                : 10,
-                      ),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child:
-                                _GuessButton(
-                              onPressed:
-                                  questionFinished ||
-                                          challengeFinished
-                                      ? null
-                                      : submitGuess,
-                              isSmall:
-                                  isSmall,
-                            ),
-                          ),
-                          const SizedBox(
-                            width: 9,
-                          ),
-                          Expanded(
-                            child:
-                                _NextClueButton(
-                              onPressed:
-                                  questionFinished ||
-                                          challengeFinished
-                                      ? null
-                                      : nextCluePressed,
-                              isSmall:
-                                  isSmall,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(
-                        height:
-                            isSmall
-                                ? 7
-                                : 10,
-                      ),
-
-                      _GiveUpButton(
-                        onPressed:
-                            questionFinished ||
-                                    challengeFinished
-                                ? null
-                                : finishFailedQuestion,
-                        isSmall:
-                            isSmall,
-                      ),
+                      GuessPanel(
+                        controller: guessController,
+                        focusNode: guessFocusNode,
+                        enabled: !questionFinished && !challengeFinished,
+                        isLastClue: isLastClue,
+                        onGuess: submitGuess,
+                        onNextClue: nextCluePressed,
+                        onGiveUp: finishFailedQuestion,
+                                  ),
                     ],
                   ),
                 );
@@ -2805,272 +2665,26 @@ class _DailyFlashQuestionImagePanel
 // GUESS FIELD
 // ===========================================================
 
-class _GuessField
-    extends StatelessWidget {
-  final TextEditingController
-      controller;
 
-  final FocusNode focusNode;
-  final bool enabled;
-
-  final ValueChanged<String>
-      onSubmitted;
-
-  const _GuessField({
-    required this.controller,
-    required this.focusNode,
-    required this.enabled,
-    required this.onSubmitted,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      focusNode: focusNode,
-      enabled: enabled,
-      onSubmitted: onSubmitted,
-      textCapitalization:
-          TextCapitalization.words,
-      textInputAction:
-          TextInputAction.done,
-      style: const TextStyle(
-        fontFamily: 'Inter',
-        color: AppColors.white,
-        fontSize: 17,
-      ),
-      decoration:
-          const InputDecoration(
-        hintText:
-            'Type your guess...',
-        hintStyle: TextStyle(
-          fontFamily: 'Inter',
-          color: AppColors.white,
-          fontSize: 17,
-        ),
-        filled: true,
-        fillColor:
-            AppColors.panel,
-        contentPadding:
-            EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 15,
-        ),
-        enabledBorder:
-            OutlineInputBorder(
-          borderRadius:
-              BorderRadius.all(
-            Radius.circular(16),
-          ),
-          borderSide:
-              BorderSide(
-            color:
-                AppColors.orange,
-          ),
-        ),
-        focusedBorder:
-            OutlineInputBorder(
-          borderRadius:
-              BorderRadius.all(
-            Radius.circular(16),
-          ),
-          borderSide:
-              BorderSide(
-            color:
-                AppColors.orange,
-            width: 2,
-          ),
-        ),
-        disabledBorder:
-            OutlineInputBorder(
-          borderRadius:
-              BorderRadius.all(
-            Radius.circular(16),
-          ),
-          borderSide:
-              BorderSide(
-            color:
-                AppColors.darkGrey,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ===========================================================
 // GUESS BUTTON
 // ===========================================================
 
-class _GuessButton
-    extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final bool isSmall;
 
-  const _GuessButton({
-    required this.onPressed,
-    required this.isSmall,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height:
-          isSmall ? 47 : 52,
-      child: FilledButton(
-        onPressed: onPressed,
-        style:
-            FilledButton
-                .styleFrom(
-          backgroundColor:
-              AppColors.orange,
-          foregroundColor:
-              AppColors.white,
-          disabledBackgroundColor:
-              AppColors.darkGrey,
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius
-                    .circular(
-              14,
-            ),
-          ),
-        ),
-        child: Text(
-          'GUESS',
-          style:
-              AppTextStyles
-                  .category
-                  .copyWith(
-            color:
-                AppColors.white,
-            fontSize:
-                isSmall
-                    ? 16
-                    : 18,
-            fontWeight:
-                FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ===========================================================
 // NEXT CLUE
 // ===========================================================
 
-class _NextClueButton
-    extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final bool isSmall;
 
-  const _NextClueButton({
-    required this.onPressed,
-    required this.isSmall,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height:
-          isSmall ? 47 : 52,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style:
-            OutlinedButton
-                .styleFrom(
-          foregroundColor:
-              AppColors.orange,
-          disabledForegroundColor:
-              AppColors.darkGrey,
-          side: BorderSide(
-            color:
-                onPressed != null
-                    ? AppColors
-                        .orange
-                    : AppColors
-                        .darkGrey,
-            width: 1.5,
-          ),
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius
-                    .circular(
-              14,
-            ),
-          ),
-        ),
-        child: Text(
-          'NEXT CLUE',
-          style:
-              AppTextStyles
-                  .category
-                  .copyWith(
-            color:
-                onPressed != null
-                    ? AppColors
-                        .orange
-                    : AppColors
-                        .darkGrey,
-            fontSize:
-                isSmall
-                    ? 15
-                    : 17,
-            fontWeight:
-                FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 
 // ===========================================================
 // GIVE UP BUTTON
 // ===========================================================
 
-class _GiveUpButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final bool isSmall;
 
-  const _GiveUpButton({
-    required this.onPressed,
-    required this.isSmall,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: isSmall ? 47 : 52,
-      child: FilledButton(
-        onPressed: onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFFBA3A34),
-          foregroundColor: AppColors.white,
-          disabledBackgroundColor: const Color(0xFFBA3A34),
-          disabledForegroundColor: AppColors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        child: Text(
-          'GIVE UP',
-          style: AppTextStyles.category.copyWith(
-            color: AppColors.white,
-            fontSize: isSmall ? 16 : 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _DailyFlashResultsDialog extends StatefulWidget {
   final bool perfect;

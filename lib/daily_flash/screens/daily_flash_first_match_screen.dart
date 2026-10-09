@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 import '../../services/analytics_service.dart';
 import '../../services/player_stats_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/stats_panel.dart';
 import '../../widgets/app_home_button.dart';
 import '../../widgets/game_dialogs.dart';
 import '../../widgets/lives_display.dart';
 import '../services/daily_flash_game_progress_service.dart';
+import '../widgets/daily_flash_results_dialog.dart';
 
 class DailyFlashFirstMatchScreen extends StatefulWidget {
   final VoidCallback? onChallengeFinished;
@@ -52,6 +54,15 @@ class _DailyFlashFirstMatchScreenState
   static const List<int> _basePoints = <int>[100, 80, 60];
   static const int _firstGuessBonus = 50;
 
+  static const List<Color> _pairColours = <Color>[
+    Color(0xFFFE5E02),
+    Color(0xFF4DA3FF),
+    Color(0xFFA86BFF),
+    Color(0xFFFFC447),
+    Color(0xFF35C9C3),
+    Color(0xFFFF6FAE),
+  ];
+
   final Random _random = Random();
 
   DailyFlashGameProgress? _dailyProgress;
@@ -75,6 +86,24 @@ class _DailyFlashFirstMatchScreenState
   Timer? _messageTimer;
   DateTime _roundStartedAt = DateTime.now();
 
+  bool get _allUnlockedLeftMatched {
+    final _DailyFlashFirstMatchQuestion? challenge = _question;
+    if (challenge == null) {
+      return false;
+    }
+
+    for (int i = 0; i < challenge.pairs.length; i++) {
+      if (_lockedLeftIndexes.contains(i)) {
+        continue;
+      }
+      if (!_tentativeMatches.containsKey(i)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   int get _currentSubmissionNumber =>
       (_submittedBoards + 1).clamp(1, _basePoints.length);
 
@@ -87,7 +116,19 @@ class _DailyFlashFirstMatchScreenState
   @override
   void initState() {
     super.initState();
+    unawaited(_loadDisplayStats());
     _loadDailyFlash();
+  }
+
+  PlayerStats _displayStats = const PlayerStats();
+
+  Future<void> _loadDisplayStats() async {
+    try {
+      final PlayerStats result = await PlayerStatsService.loadStats();
+      if (mounted) setState(() => _displayStats = result);
+    } catch (_) {
+      // Display-only stats must not interrupt a Daily Flash question.
+    }
   }
 
   @override
@@ -546,6 +587,17 @@ class _DailyFlashFirstMatchScreenState
     );
   }
 
+  String _correctMatchesText(
+    _DailyFlashFirstMatchQuestion question,
+  ) {
+    return question.pairs
+        .map(
+          (_FirstMatchPair pair) =>
+              '${pair.left} — ${pair.right}',
+        )
+        .join('\n');
+  }
+
   Future<void> _finishFailed() async {
     final _DailyFlashFirstMatchQuestion? question =
         _question;
@@ -560,6 +612,23 @@ class _DailyFlashFirstMatchScreenState
 
     setState(() {
       _roundFinished = true;
+      _selectedLeftIndex = null;
+      _tentativeMatches.clear();
+      _rightChoices = question.pairs
+          .map((_FirstMatchPair pair) => pair.right)
+          .toList(growable: false);
+      _lockedLeftIndexes
+        ..clear()
+        ..addAll(<int>{
+          for (int index = 0; index < question.pairs.length; index++)
+            index,
+        });
+      _lockedRightIndexes
+        ..clear()
+        ..addAll(<int>{
+          for (int index = 0; index < question.pairs.length; index++)
+            index,
+        });
       _message = null;
     });
 
@@ -599,9 +668,13 @@ class _DailyFlashFirstMatchScreenState
       ),
     );
 
+    final String correctMatches =
+        _correctMatchesText(question);
+
     await _showResultDialog(
       title: 'GAME OVER',
-      message: 'The board was not completed.',
+      message:
+          'THE CORRECT MATCHES WERE:\n\n$correctMatches',
       success: false,
     );
   }
@@ -620,6 +693,23 @@ class _DailyFlashFirstMatchScreenState
 
     setState(() {
       _roundFinished = true;
+      _selectedLeftIndex = null;
+      _tentativeMatches.clear();
+      _rightChoices = question.pairs
+          .map((_FirstMatchPair pair) => pair.right)
+          .toList(growable: false);
+      _lockedLeftIndexes
+        ..clear()
+        ..addAll(<int>{
+          for (int index = 0; index < question.pairs.length; index++)
+            index,
+        });
+      _lockedRightIndexes
+        ..clear()
+        ..addAll(<int>{
+          for (int index = 0; index < question.pairs.length; index++)
+            index,
+        });
       _message = null;
     });
 
@@ -641,9 +731,13 @@ class _DailyFlashFirstMatchScreenState
       _dailyProgress = updated;
     });
 
+    final String correctMatches =
+        _correctMatchesText(question);
+
     await _showResultDialog(
       title: 'YOU GAVE UP!',
-      message: 'The board was not completed.',
+      message:
+          'THE CORRECT MATCHES WERE:\n\n$correctMatches',
       success: false,
     );
   }
@@ -710,8 +804,7 @@ class _DailyFlashFirstMatchScreenState
       return;
     }
 
-    final DailyFlashGameProgress? progress =
-        _dailyProgress;
+    final DailyFlashGameProgress? progress = _dailyProgress;
 
     if (progress == null ||
         !progress.allQuestionsAttempted) {
@@ -737,51 +830,23 @@ class _DailyFlashFirstMatchScreenState
       return;
     }
 
+    final int baseXp = progress.totalXp ~/ 2;
+    final int bonusXp = progress.totalXp - baseXp;
+
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppColors.panel,
-          title: Text(
-            perfect
-                ? 'PERFECT 5!'
-                : 'DAILY FLASH 5 COMPLETE',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          content: Text(
-            '${progress.questionsCorrect}/5 correct\n'
-            '${progress.firstGuesses} First Guesses\n\n'
-            '${progress.totalXp} XP earned',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.white,
-              height: 1.45,
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: <Widget>[
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.orange,
-                foregroundColor: AppColors.white,
-              ),
-              onPressed: () =>
-                  Navigator.of(dialogContext).pop(),
-              child: const Text(
-                'CONTINUE',
-                style: TextStyle(
-                  fontFamily: 'Oswald',
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
+        return DailyFlashResultsDialog(
+          perfect: perfect,
+          score: progress.questionsCorrect,
+          baseXp: baseXp,
+          bonusXp: bonusXp,
+          totalXp: progress.totalXp,
+          hasMilestone: false,
+          onContinue: () {
+            Navigator.of(dialogContext).pop();
+          },
         );
       },
     );
@@ -934,113 +999,84 @@ class _DailyFlashFirstMatchScreenState
   }
 
   Widget _buildGame() {
-    final _DailyFlashFirstMatchQuestion question =
-        _question!;
-    final bool isDesktop =
-        MediaQuery.sizeOf(context).width >= 900;
+    final Size screenSize = MediaQuery.sizeOf(context);
+    final bool isDesktop = screenSize.width >= 900;
+    final bool compactHeight =
+        screenSize.width >= 600 && screenSize.height < 820;
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
-        isDesktop ? 32 : 16,
-        6,
-        isDesktop ? 32 : 16,
-        28,
+        isDesktop ? 32 : 12,
+        compactHeight ? 2 : 6,
+        isDesktop ? 32 : 12,
+        compactHeight ? 6 : 28,
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints:
-              const BoxConstraints(maxWidth: 880),
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.stretch,
-            children: <Widget>[
-              _buildDailyProgressStrip(),
-              const SizedBox(height: 10),
-              if (_message != null) ...<Widget>[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF151515),
-                    borderRadius:
-                        BorderRadius.circular(12),
+          constraints: const BoxConstraints(
+            maxWidth: 880,
+          ),
+          child: Container(
+            padding: MediaQuery.sizeOf(context).width >= 600
+                ? EdgeInsets.all(compactHeight ? 10 : 14)
+                : EdgeInsets.zero,
+            decoration: MediaQuery.sizeOf(context).width >= 600
+                ? BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(22),
                     border: Border.all(
-                      color: AppColors.orange,
+                      color: AppColors.border,
+                      width: 1.3,
                     ),
-                  ),
-                  child: Text(
-                    _message!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w600,
+                  )
+                : null,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+              StatsPanel(
+                totalScore: _displayStats.totalScore,
+                currentStreak: _displayStats.currentStreak,
+                firstGuesses: _displayStats.firstGuesses,
+                gamesPlayed: _displayStats.gamesPlayed,
+                showWebBorder: false,
+              ),
+              SizedBox(height: compactHeight ? 6 : 12),
+              _buildStatusBlock(),
+              if (_message != null) ...<Widget>[
+                SizedBox(height: compactHeight ? 7 : 10),
+                GameMessagePanel(
+                  message: _message!,
+                  type: GameMessageType.error,
+                ),
+              ],
+              SizedBox(height: compactHeight ? 7 : 14),
+              _buildInstructionStrip(),
+              SizedBox(height: compactHeight ? 7 : 14),
+              _buildBoard(isDesktop: isDesktop),
+              SizedBox(height: compactHeight ? 8 : 14),
+              Container(
+                padding: EdgeInsets.only(
+                  top: compactHeight ? 9 : 14,
+                ),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: Color(0xFF3E3E3E),
+                      width: 1,
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                child: _buildButtons(),
+              ),
               ],
-              _buildStatusBlock(),
-              const SizedBox(height: 12),
-              _buildInstructionStrip(),
-              const SizedBox(height: 12),
-              _buildBoard(question),
-              const SizedBox(height: 14),
-              _buildButtons(),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildDailyProgressStrip() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 10,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFF151515),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.orange,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: <Widget>[
-          const Icon(
-            Icons.compare_arrows_rounded,
-            color: AppColors.orange,
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'FIRST MATCH • QUESTION ${_dailyQuestionIndex + 1} OF 5',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontFamily: 'Oswald',
-                color: AppColors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            '2× XP',
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.orange,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildStatusBlock() {
     final int correct =
@@ -1133,11 +1169,15 @@ class _DailyFlashFirstMatchScreenState
   }
 
   Widget _buildInstructionStrip() {
+    final bool compactHeight =
+        MediaQuery.sizeOf(context).width >= 600 &&
+        MediaQuery.sizeOf(context).height < 820;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
         horizontal: 16,
-        vertical: 12,
+        vertical: compactHeight ? 8 : 12,
       ),
       decoration: BoxDecoration(
         color: const Color(0xFF151515),
@@ -1156,14 +1196,70 @@ class _DailyFlashFirstMatchScreenState
           fontSize: 17,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.3,
+          height: 1.1,
         ),
       ),
     );
   }
 
-  Widget _buildBoard(
-    _DailyFlashFirstMatchQuestion question,
-  ) {
+  int? _leftForRight(int rightIndex) {
+    for (final MapEntry<int, int> entry
+        in _tentativeMatches.entries) {
+      if (entry.value == rightIndex) {
+        return entry.key;
+      }
+    }
+    return null;
+  }
+
+  int? _pairColourIndexForLeft(int leftIndex) {
+    if (_lockedLeftIndexes.contains(leftIndex) ||
+        _selectedLeftIndex == leftIndex ||
+        _tentativeMatches.containsKey(leftIndex)) {
+      return leftIndex % _pairColours.length;
+    }
+
+    return null;
+  }
+
+  int? _pairColourIndexForRight(int rightIndex) {
+    if (_lockedRightIndexes.contains(rightIndex)) {
+      final _DailyFlashFirstMatchQuestion? challenge = _question;
+      if (challenge == null ||
+          rightIndex < 0 ||
+          rightIndex >= _rightChoices.length) {
+        return null;
+      }
+
+      final String rightValue = _rightChoices[rightIndex];
+      for (int leftIndex = 0;
+          leftIndex < challenge.pairs.length;
+          leftIndex++) {
+        if (challenge.pairs[leftIndex].right == rightValue) {
+          return leftIndex % _pairColours.length;
+        }
+      }
+
+      return null;
+    }
+
+    final int? leftIndex = _leftForRight(rightIndex);
+    if (leftIndex == null) {
+      return null;
+    }
+
+    return leftIndex % _pairColours.length;
+  }
+
+  Widget _buildBoard({
+    required bool isDesktop,
+  }) {
+    final _DailyFlashFirstMatchQuestion challenge = _question!;
+    final bool compactHeight =
+        MediaQuery.sizeOf(context).width >= 600 &&
+        MediaQuery.sizeOf(context).height < 820;
+    final double rowGap = compactHeight ? 5 : 8;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -1171,29 +1267,25 @@ class _DailyFlashFirstMatchScreenState
           child: Column(
             children: <Widget>[
               const _ColumnHeading('MATCH'),
-              const SizedBox(height: 8),
-              for (int i = 0;
-                  i < question.pairs.length;
-                  i++) ...<Widget>[
-                _buildLeftTile(question, i),
-                if (i != question.pairs.length - 1)
-                  const SizedBox(height: 8),
+              SizedBox(height: rowGap),
+              for (int i = 0; i < challenge.pairs.length; i++) ...<Widget>[
+                _buildLeftTile(i),
+                if (i != challenge.pairs.length - 1)
+                  SizedBox(height: rowGap),
               ],
             ],
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: isDesktop ? 18 : 8),
         Expanded(
           child: Column(
             children: <Widget>[
               const _ColumnHeading('WITH'),
               const SizedBox(height: 8),
-              for (int i = 0;
-                  i < _rightChoices.length;
-                  i++) ...<Widget>[
+              for (int i = 0; i < _rightChoices.length; i++) ...<Widget>[
                 _buildRightTile(i),
                 if (i != _rightChoices.length - 1)
-                  const SizedBox(height: 8),
+                  SizedBox(height: rowGap),
               ],
             ],
           ),
@@ -1202,166 +1294,114 @@ class _DailyFlashFirstMatchScreenState
     );
   }
 
-  Widget _buildLeftTile(
-    _DailyFlashFirstMatchQuestion question,
-    int index,
-  ) {
+  Widget _buildLeftTile(int leftIndex) {
+    final _DailyFlashFirstMatchQuestion challenge = _question!;
     final bool locked =
-        _lockedLeftIndexes.contains(index);
+        _lockedLeftIndexes.contains(leftIndex);
     final bool selected =
-        _selectedLeftIndex == index;
-    final int? matchedRight =
-        _tentativeMatches[index];
+        _selectedLeftIndex == leftIndex;
 
-    return InkWell(
-      onTap: locked ? null : () => _selectLeft(index),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        constraints:
-            const BoxConstraints(minHeight: 58),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
-        ),
-        decoration: BoxDecoration(
-          color: locked
-              ? const Color(0xFF1B3A24)
-              : selected
-                  ? const Color(0xFF2A1C13)
-                  : const Color(0xFF151515),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: locked
-                ? Colors.green
-                : selected
-                    ? AppColors.orange
-                    : const Color(0xFF444444),
-            width: selected ? 1.8 : 1,
-          ),
-        ),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                question.pairs[index].left,
-                style: const TextStyle(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            if (locked)
-              const Icon(
-                Icons.check_circle_rounded,
-                color: Colors.green,
-                size: 20,
-              )
-            else if (matchedRight != null)
-              const Icon(
-                Icons.link_rounded,
-                color: AppColors.orange,
-                size: 20,
-              ),
-          ],
-        ),
-      ),
+    final int? colourIndex =
+        _pairColourIndexForLeft(leftIndex);
+
+    return _MatchChoiceTile(
+      text: challenge.pairs[leftIndex].left,
+      locked: locked,
+      selected: selected,
+      outlineColour: colourIndex == null
+          ? const Color(0xFF454545)
+          : _pairColours[colourIndex],
+      onTap: _roundFinished || locked
+          ? null
+          : () => _selectLeft(leftIndex),
     );
   }
 
-  Widget _buildRightTile(int index) {
+  Widget _buildRightTile(int rightIndex) {
     final bool locked =
-        _lockedRightIndexes.contains(index);
-    final bool chosen =
-        _tentativeMatches.containsValue(index);
+        _lockedRightIndexes.contains(rightIndex);
 
-    return InkWell(
-      onTap: locked ? null : () => _selectRight(index),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        constraints:
-            const BoxConstraints(minHeight: 58),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
-        ),
-        decoration: BoxDecoration(
-          color: locked
-              ? const Color(0xFF1B3A24)
-              : chosen
-                  ? const Color(0xFF2A1C13)
-                  : const Color(0xFF151515),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: locked
-                ? Colors.green
-                : chosen
-                    ? AppColors.orange
-                    : const Color(0xFF444444),
-            width: chosen ? 1.8 : 1,
-          ),
-        ),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                _rightChoices[index],
-                style: const TextStyle(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            if (locked)
-              const Icon(
-                Icons.check_circle_rounded,
-                color: Colors.green,
-                size: 20,
-              ),
-          ],
-        ),
-      ),
+    final int? colourIndex =
+        _pairColourIndexForRight(rightIndex);
+
+    return _MatchChoiceTile(
+      text: _rightChoices[rightIndex],
+      locked: locked,
+      selected: false,
+      outlineColour: colourIndex == null
+          ? const Color(0xFF454545)
+          : _pairColours[colourIndex],
+      onTap: _roundFinished || locked
+          ? null
+          : () => _selectRight(rightIndex),
     );
   }
 
   Widget _buildButtons() {
-    return Column(
+    final bool enabled =
+        !_roundFinished && _lives > 0;
+    final bool compactHeight =
+        MediaQuery.sizeOf(context).width >= 600 &&
+        MediaQuery.sizeOf(context).height < 820;
+    final double buttonHeight = compactHeight ? 44 : 48;
+
+    return Row(
       children: <Widget>[
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.orange,
-              foregroundColor: AppColors.white,
-              padding: const EdgeInsets.symmetric(
-                vertical: 14,
+        Expanded(
+          child: SizedBox(
+            height: buttonHeight,
+            child: FilledButton(
+              onPressed:
+                  enabled && _allUnlockedLeftMatched
+                      ? _submitBoard
+                      : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.orange,
+                foregroundColor: AppColors.white,
+                disabledBackgroundColor: AppColors.darkGrey,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
-            ),
-            onPressed: _roundFinished
-                ? null
-                : () => unawaited(_submitBoard()),
-            child: const Text(
-              'SUBMIT MATCHES',
-              style: TextStyle(
-                fontFamily: 'Oswald',
-                fontWeight: FontWeight.w700,
-                fontSize: 17,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'SUBMIT MATCHES',
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontFamily: 'Oswald',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: _roundFinished
-              ? null
-              : () => unawaited(_giveUp()),
-          child: const Text(
-            'GIVE UP',
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.grey,
-              fontWeight: FontWeight.w600,
+        const SizedBox(width: 12),
+        Expanded(
+          child: SizedBox(
+            height: buttonHeight,
+            child: FilledButton(
+              onPressed: enabled ? _giveUp : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFD32F2F),
+                foregroundColor: AppColors.white,
+                disabledBackgroundColor: AppColors.darkGrey,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text(
+                'GIVE UP',
+                style: TextStyle(
+                  fontFamily: 'Oswald',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
             ),
           ),
         ),
@@ -1477,6 +1517,92 @@ class _DailyFlashGameHeader extends StatelessWidget
                   ),
                 ],
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MatchChoiceTile extends StatelessWidget {
+  final String text;
+  final bool locked;
+  final bool selected;
+  final Color outlineColour;
+  final VoidCallback? onTap;
+
+  const _MatchChoiceTile({
+    required this.text,
+    required this.locked,
+    required this.selected,
+    required this.outlineColour,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bool compactHeight =
+        MediaQuery.sizeOf(context).width >= 600 &&
+        MediaQuery.sizeOf(context).height < 820;
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          constraints: BoxConstraints(
+            minHeight: compactHeight ? 48 : 58,
+          ),
+          alignment: Alignment.center,
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: compactHeight ? 6 : 10,
+          ),
+          decoration: BoxDecoration(
+            color: locked
+                ? const Color(0xFF102519)
+                : selected
+                    ? const Color(0xFF25170E)
+                    : const Color(0xFF171717),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: outlineColour,
+              width: locked || selected ? 2.2 : 1.5,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  text.toUpperCase(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Oswald',
+                    color: locked
+                        ? const Color(0xFF72E59E)
+                        : AppColors.white,
+                    fontSize: compactHeight ? 15 : 17,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.15,
+                    height: 1.05,
+                  ),
+                ),
+              ),
+              if (locked) ...<Widget>[
+                const SizedBox(width: 6),
+                const Icon(
+                  Icons.lock_rounded,
+                  size: 16,
+                  color: Color(0xFF72E59E),
+                ),
+              ],
             ],
           ),
         ),

@@ -32,22 +32,12 @@ class _FamousPeopleSubcategoryScreenState
     _FamousPeopleSubcategory(
       'Athletes & Sports Stars',
       'assets/images/categories/who_am_i/athletes_sports_stars.webp',
-      firebaseKey: 'athletes_sports',
+      firebaseKey: 'athletes_sports_stars',
     ),
     _FamousPeopleSubcategory(
       'Authors, Poets & Playwrights',
       'assets/images/categories/who_am_i/authors_poets_playwrights.webp',
       firebaseKey: 'authors_writers',
-    ),
-    _FamousPeopleSubcategory(
-      'Campaigners & Humanitarians',
-      'assets/images/categories/who_am_i/campaigners_humanitarians.webp',
-      firebaseKey: 'campaigners_humanitarians',
-    ),
-    _FamousPeopleSubcategory(
-      'Entrepreneurs & Business Leaders',
-      'assets/images/categories/who_am_i/entrepreneurs_business_leaders.webp',
-      firebaseKey: 'entrepreneurs_business',
     ),
     _FamousPeopleSubcategory(
       'Explorers & Adventurers',
@@ -60,22 +50,17 @@ class _FamousPeopleSubcategoryScreenState
       firebaseKey: 'footballers',
     ),
     _FamousPeopleSubcategory(
-      'Musicians & Singers',
-      'assets/images/categories/who_am_i/musicians_singers.webp',
-      firebaseKey: 'musicians_singers',
-    ),
-    _FamousPeopleSubcategory(
       'Pioneers & Record Breakers',
       'assets/images/categories/who_am_i/pioneers_record_breakers.webp',
       firebaseKey: 'pioneers_records',
     ),
     _FamousPeopleSubcategory(
-      'Public & Internet Personalities',
+      'Internet Personalities',
       'assets/images/categories/who_am_i/public_internet_personalities.webp',
       firebaseKey: 'public_internet',
     ),
     _FamousPeopleSubcategory(
-      'Royalty & Political Leaders',
+      'Political Leaders',
       'assets/images/categories/who_am_i/royalty_political_leaders.webp',
       firebaseKey: 'royalty_leaders',
     ),
@@ -388,6 +373,7 @@ class _FamousPeopleSubcategoryScreenState
             initialItem: selected.item,
             launchedFromSurpriseMe: true,
             showSurpriseToast: true,
+            surpriseCategory: 'famous_people',
           ),
         ),
       );

@@ -8,6 +8,7 @@ import '../../services/analytics_service.dart';
 import '../../services/player_stats_service.dart';
 import '../services/daily_flash_game_progress_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/stats_panel.dart';
 import '../../widgets/app_home_button.dart';
 import '../../widgets/game_dialogs.dart';
 import '../../widgets/lives_display.dart';
@@ -92,7 +93,19 @@ class _DailyFlashFirstWordScreenState extends State<DailyFlashFirstWordScreen> {
   @override
   void initState() {
     super.initState();
+    unawaited(_loadDisplayStats());
     _loadRound();
+  }
+
+  PlayerStats _displayStats = const PlayerStats();
+
+  Future<void> _loadDisplayStats() async {
+    try {
+      final PlayerStats result = await PlayerStatsService.loadStats();
+      if (mounted) setState(() => _displayStats = result);
+    } catch (_) {
+      // Display-only stats must not interrupt a Daily Flash question.
+    }
   }
 
   @override
@@ -829,6 +842,14 @@ class _DailyFlashFirstWordScreenState extends State<DailyFlashFirstWordScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
+              StatsPanel(
+                totalScore: _displayStats.totalScore,
+                currentStreak: _displayStats.currentStreak,
+                firstGuesses: _displayStats.firstGuesses,
+                gamesPlayed: _displayStats.gamesPlayed,
+                showWebBorder: false,
+              ),
+              const SizedBox(height: 10),
               _buildClueHeaderBlock(),
               if (_message != null) ...<Widget>[
                 const SizedBox(height: 10),
@@ -1169,7 +1190,7 @@ class _DailyFlashFirstWordScreenState extends State<DailyFlashFirstWordScreen> {
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(
-                'QUESTION ${_dailyQuestionIndex + 1}/5 • CLUE ${_clueIndex + 1}/5',
+                'CLUE ${_clueIndex + 1} / 5',
                 maxLines: 1,
                 style: const TextStyle(
                   fontFamily: 'Oswald',

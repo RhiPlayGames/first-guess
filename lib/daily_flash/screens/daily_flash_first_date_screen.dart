@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import '../../services/analytics_service.dart';
 import '../../services/player_stats_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/stats_panel.dart';
 import '../../widgets/app_home_button.dart';
 import '../../widgets/game_dialogs.dart';
 import '../../widgets/lives_display.dart';
 import '../services/daily_flash_game_progress_service.dart';
+import '../widgets/daily_flash_results_dialog.dart';
 
 class DailyFlashFirstDateScreen extends StatefulWidget {
   final VoidCallback? onChallengeFinished;
@@ -91,7 +93,19 @@ class _DailyFlashFirstDateScreenState
   @override
   void initState() {
     super.initState();
+    unawaited(_loadDisplayStats());
     _loadDailyFlash();
+  }
+
+  PlayerStats _displayStats = const PlayerStats();
+
+  Future<void> _loadDisplayStats() async {
+    try {
+      final PlayerStats result = await PlayerStatsService.loadStats();
+      if (mounted) setState(() => _displayStats = result);
+    } catch (_) {
+      // Display-only stats must not interrupt a Daily Flash question.
+    }
   }
 
   @override
@@ -707,51 +721,23 @@ class _DailyFlashFirstDateScreenState
       return;
     }
 
+    final int baseXp = progress.totalXp ~/ 2;
+    final int bonusXp = progress.totalXp - baseXp;
+
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppColors.panel,
-          title: Text(
-            perfect
-                ? 'PERFECT 5!'
-                : 'DAILY FLASH 5 COMPLETE',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          content: Text(
-            '${progress.questionsCorrect}/5 correct\n'
-            '${progress.firstGuesses} First Guesses\n\n'
-            '${progress.totalXp} XP earned',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.white,
-              height: 1.45,
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: <Widget>[
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.orange,
-                foregroundColor: AppColors.white,
-              ),
-              onPressed: () =>
-                  Navigator.of(dialogContext).pop(),
-              child: const Text(
-                'CONTINUE',
-                style: TextStyle(
-                  fontFamily: 'Oswald',
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
+        return DailyFlashResultsDialog(
+          perfect: perfect,
+          score: progress.questionsCorrect,
+          baseXp: baseXp,
+          bonusXp: bonusXp,
+          totalXp: progress.totalXp,
+          hasMilestone: false,
+          onContinue: () {
+            Navigator.of(dialogContext).pop();
+          },
         );
       },
     );
@@ -931,8 +917,6 @@ class _DailyFlashFirstDateScreenState
   }
 
   Widget _buildGame() {
-    final _DailyFlashFirstDateQuestion question =
-        _question!;
     final bool isDesktop =
         MediaQuery.sizeOf(context).width >= 900;
 
@@ -945,49 +929,48 @@ class _DailyFlashFirstDateScreenState
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints:
-              const BoxConstraints(maxWidth: 880),
+          constraints: const BoxConstraints(maxWidth: 880),
           child: Container(
             padding: MediaQuery.sizeOf(context).width >= 600
                 ? const EdgeInsets.all(14)
                 : EdgeInsets.zero,
-            decoration:
-                MediaQuery.sizeOf(context).width >= 600
-                    ? BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius:
-                            BorderRadius.circular(22),
-                        border: Border.all(
-                          color: AppColors.border,
-                          width: 1.3,
-                        ),
-                      )
-                    : null,
+            decoration: MediaQuery.sizeOf(context).width >= 600
+                ? BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: AppColors.border,
+                      width: 1.3,
+                    ),
+                  )
+                : null,
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                _buildDailyProgressStrip(),
-                const SizedBox(height: 10),
-                if (_message != null) ...<Widget>[
-                  GameMessagePanel(
-                    message: _message!,
-                    type: _messageType,
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                _buildStatusBlock(),
-                const SizedBox(height: 14),
-                _buildPromptCard(question),
-                const SizedBox(height: 12),
-                _buildClueCard(
-                  question.clues[_clueIndex],
-                  isDesktop: isDesktop,
+              StatsPanel(
+                totalScore: _displayStats.totalScore,
+                currentStreak: _displayStats.currentStreak,
+                firstGuesses: _displayStats.firstGuesses,
+                gamesPlayed: _displayStats.gamesPlayed,
+                showWebBorder: false,
+              ),
+              const SizedBox(height: 10),
+              if (_message != null) ...<Widget>[
+                GameMessagePanel(
+                  message: _message!,
+                  type: _messageType,
                 ),
-                const SizedBox(height: 14),
-                _buildAnswerField(),
                 const SizedBox(height: 12),
-                _buildActionButtons(),
+              ],
+              _buildStatusBlock(),
+              const SizedBox(height: 14),
+              _buildPromptCard(),
+              const SizedBox(height: 12),
+              _buildClueCard(isDesktop: isDesktop),
+              const SizedBox(height: 14),
+              _buildAnswerField(),
+              const SizedBox(height: 12),
+              _buildActionButtons(),
               ],
             ),
           ),
@@ -996,55 +979,7 @@ class _DailyFlashFirstDateScreenState
     );
   }
 
-  Widget _buildDailyProgressStrip() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 10,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFF151515),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.orange,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: <Widget>[
-          const Icon(
-            Icons.calendar_month_rounded,
-            color: AppColors.orange,
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'FIRST DATE • QUESTION ${_dailyQuestionIndex + 1} OF 5',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontFamily: 'Oswald',
-                color: AppColors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            '2× XP',
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.orange,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildStatusBlock() {
     return Container(
@@ -1138,9 +1073,9 @@ class _DailyFlashFirstDateScreenState
     );
   }
 
-  Widget _buildPromptCard(
-    _DailyFlashFirstDateQuestion question,
-  ) {
+  Widget _buildPromptCard() {
+    final _DailyFlashFirstDateQuestion question = _question!;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
@@ -1163,158 +1098,215 @@ class _DailyFlashFirstDateScreenState
           color: AppColors.white,
           fontSize: 22,
           fontWeight: FontWeight.w700,
+          letterSpacing: 0.35,
+          height: 1.15,
         ),
       ),
     );
   }
 
-  Widget _buildClueCard(
-    String clue, {
+  Widget _buildClueCard({
     required bool isDesktop,
   }) {
+    final _DailyFlashFirstDateQuestion question = _question!;
+
     return Container(
       width: double.infinity,
       constraints: BoxConstraints(
-        minHeight: isDesktop ? 120 : 100,
+        minHeight: isDesktop ? 150 : 128,
       ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 20,
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 28 : 20,
+        vertical: isDesktop ? 26 : 22,
       ),
-      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.panel,
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFF111111),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: AppColors.orange,
-          width: 1.4,
+          width: 1.5,
         ),
       ),
-      child: Text(
-        clue,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontFamily: 'Inter',
-          color: AppColors.white,
-          fontSize: isDesktop ? 18 : 16,
-          fontWeight: FontWeight.w500,
-          height: 1.35,
+      child: Center(
+        child: Text(
+          question.clues[_clueIndex],
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            color: AppColors.white,
+            fontSize: isDesktop ? 20 : 17,
+            fontWeight: FontWeight.w600,
+            height: 1.35,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildAnswerField() {
+    final bool enabled =
+        !_roundFinished && !_submitting && _lives > 0;
+
     return TextField(
       controller: _answerController,
       focusNode: _answerFocusNode,
-      enabled: !_roundFinished && !_submitting,
+      enabled: enabled,
       textInputAction: TextInputAction.done,
-      onSubmitted: (_) => unawaited(_submitGuess()),
+      onSubmitted: (_) {
+        if (enabled) {
+          unawaited(_submitGuess());
+        }
+      },
       style: const TextStyle(
+        fontFamily: 'Inter',
         color: AppColors.white,
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
       ),
       decoration: InputDecoration(
-        hintText: 'Type your answer',
+        hintText: _answerHint(),
         hintStyle: const TextStyle(
-          color: AppColors.grey,
+          color: AppColors.white,
+          fontFamily: 'Inter',
         ),
         filled: true,
-        fillColor: const Color(0xFF151515),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFF444444),
-          ),
+        fillColor: const Color(0xFF121212),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 17,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFF444444),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(
             color: AppColors.orange,
             width: 1.5,
           ),
         ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(
+            color: AppColors.orange,
+            width: 2,
+          ),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(
+            color: AppColors.darkGrey,
+          ),
+        ),
       ),
     );
   }
 
+  String _answerHint() {
+    switch (_question?.answerType) {
+      case 'year':
+        return 'Enter a year...';
+      case 'month':
+        return 'Enter a month...';
+      case 'month_year':
+        return 'Enter a month and year...';
+      default:
+        return 'Enter your answer...';
+    }
+  }
+
   Widget _buildActionButtons() {
-    final bool canSkip =
-        !_roundFinished && !_submitting && _clueIndex < 9;
+    final bool enabled =
+        !_roundFinished && !_submitting && _lives > 0;
+    final bool canAdvanceClue =
+        enabled &&
+        _question != null &&
+        _clueIndex < _question!.clues.length - 1;
 
     return Column(
       children: <Widget>[
         Row(
           children: <Widget>[
             Expanded(
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.orange,
-                  foregroundColor: AppColors.white,
-                  padding:
-                      const EdgeInsets.symmetric(
-                    vertical: 14,
+              child: SizedBox(
+                height: 48,
+                child: FilledButton(
+                  onPressed: enabled
+                      ? () => unawaited(_submitGuess())
+                      : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.orange,
+                    foregroundColor: AppColors.white,
+                    disabledBackgroundColor: AppColors.darkGrey,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                ),
-                onPressed:
-                    _roundFinished || _submitting
-                        ? null
-                        : () => unawaited(
-                              _submitGuess(),
-                            ),
-                child: const Text(
-                  'GUESS',
-                  style: TextStyle(
-                    fontFamily: 'Oswald',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 17,
+                  child: Text(
+                    _submitting ? 'CHECKING...' : 'GUESS',
+                    style: const TextStyle(
+                      fontFamily: 'Oswald',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
                   ),
                 ),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.white,
-                  side: const BorderSide(
-                    color: Color(0xFF555555),
+              child: SizedBox(
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: canAdvanceClue ? _skipClue : null,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.white,
+                    disabledForegroundColor: AppColors.grey,
+                    side: BorderSide(
+                      color: canAdvanceClue
+                          ? AppColors.white
+                          : AppColors.darkGrey,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(
-                    vertical: 14,
-                  ),
-                ),
-                onPressed: canSkip ? _skipClue : null,
-                child: const Text(
-                  'NEXT CLUE',
-                  style: TextStyle(
-                    fontFamily: 'Oswald',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 17,
+                  child: const Text(
+                    'NEXT CLUE',
+                    style: TextStyle(
+                      fontFamily: 'Oswald',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
                   ),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
-        TextButton(
-          onPressed: _roundFinished
-              ? null
-              : () => unawaited(_giveUp()),
-          child: const Text(
-            'GIVE UP',
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.grey,
-              fontWeight: FontWeight.w600,
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: FilledButton(
+            onPressed:
+                enabled ? () => unawaited(_giveUp()) : null,
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFD32F2F),
+              foregroundColor: AppColors.white,
+              disabledBackgroundColor: AppColors.darkGrey,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: const Text(
+              'GIVE UP',
+              style: TextStyle(
+                fontFamily: 'Oswald',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
             ),
           ),
         ),
