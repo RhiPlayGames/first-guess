@@ -717,25 +717,10 @@ extension _GameScreenView on _GameScreenState {
     );
   }
 
-  // Stable phone-only widget tree. In particular, the TextField below remains
-  // mounted in the same position while keyboard insets change. Replacing it
-  // with a separate compact TextField would drop iOS first-responder focus.
+  // Native phone layout: retain a stable TextField and button hierarchy while
+  // keyboard insets change. Only the image size and spacing adapt.
   Widget buildNativePhoneGamePanel({required bool keyboardOpen}) {
     final bool canPlay = !roundFinished && !showSurpriseToast && imageReady;
-
-    Widget visual({required bool compact}) => KeyedSubtree(
-      key: ValueKey('phone-${widget.gameType.name}-${currentItem.imagePath}'),
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: Stack(
-          children: [
-            Positioned.fill(child: buildVisualPanel(containImage: compact)),
-            if (isPracticeModeActive && !widget.launchedFromCaseFile)
-              const Positioned(top: 8, right: 8, child: _PracticeModeRibbon()),
-          ],
-        ),
-      ),
-    );
 
     return Stack(
       children: [
@@ -743,67 +728,79 @@ extension _GameScreenView on _GameScreenState {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             buildClueHeaderBlock(),
-            SizedBox(height: keyboardOpen ? 10 : 8),
-            // This region changes arrangement, but the answer field does not.
-            if (keyboardOpen)
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  const double gap = 12;
-                  final double imageSide = (constraints.maxWidth - gap) * 0.51;
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(width: imageSide, child: visual(compact: true)),
-                      const SizedBox(width: gap),
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _keyboardSideButton(
-                              icon: Icons.lightbulb_outline_rounded,
-                              label: 'NEXT CLUE',
-                              enabled: canPlay && !isLastClue,
-                              onPressed: showNextClue,
-                            ),
-                            const SizedBox(height: 10),
-                            _keyboardSideButton(
-                              icon: Icons.outlined_flag_rounded,
-                              label: 'GIVE UP',
-                              enabled: canPlay,
-                              onPressed: giveUpRound,
-                              destructive: true,
-                            ),
-                          ],
+            SizedBox(height: keyboardOpen ? 6 : 10),
+            // The clue never moves below the image.
+            CluePanel(clue: currentItem.clues[currentClueIndex]),
+            SizedBox(height: keyboardOpen ? 8 : 12),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const double gap = 12;
+                final double available = constraints.maxWidth - gap;
+                final double imageSide = keyboardOpen
+                    ? (available * 0.48).clamp(120.0, 180.0)
+                    : (available * 0.51);
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: imageSide,
+                      child: KeyedSubtree(
+                        key: ValueKey(
+                          'phone-${widget.gameType.name}-${currentItem.imagePath}',
+                        ),
+                        child: AspectRatio(
+                          aspectRatio: 1,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: buildVisualPanel(containImage: keyboardOpen),
+                              ),
+                              if (isPracticeModeActive && !widget.launchedFromCaseFile)
+                                const Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: _PracticeModeRibbon(),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
-                    ],
-                  );
-                },
-              )
-            else
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  CluePanel(clue: currentItem.clues[currentClueIndex]),
-                  const SizedBox(height: 8),
-                  visual(compact: false),
-                ],
-              ),
-            // Always present: same slot across both layouts.
-            keyboardOpen
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: CluePanel(clue: currentItem.clues[currentClueIndex]),
-                  )
-                : const SizedBox.shrink(),
+                    ),
+                    const SizedBox(width: gap),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _keyboardSideButton(
+                            icon: Icons.lightbulb_outline_rounded,
+                            label: 'NEXT CLUE',
+                            enabled: canPlay && !isLastClue,
+                            onPressed: showNextClue,
+                          ),
+                          const SizedBox(height: 10),
+                          _keyboardSideButton(
+                            icon: Icons.outlined_flag_rounded,
+                            label: 'GIVE UP',
+                            enabled: canPlay,
+                            onPressed: giveUpRound,
+                            destructive: true,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
             buildGameMessage(),
-            SizedBox(height: keyboardOpen ? 10 : 16),
-            // The widget is never swapped out when the keyboard opens/closes.
+            SizedBox(height: keyboardOpen ? 8 : 14),
+            // Never conditionally replace this TextField: iOS must retain
+            // its first-responder connection as the keyboard opens.
             TextField(
               controller: guessController,
               focusNode: guessFocusNode,
               enabled: canPlay,
-              autofocus: canPlay,
+              autofocus: false,
               onSubmitted: (_) {
                 if (canPlay) submitGuess();
               },
@@ -846,122 +843,29 @@ extension _GameScreenView on _GameScreenState {
               ),
             ),
             const SizedBox(height: 10),
-            if (keyboardOpen)
-              SizedBox(
-                height: 52,
-                child: FilledButton(
-                  onPressed: canPlay ? submitGuess : null,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.orange,
-                    foregroundColor: AppColors.white,
-                    disabledBackgroundColor: AppColors.darkGrey,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text(
-                    'GUESS',
-                    style: TextStyle(
-                      fontFamily: 'Oswald',
-                      fontSize: 25,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
+            SizedBox(
+              height: 52,
+              child: FilledButton(
+                onPressed: canPlay ? submitGuess : null,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.orange,
+                  foregroundColor: AppColors.white,
+                  disabledBackgroundColor: AppColors.darkGrey,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-              )
-            else
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: 48,
-                          child: FilledButton(
-                            onPressed: canPlay ? submitGuess : null,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.orange,
-                              foregroundColor: AppColors.white,
-                              disabledBackgroundColor: AppColors.darkGrey,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: const Text(
-                              'GUESS',
-                              style: TextStyle(
-                                fontFamily: 'Oswald',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: SizedBox(
-                          height: 48,
-                          child: OutlinedButton(
-                            onPressed: canPlay && !isLastClue
-                                ? showNextClue
-                                : null,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.white,
-                              disabledForegroundColor: AppColors.darkGrey,
-                              side: BorderSide(
-                                color: canPlay && !isLastClue
-                                    ? AppColors.white
-                                    : AppColors.darkGrey,
-                                width: 1.5,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: const FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                'NEXT CLUE',
-                                style: TextStyle(
-                                  fontFamily: 'Oswald',
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                child: const Text(
+                  'GUESS',
+                  style: TextStyle(
+                    fontFamily: 'Oswald',
+                    fontSize: 25,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
                   ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 48,
-                    child: FilledButton(
-                      onPressed: canPlay ? giveUpRound : null,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFD32F2F),
-                        foregroundColor: AppColors.white,
-                        disabledBackgroundColor: AppColors.darkGrey,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text(
-                        'GIVE UP',
-                        style: TextStyle(
-                          fontFamily: 'Oswald',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
+            ),
           ],
         ),
         Positioned.fill(
