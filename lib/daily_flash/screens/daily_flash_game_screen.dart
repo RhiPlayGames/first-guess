@@ -1820,7 +1820,7 @@ class _DailyFlashGameScreenState
     return SizedBox(width: double.infinity, height: 43,
       child: guess || destructive
           ? FilledButton(onPressed: enabled ? callback : null,
-              style: FilledButton.styleFrom(backgroundColor: guess ? const Color(0xFFFE5E02) : const Color(0xFFAE3932),
+              style: FilledButton.styleFrom(backgroundColor: guess ? const Color(0xFFFE5E02) : const Color(0xFFD32F2F),
                 foregroundColor: Colors.white, disabledBackgroundColor: AppColors.darkGrey,
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: text)
@@ -2066,7 +2066,7 @@ class _DailyFlashGameScreenState
 
                        if (_isInstalledPhone(context)) ...<Widget>[
                          LayoutBuilder(builder: (context, constraints) {
-                           final double side = ((constraints.maxWidth - 10) * 0.46).clamp(110.0, 175.0);
+                           final double side = ((constraints.maxWidth - 10) * 0.51).clamp(122.0, 188.0);
                            return Row(
                              children: <Widget>[
                                SizedBox(width: side, height: side,
@@ -2712,9 +2712,8 @@ class _DailyFlashQuestionImagePanel
       height:
           height ?? (isSmall ? 270 : 320),
       width: double.infinity,
-      padding:
-          EdgeInsets.all(
-        isSmall ? 16 : 20,
+      padding: EdgeInsets.all(
+        _isInstalledPhone(context) ? 0 : (isSmall ? 16 : 20),
       ),
       decoration: BoxDecoration(
         color: Colors.black,
@@ -2733,7 +2732,7 @@ class _DailyFlashQuestionImagePanel
           '$imagePath-$retryVersion',
         ),
         gaplessPlayback: true,
-        fit: BoxFit.contain,
+        fit: _isInstalledPhone(context) ? BoxFit.cover : BoxFit.contain,
         filterQuality:
             FilterQuality.high,
         errorBuilder: (

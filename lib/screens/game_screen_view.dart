@@ -19,6 +19,7 @@ extension _GameScreenView on _GameScreenState {
   }
 
   Future<void> confirmLeaveGame() async {
+    if (_useNativePhoneLayout(context)) FocusScope.of(context).unfocus();
     const String hideLeaveWarningPreferenceKey =
         'standard_game_hide_leave_warning_v1';
     const String leaveWarningCountPreferenceKey =
@@ -206,6 +207,7 @@ extension _GameScreenView on _GameScreenState {
   }
 
   Future<void> confirmReturnHome() async {
+    if (_useNativePhoneLayout(context)) FocusScope.of(context).unfocus();
     const String hideLeaveWarningPreferenceKey =
         'standard_game_hide_leave_warning_v1';
 
@@ -753,7 +755,7 @@ extension _GameScreenView on _GameScreenState {
                           child: Stack(
                             children: [
                               Positioned.fill(
-                                child: buildVisualPanel(containImage: keyboardOpen),
+                                child: buildVisualPanel(),
                               ),
                               if (isPracticeModeActive && !widget.launchedFromCaseFile)
                                 const Positioned(
@@ -882,7 +884,7 @@ extension _GameScreenView on _GameScreenState {
           ? FilledButton(
               onPressed: enabled ? onPressed : null,
               style: FilledButton.styleFrom(
-                backgroundColor: guess ? const Color(0xFFFE5E02) : const Color(0xFFAE3932),
+                backgroundColor: guess ? const Color(0xFFFE5E02) : const Color(0xFFD32F2F),
                 foregroundColor: AppColors.white,
                 disabledBackgroundColor: AppColors.darkGrey,
                 padding: const EdgeInsets.symmetric(horizontal: 5),

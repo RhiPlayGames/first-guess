@@ -16,6 +16,14 @@ import '../widgets/lives_display.dart';
 import '../widgets/milestone_reached_dialog.dart';
 import '../widgets/stats_panel.dart';
 
+bool _isInstalledPhone(BuildContext context) {
+  const bool isWeb = bool.fromEnvironment('dart.library.js_interop');
+  final platform = Theme.of(context).platform;
+  return !isWeb &&
+      (platform == TargetPlatform.iOS || platform == TargetPlatform.android) &&
+      MediaQuery.sizeOf(context).shortestSide < 600;
+}
+
 class FirstConnectionGameScreen extends StatefulWidget {
   const FirstConnectionGameScreen({super.key});
 
@@ -264,7 +272,7 @@ class _FirstConnectionGameScreenState
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          _guessFocusNode.requestFocus();
+          if (mounted && !_isInstalledPhone(context)) _guessFocusNode.requestFocus();
         }
       });
     } catch (_) {
@@ -454,7 +462,7 @@ class _FirstConnectionGameScreenState
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          _guessFocusNode.requestFocus();
+          if (mounted && !_isInstalledPhone(context)) _guessFocusNode.requestFocus();
         }
       });
 
@@ -501,7 +509,7 @@ class _FirstConnectionGameScreenState
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _guessFocusNode.requestFocus();
+        if (mounted && !_isInstalledPhone(context)) _guessFocusNode.requestFocus();
       }
     });
   }
@@ -518,7 +526,7 @@ class _FirstConnectionGameScreenState
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _guessFocusNode.requestFocus();
+        if (mounted && !_isInstalledPhone(context)) _guessFocusNode.requestFocus();
       }
     });
   }
@@ -1367,7 +1375,7 @@ class _FirstConnectionGameScreenState
           controller: _guessController,
           focusNode: _guessFocusNode,
           enabled: enabled,
-          autofocus: enabled,
+          autofocus: enabled && !_isInstalledPhone(context),
           onSubmitted: (_) {
             if (enabled) {
               _submitGuess();

@@ -1473,6 +1473,52 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
   }
 
   Widget _buildAnswerField() {
+    if (_isInstalledPhone(context)) {
+      final bool enabled = !_roundFinished && !_submitting && _lives > 0;
+      return Container(
+        height: 55,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: const Color(0xFF121212),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.orange, width: 1.5),
+        ),
+        child: Row(children: <Widget>[
+          Expanded(child: TextField(
+            controller: _answerController,
+            focusNode: _answerFocusNode,
+            autofocus: false,
+            enabled: enabled,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) { if (enabled) unawaited(_submitAnswer()); },
+            style: const TextStyle(fontFamily: 'Inter', color: AppColors.white,
+              fontSize: 17, fontWeight: FontWeight.w600),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              hintText: _phoneDateHint(),
+              hintStyle: const TextStyle(fontFamily: 'Inter', color: AppColors.white),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            ),
+          )),
+          SizedBox(width: 126, height: double.infinity, child: FilledButton(
+            onPressed: enabled ? () {
+              FocusScope.of(context).unfocus();
+              unawaited(_submitAnswer());
+            } : null,
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFFE5E02),
+              foregroundColor: AppColors.white,
+              padding: EdgeInsets.zero,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(
+                topRight: Radius.circular(12), bottomRight: Radius.circular(12))),
+            ),
+            child: const Text('GUESS', style: TextStyle(fontFamily: 'Oswald',
+              fontSize: 16, fontWeight: FontWeight.w600)),
+          )),
+        ]),
+      );
+    }
+
     final bool enabled =
         !_roundFinished && !_submitting && _lives > 0;
 

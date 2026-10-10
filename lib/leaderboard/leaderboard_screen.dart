@@ -1375,7 +1375,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'FIRST GUESS',
+                        isDesktop ? 'FIRST GUESS' : 'FIRST GUESS (FG)',
                         style: TextStyle(
                           fontFamily: 'Oswald',
                           color: Colors.white,
