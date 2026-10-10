@@ -1066,10 +1066,10 @@ class _DailyFlashFirstMatchScreenState
                 padding: EdgeInsets.only(
                   top: compactHeight ? 9 : 14,
                 ),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   border: Border(
                     top: BorderSide(
-                      color: Color(0xFF3E3E3E),
+                      color: _isInstalledPhone(context) ? const Color(0xFFFE5E02) : const Color(0xFF3E3E3E),
                       width: 1,
                     ),
                   ),
@@ -1366,7 +1366,7 @@ class _DailyFlashFirstMatchScreenState
                       ? _submitBoard
                       : null,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.orange,
+                backgroundColor: _isInstalledPhone(context) ? const Color(0xFFFE5E02) : AppColors.orange,
                 foregroundColor: AppColors.white,
                 disabledBackgroundColor: AppColors.darkGrey,
                 shape: RoundedRectangleBorder(
@@ -1429,9 +1429,9 @@ class _ColumnHeading extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'Oswald',
-        color: AppColors.orange,
+        color: _isInstalledPhone(context) ? const Color(0xFFFE5E02) : AppColors.orange,
         fontSize: 16,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.5,

@@ -1301,16 +1301,16 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
           decoration: InputDecoration(
             suffixIcon: _isInstalledPhone(context)
                 ? Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 5, 5, 5),
+                    padding: EdgeInsets.zero,
                     child: SizedBox(
-                      width: 88,
+                      width: 110,
                       child: FilledButton(
                         onPressed: enabled ? _submitGuess : null,
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.orange,
+                          backgroundColor: const Color(0xFFFE5E02),
                           foregroundColor: AppColors.white,
                           padding: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(topRight: Radius.circular(12), bottomRight: Radius.circular(12))),
                         ),
                         child: const Text('GUESS', style: TextStyle(fontFamily: 'Oswald', fontSize: 16, fontWeight: FontWeight.w600)),
                       ),

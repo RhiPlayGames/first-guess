@@ -777,13 +777,13 @@ extension _GameScreenView on _GameScreenState {
                              onPressed: submitGuess,
                              guess: true,
                            ),
-                           const SizedBox(height: 6),
+                           const SizedBox(height: 8),
                            _keyboardSideButton(
                              label: 'NEXT CLUE',
                              enabled: canPlay && !isLastClue,
                              onPressed: showNextClue,
                            ),
-                           const SizedBox(height: 6),
+                           const SizedBox(height: 8),
                            _keyboardSideButton(
                              label: 'GIVE UP',
                              enabled: canPlay,
@@ -884,12 +884,12 @@ extension _GameScreenView on _GameScreenState {
     );
     return SizedBox(
       width: double.infinity,
-      height: 44,
+      height: 46,
       child: guess || destructive
           ? FilledButton(
               onPressed: enabled ? onPressed : null,
               style: FilledButton.styleFrom(
-                backgroundColor: guess ? const Color(0xFFD96113) : const Color(0xFFAE3932),
+                backgroundColor: guess ? const Color(0xFFFE5E02) : const Color(0xFFAE3932),
                 foregroundColor: AppColors.white,
                 disabledBackgroundColor: AppColors.darkGrey,
                 padding: const EdgeInsets.symmetric(horizontal: 5),
@@ -1126,10 +1126,10 @@ extension _GameScreenView on _GameScreenState {
                       'CLUE ${currentClueIndex + 1} / '
                       '${currentItem.clues.length}',
                       maxLines: 1,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Oswald',
                         color: AppColors.white,
-                        fontSize: 12,
+                        fontSize: _useNativePhoneLayout(context) ? 14 : 12,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.2,
                       ),
@@ -1150,26 +1150,26 @@ extension _GameScreenView on _GameScreenState {
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerRight,
                     child: isPracticeModeActive
-                        ? const Text(
+                        ? Text(
                             '0 XP',
                             maxLines: 1,
                             style: TextStyle(
                               fontFamily: 'Oswald',
                               color: AppColors.orange,
-                              fontSize: 12,
+                              fontSize: _useNativePhoneLayout(context) ? 14 : 12,
                               fontWeight: FontWeight.w700,
                             ),
                           )
                         : currentClueIndex == 0
                         ? Text.rich(
-                            const TextSpan(
+                            TextSpan(
                               children: [
                                 TextSpan(
                                   text: '100 XP',
                                   style: TextStyle(
                                     fontFamily: 'Oswald',
                                     color: AppColors.white,
-                                    fontSize: 11,
+                                    fontSize: _useNativePhoneLayout(context) ? 13 : 11,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -1178,7 +1178,7 @@ extension _GameScreenView on _GameScreenState {
                                   style: TextStyle(
                                     fontFamily: 'Oswald',
                                     color: AppColors.orange,
-                                    fontSize: 11,
+                                    fontSize: _useNativePhoneLayout(context) ? 13 : 11,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -1189,10 +1189,10 @@ extension _GameScreenView on _GameScreenState {
                         : Text(
                             '$pointsAvailable PTS',
                             maxLines: 1,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'Oswald',
                               color: AppColors.white,
-                              fontSize: 12,
+                              fontSize: _useNativePhoneLayout(context) ? 14 : 12,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

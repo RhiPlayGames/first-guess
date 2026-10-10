@@ -1819,7 +1819,7 @@ class _DailyFlashGameScreenState
     return SizedBox(width: double.infinity, height: 43,
       child: guess || destructive
           ? FilledButton(onPressed: enabled ? callback : null,
-              style: FilledButton.styleFrom(backgroundColor: guess ? const Color(0xFFD96113) : const Color(0xFFAE3932),
+              style: FilledButton.styleFrom(backgroundColor: guess ? const Color(0xFFFE5E02) : const Color(0xFFAE3932),
                 foregroundColor: Colors.white, disabledBackgroundColor: AppColors.darkGrey,
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: text)

@@ -1318,10 +1318,10 @@ class _FirstMatchGameScreenState extends State<FirstMatchGameScreen> {
                 padding: EdgeInsets.only(
                   top: compactHeight ? 9 : 14,
                 ),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   border: Border(
                     top: BorderSide(
-                      color: Color(0xFF3E3E3E),
+                      color: _isInstalledPhone(context) ? const Color(0xFFFE5E02) : const Color(0xFF3E3E3E),
                       width: 1,
                     ),
                   ),
@@ -1563,7 +1563,7 @@ class _FirstMatchGameScreenState extends State<FirstMatchGameScreen> {
                       ? _submitMatches
                       : null,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.orange,
+                backgroundColor: _isInstalledPhone(context) ? const Color(0xFFFE5E02) : AppColors.orange,
                 foregroundColor: AppColors.white,
                 disabledBackgroundColor: AppColors.darkGrey,
                 shape: RoundedRectangleBorder(
@@ -1627,9 +1627,9 @@ class _ColumnHeading extends StatelessWidget {
     return Text(
       text,
       textAlign: TextAlign.center,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'Oswald',
-        color: AppColors.grey,
+        color: _isInstalledPhone(context) ? const Color(0xFFFE5E02) : AppColors.grey,
         fontSize: 14,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.6,

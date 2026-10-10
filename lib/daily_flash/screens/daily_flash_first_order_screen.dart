@@ -1432,7 +1432,7 @@ class _DailyFlashFirstOrderScreenState
             child: FilledButton(
               onPressed: enabled ? _submitOrder : null,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.orange,
+                backgroundColor: _isInstalledPhone(context) ? const Color(0xFFFE5E02) : AppColors.orange,
                 foregroundColor: AppColors.white,
                 disabledBackgroundColor: AppColors.darkGrey,
                 shape: RoundedRectangleBorder(
