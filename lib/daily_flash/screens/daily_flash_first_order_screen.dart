@@ -14,6 +14,14 @@ import '../../widgets/game_dialogs.dart';
 import '../services/daily_flash_game_progress_service.dart';
 import '../widgets/daily_flash_results_dialog.dart';
 
+bool _isInstalledPhone(BuildContext context) {
+  const bool isWeb = bool.fromEnvironment('dart.library.js_interop');
+  final TargetPlatform platform = Theme.of(context).platform;
+  return !isWeb &&
+      (platform == TargetPlatform.iOS || platform == TargetPlatform.android) &&
+      MediaQuery.sizeOf(context).shortestSide < 600;
+}
+
 class _SixDotDragGrip extends StatelessWidget {
   final Color color;
 
@@ -969,9 +977,9 @@ class _DailyFlashFirstOrderScreenState
                 SizedBox(height: compactHeight ? 8 : 16),
                 _buildPrompt(question),
                 _buildGameMessage(),
-                SizedBox(height: compactHeight ? 7 : 14),
+                SizedBox(height: _isInstalledPhone(context) ? 5 : (compactHeight ? 7 : 14)),
                 _buildOrderList(isDesktop: isDesktop),
-                SizedBox(height: compactHeight ? 8 : 16),
+                SizedBox(height: _isInstalledPhone(context) ? 6 : (compactHeight ? 8 : 16)),
                 _buildActionButtons(),
               ],
             ),
@@ -1277,7 +1285,7 @@ class _DailyFlashFirstOrderScreenState
       children.add(
         buildDropZone(
           slot: 0,
-          idleHeight: compactHeight ? 20 : 40,
+          idleHeight: _isInstalledPhone(context) ? 9 : (compactHeight ? 20 : 40),
         ),
       );
     }
@@ -1397,7 +1405,7 @@ class _DailyFlashFirstOrderScreenState
         children.add(
           buildDropZone(
             slot: slotAfter,
-            idleHeight: compactHeight ? 20 : 40,
+            idleHeight: _isInstalledPhone(context) ? 9 : (compactHeight ? 20 : 40),
           ),
         );
       }

@@ -771,20 +771,25 @@ extension _GameScreenView on _GameScreenState {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _keyboardSideButton(
-                            icon: Icons.lightbulb_outline_rounded,
-                            label: 'NEXT CLUE',
-                            enabled: canPlay && !isLastClue,
-                            onPressed: showNextClue,
-                          ),
-                          const SizedBox(height: 10),
-                          _keyboardSideButton(
-                            icon: Icons.outlined_flag_rounded,
-                            label: 'GIVE UP',
-                            enabled: canPlay,
-                            onPressed: giveUpRound,
-                            destructive: true,
-                          ),
+                           _keyboardSideButton(
+                             label: 'GUESS',
+                             enabled: canPlay,
+                             onPressed: submitGuess,
+                             guess: true,
+                           ),
+                           const SizedBox(height: 6),
+                           _keyboardSideButton(
+                             label: 'NEXT CLUE',
+                             enabled: canPlay && !isLastClue,
+                             onPressed: showNextClue,
+                           ),
+                           const SizedBox(height: 6),
+                           _keyboardSideButton(
+                             label: 'GIVE UP',
+                             enabled: canPlay,
+                             onPressed: giveUpRound,
+                             destructive: true,
+                           ),
                         ],
                       ),
                     ),
@@ -842,30 +847,6 @@ extension _GameScreenView on _GameScreenState {
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                onPressed: canPlay ? submitGuess : null,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.orange,
-                  foregroundColor: AppColors.white,
-                  disabledBackgroundColor: AppColors.darkGrey,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: const Text(
-                  'GUESS',
-                  style: TextStyle(
-                    fontFamily: 'Oswald',
-                    fontSize: 25,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
         Positioned.fill(
@@ -888,68 +869,44 @@ extension _GameScreenView on _GameScreenState {
   }
 
   Widget _keyboardSideButton({
-    required IconData icon,
     required String label,
     required bool enabled,
     required VoidCallback onPressed,
     bool destructive = false,
+    bool guess = false,
   }) {
+    final BorderRadius radius = BorderRadius.circular(13);
+    final Widget text = FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(label, maxLines: 1, style: const TextStyle(
+        fontFamily: 'Oswald', fontSize: 19, fontWeight: FontWeight.w700,
+      )),
+    );
     return SizedBox(
       width: double.infinity,
-      height: 54,
-      child: destructive
-          ? FilledButton.icon(
+      height: 44,
+      child: guess || destructive
+          ? FilledButton(
               onPressed: enabled ? onPressed : null,
-              icon: Icon(icon, size: 23),
-              label: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  style: const TextStyle(
-                    fontFamily: 'Oswald',
-                    fontSize: 21,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFD32F2F),
+                backgroundColor: guess ? const Color(0xFFD96113) : const Color(0xFFAE3932),
                 foregroundColor: AppColors.white,
                 disabledBackgroundColor: AppColors.darkGrey,
                 padding: const EdgeInsets.symmetric(horizontal: 5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: radius),
               ),
+              child: text,
             )
-          : OutlinedButton.icon(
+          : OutlinedButton(
               onPressed: enabled ? onPressed : null,
-              icon: Icon(icon, size: 23),
-              label: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  style: const TextStyle(
-                    fontFamily: 'Oswald',
-                    fontSize: 21,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.white,
                 disabledForegroundColor: AppColors.darkGrey,
+                side: BorderSide(color: enabled ? const Color(0xFF777777) : AppColors.darkGrey, width: 1.7),
                 padding: const EdgeInsets.symmetric(horizontal: 5),
-                side: BorderSide(
-                  color: enabled ? AppColors.white : AppColors.darkGrey,
-                  width: 1.7,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: radius),
               ),
+              child: text,
             ),
     );
   }

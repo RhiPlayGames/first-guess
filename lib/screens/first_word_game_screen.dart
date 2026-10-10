@@ -16,6 +16,14 @@ import '../widgets/lives_display.dart';
 import '../widgets/milestone_reached_dialog.dart';
 import '../widgets/stats_panel.dart';
 
+bool _isInstalledPhone(BuildContext context) {
+  const bool isWeb = bool.fromEnvironment('dart.library.js_interop');
+  final TargetPlatform platform = Theme.of(context).platform;
+  return !isWeb &&
+      (platform == TargetPlatform.iOS || platform == TargetPlatform.android) &&
+      MediaQuery.sizeOf(context).shortestSide < 600;
+}
+
 class FirstWordGameScreen extends StatefulWidget {
   const FirstWordGameScreen({super.key});
 
@@ -1137,9 +1145,9 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
                 );
               },
             ),
-            const SizedBox(height: 18),
+            SizedBox(height: _isInstalledPhone(context) ? 6 : 18),
             SizedBox(
-              height: isDesktop ? 88 : 76,
+              height: _isInstalledPhone(context) ? 44 : (isDesktop ? 88 : 76),
               child: Center(
                 child: _buildWordPattern(
                   question.patterns[_clueIndex],
@@ -1147,7 +1155,7 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: _isInstalledPhone(context) ? 6 : 16),
             _buildFirstWordGuessPanel(),
               ],
             ),
@@ -1290,7 +1298,25 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
             color: AppColors.white,
             fontSize: 17,
           ),
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
+            suffixIcon: _isInstalledPhone(context)
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 5, 5, 5),
+                    child: SizedBox(
+                      width: 88,
+                      child: FilledButton(
+                        onPressed: enabled ? _submitGuess : null,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.orange,
+                          foregroundColor: AppColors.white,
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                        ),
+                        child: const Text('GUESS', style: TextStyle(fontFamily: 'Oswald', fontSize: 16, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  )
+                : null,
             hintText: 'Type your word...',
             hintStyle: TextStyle(
               fontFamily: 'Inter',
@@ -1301,7 +1327,7 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
             fillColor: AppColors.panel,
             contentPadding: EdgeInsets.symmetric(
               horizontal: 18,
-              vertical: 22,
+              vertical: _isInstalledPhone(context) ? 12 : 22,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(
@@ -1333,7 +1359,7 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
         const SizedBox(height: 10),
         Row(
           children: <Widget>[
-            Expanded(
+            if (!_isInstalledPhone(context)) Expanded(
               child: SizedBox(
                 height: 48,
                 child: FilledButton(
@@ -1358,7 +1384,7 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            if (!_isInstalledPhone(context)) const SizedBox(width: 12),
             Expanded(
               child: SizedBox(
                 height: 48,
@@ -1392,10 +1418,27 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
                 ),
               ),
             ),
+            if (_isInstalledPhone(context)) ...<Widget>[
+              const SizedBox(width: 10),
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: FilledButton(
+                    onPressed: enabled ? _giveUp : null,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFAF3932),
+                      foregroundColor: AppColors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('GIVE UP', style: TextStyle(fontFamily: 'Oswald', fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
-        const SizedBox(height: 12),
-        SizedBox(
+        if (!_isInstalledPhone(context)) const SizedBox(height: 12),
+        if (!_isInstalledPhone(context)) SizedBox(
           width: double.infinity,
           height: 48,
           child: FilledButton(

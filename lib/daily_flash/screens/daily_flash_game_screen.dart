@@ -38,6 +38,14 @@ enum _DailyFlashGuessMatch {
   incorrect,
 }
 
+bool _isInstalledPhone(BuildContext context) {
+  const bool isWeb = bool.fromEnvironment('dart.library.js_interop');
+  final TargetPlatform platform = Theme.of(context).platform;
+  return !isWeb &&
+      (platform == TargetPlatform.iOS || platform == TargetPlatform.android) &&
+      MediaQuery.sizeOf(context).shortestSide < 600;
+}
+
 class DailyFlashGameScreen extends StatefulWidget {
   final VoidCallback? onChallengeFinished;
 
@@ -1805,6 +1813,24 @@ class _DailyFlashGameScreenState
   // SCREEN
   // =========================================================
 
+  Widget _phoneClassicButton(String label, bool enabled, VoidCallback callback, {bool guess = false, bool destructive = false}) {
+    final Widget text = FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1,
+      style: const TextStyle(fontFamily: 'Oswald', fontSize: 18, fontWeight: FontWeight.w700)));
+    return SizedBox(width: double.infinity, height: 43,
+      child: guess || destructive
+          ? FilledButton(onPressed: enabled ? callback : null,
+              style: FilledButton.styleFrom(backgroundColor: guess ? const Color(0xFFD96113) : const Color(0xFFAE3932),
+                foregroundColor: Colors.white, disabledBackgroundColor: AppColors.darkGrey,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: text)
+          : OutlinedButton(onPressed: enabled ? callback : null,
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.white,
+                side: const BorderSide(color: Color(0xFF777777), width: 1.7),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: text),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (hasTechnicalError) {
@@ -2037,6 +2063,52 @@ class _DailyFlashGameScreenState
                                 : 10,
                       ),
 
+                       if (_isInstalledPhone(context)) ...<Widget>[
+                         LayoutBuilder(builder: (context, constraints) {
+                           final double side = ((constraints.maxWidth - 10) * 0.46).clamp(110.0, 175.0);
+                           return Row(
+                             children: <Widget>[
+                               SizedBox(width: side, height: side,
+                                 child: _DailyFlashQuestionImagePanel(
+                                   key: ValueKey<String>('phone-${currentQuestion.answer}'),
+                                   imagePath: currentQuestion.imagePath,
+                                   retryVersion: imageRetryVersion,
+                                   onImageError: _showTechnicalError,
+                                   isSmall: true,
+                                   height: side,
+                                 ),
+                               ),
+                               const SizedBox(width: 10),
+                               Expanded(child: Column(children: <Widget>[
+                                 _phoneClassicButton('GUESS', !questionFinished && !challengeFinished, submitGuess, guess: true),
+                                 const SizedBox(height: 5),
+                                 _phoneClassicButton('NEXT CLUE', !questionFinished && !challengeFinished && !isLastClue, nextCluePressed),
+                                 const SizedBox(height: 5),
+                                 _phoneClassicButton('GIVE UP', !questionFinished && !challengeFinished, finishFailedQuestion, destructive: true),
+                               ])),
+                             ],
+                           );
+                         }),
+                         const SizedBox(height: 7),
+                         TextField(
+                           controller: guessController,
+                           focusNode: guessFocusNode,
+                           enabled: !questionFinished && !challengeFinished,
+                           autofocus: false,
+                           textCapitalization: TextCapitalization.words,
+                           textInputAction: TextInputAction.done,
+                           onSubmitted: (_) { if (!questionFinished && !challengeFinished) submitGuess(); },
+                           style: const TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 16),
+                           decoration: InputDecoration(
+                             hintText: 'Type your guess...',
+                             hintStyle: const TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 16),
+                             filled: true, fillColor: AppColors.panel,
+                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.orange)),
+                             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.orange, width: 2)),
+                           ),
+                         ),
+                       ] else ...<Widget>[
                       _DailyFlashQuestionImagePanel(
                         key:
                             ValueKey<
@@ -2062,7 +2134,8 @@ class _DailyFlashGameScreenState
                                 : 10,
                       ),
 
-                      GuessPanel(
+                       ],
+                      if (!_isInstalledPhone(context)) GuessPanel(
                         controller: guessController,
                         focusNode: guessFocusNode,
                         enabled: !questionFinished && !challengeFinished,

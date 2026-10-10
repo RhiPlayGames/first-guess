@@ -16,6 +16,14 @@ import '../widgets/lives_display.dart';
 import '../widgets/milestone_reached_dialog.dart';
 import '../widgets/stats_panel.dart';
 
+bool _isInstalledPhone(BuildContext context) {
+  const bool isWeb = bool.fromEnvironment('dart.library.js_interop');
+  final TargetPlatform platform = Theme.of(context).platform;
+  return !isWeb &&
+      (platform == TargetPlatform.iOS || platform == TargetPlatform.android) &&
+      MediaQuery.sizeOf(context).shortestSide < 600;
+}
+
 class FirstDateGameScreen extends StatefulWidget {
   const FirstDateGameScreen({super.key});
 
@@ -1275,8 +1283,8 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
               ],
               _buildStatusBlock(),
               const SizedBox(height: 14),
-              _buildPromptCard(),
-              const SizedBox(height: 12),
+              if (!_isInstalledPhone(context)) _buildPromptCard(),
+              SizedBox(height: _isInstalledPhone(context) ? 0 : 12),
               _buildClueCard(isDesktop: isDesktop),
               const SizedBox(height: 14),
               _buildAnswerField(),
@@ -1484,7 +1492,27 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
         fontWeight: FontWeight.w600,
       ),
       decoration: InputDecoration(
-        hintText: _answerHint(),
+        suffixIcon: _isInstalledPhone(context)
+            ? Padding(
+                padding: const EdgeInsets.fromLTRB(0, 5, 5, 5),
+                child: SizedBox(
+                  width: 90,
+                  child: FilledButton(
+                    onPressed: enabled ? () => unawaited(_submitAnswer()) : null,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.orange,
+                      foregroundColor: AppColors.white,
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                    ),
+                    child: const Text('GUESS', style: TextStyle(fontFamily: 'Oswald', fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              )
+            : null,
+        hintText: _isInstalledPhone(context)
+            ? _phoneDateHint()
+            : _answerHint(),
         hintStyle: const TextStyle(
           color: AppColors.white,
           fontFamily: 'Inter',
@@ -1519,6 +1547,15 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
     );
   }
 
+  String _phoneDateHint() {
+    switch (_question?.answerType) {
+      case 'year': return 'GUESS THE YEAR...';
+      case 'month': return 'GUESS THE MONTH...';
+      case 'month_year': return 'GUESS MONTH AND YEAR...';
+      default: return 'GUESS THE DATE...';
+    }
+  }
+
   String _answerHint() {
     switch (_question?.answerType) {
       case 'year':
@@ -1539,6 +1576,42 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
         enabled &&
         _question != null &&
         _clueIndex < _question!.clues.length - 1;
+
+    if (_isInstalledPhone(context)) {
+      return Row(
+        children: <Widget>[
+          Expanded(
+            child: SizedBox(
+              height: 42,
+              child: OutlinedButton(
+                onPressed: canAdvanceClue ? _skipClue : null,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.white,
+                  side: const BorderSide(color: Color(0xFF777777), width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                ),
+                child: const FittedBox(fit: BoxFit.scaleDown, child: Text('NEXT CLUE', style: TextStyle(fontFamily: 'Oswald', fontWeight: FontWeight.w600, fontSize: 16))),
+              ),
+            ),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: SizedBox(
+              height: 42,
+              child: FilledButton(
+                onPressed: enabled ? () => unawaited(_giveUp()) : null,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFAF3932),
+                  foregroundColor: AppColors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                ),
+                child: const Text('GIVE UP', style: TextStyle(fontFamily: 'Oswald', fontWeight: FontWeight.w600, fontSize: 16)),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
     return Column(
       children: <Widget>[

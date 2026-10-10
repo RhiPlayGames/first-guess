@@ -14,6 +14,14 @@ import '../../widgets/lives_display.dart';
 import '../services/daily_flash_game_progress_service.dart';
 import '../widgets/daily_flash_results_dialog.dart';
 
+bool _isInstalledPhone(BuildContext context) {
+  const bool isWeb = bool.fromEnvironment('dart.library.js_interop');
+  final TargetPlatform platform = Theme.of(context).platform;
+  return !isWeb &&
+      (platform == TargetPlatform.iOS || platform == TargetPlatform.android) &&
+      MediaQuery.sizeOf(context).shortestSide < 600;
+}
+
 class DailyFlashFirstMatchScreen extends StatefulWidget {
   final VoidCallback? onChallengeFinished;
 
@@ -1177,7 +1185,7 @@ class _DailyFlashFirstMatchScreenState
       width: double.infinity,
       padding: EdgeInsets.symmetric(
         horizontal: 16,
-        vertical: compactHeight ? 8 : 12,
+        vertical: _isInstalledPhone(context) ? 7 : (compactHeight ? 8 : 12),
       ),
       decoration: BoxDecoration(
         color: const Color(0xFF151515),
@@ -1187,13 +1195,15 @@ class _DailyFlashFirstMatchScreenState
           width: 1,
         ),
       ),
-      child: const Text(
-        'SELECT A LEFT ITEM, THEN CHOOSE ITS MATCH ON THE RIGHT',
+      child: Text(
+        _isInstalledPhone(context)
+            ? 'SELECT LEFT, THEN MATCH TO THE RIGHT'
+            : 'SELECT A LEFT ITEM, THEN CHOOSE ITS MATCH ON THE RIGHT',
         textAlign: TextAlign.center,
         style: TextStyle(
           fontFamily: 'Oswald',
           color: AppColors.white,
-          fontSize: 17,
+          fontSize: _isInstalledPhone(context) ? 14 : 17,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.3,
           height: 1.1,
