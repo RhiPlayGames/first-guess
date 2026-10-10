@@ -428,6 +428,7 @@ extension _GameScreenLogic on _GameScreenState {
   }
 
   Future<void> submitGuess() async {
+    if (_useNativePhoneLayout(context)) FocusScope.of(context).unfocus();
     if (roundFinished) {
       return;
     }
@@ -509,7 +510,7 @@ extension _GameScreenLogic on _GameScreenState {
             return;
           }
 
-          guessFocusNode.requestFocus();
+          if (!_useNativePhoneLayout(context)) guessFocusNode.requestFocus();
 
           guessController.selection =
               TextSelection(
@@ -602,7 +603,7 @@ extension _GameScreenLogic on _GameScreenState {
             return;
           }
 
-          guessFocusNode.requestFocus();
+          if (!_useNativePhoneLayout(context)) guessFocusNode.requestFocus();
 
           guessController.selection =
               TextSelection(
@@ -2247,7 +2248,7 @@ extension _GameScreenLogic on _GameScreenState {
         return;
       }
 
-      guessFocusNode.requestFocus();
+      if (!_useNativePhoneLayout(context)) guessFocusNode.requestFocus();
     });
   }
 

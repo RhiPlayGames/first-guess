@@ -1285,7 +1285,7 @@ class _DailyFlashFirstOrderScreenState
       children.add(
         buildDropZone(
           slot: 0,
-          idleHeight: _isInstalledPhone(context) ? 9 : (compactHeight ? 20 : 40),
+          idleHeight: _isInstalledPhone(context) ? 17 : (compactHeight ? 20 : 40),
         ),
       );
     }
@@ -1405,7 +1405,7 @@ class _DailyFlashFirstOrderScreenState
         children.add(
           buildDropZone(
             slot: slotAfter,
-            idleHeight: _isInstalledPhone(context) ? 9 : (compactHeight ? 20 : 40),
+            idleHeight: _isInstalledPhone(context) ? 17 : (compactHeight ? 20 : 40),
           ),
         );
       }

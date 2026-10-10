@@ -217,7 +217,7 @@ class _DailyFlashFirstDateScreenState
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          _answerFocusNode.requestFocus();
+          if (!_isInstalledPhone(context)) _answerFocusNode.requestFocus();
         }
       });
     } catch (_) {
@@ -360,6 +360,7 @@ class _DailyFlashFirstDateScreenState
   }
 
   Future<void> _submitGuess() async {
+    if (_isInstalledPhone(context)) FocusScope.of(context).unfocus();
     final _DailyFlashFirstDateQuestion? question = _question;
 
     if (question == null ||
@@ -432,7 +433,7 @@ class _DailyFlashFirstDateScreenState
     );
 
     if (mounted) {
-      _answerFocusNode.requestFocus();
+      if (!_isInstalledPhone(context)) _answerFocusNode.requestFocus();
     }
   }
 
@@ -453,7 +454,7 @@ class _DailyFlashFirstDateScreenState
       _message = null;
     });
 
-    _answerFocusNode.requestFocus();
+    if (!_isInstalledPhone(context)) _answerFocusNode.requestFocus();
   }
 
   Future<void> _finishCorrect() async {
@@ -1176,7 +1177,7 @@ class _DailyFlashFirstDateScreenState
             ? Padding(
                 padding: EdgeInsets.zero,
                 child: SizedBox(
-                  width: 110,
+                  width: 126,
                   child: FilledButton(
                     onPressed: enabled ? () => unawaited(_submitGuess()) : null,
                     style: FilledButton.styleFrom(

@@ -307,7 +307,7 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          _answerFocusNode.requestFocus();
+          if (!_isInstalledPhone(context)) _answerFocusNode.requestFocus();
         }
       });
     } catch (_) {
@@ -512,6 +512,7 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
   }
 
   Future<void> _submitAnswer() async {
+    if (_isInstalledPhone(context)) FocusScope.of(context).unfocus();
     final _FirstDateQuestion? question = _question;
     final String guess = _answerController.text.trim();
 
@@ -585,7 +586,7 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
     );
 
     if (mounted) {
-      _answerFocusNode.requestFocus();
+      if (!_isInstalledPhone(context)) _answerFocusNode.requestFocus();
     }
   }
 
@@ -609,7 +610,7 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
       _message = null;
     });
 
-    _answerFocusNode.requestFocus();
+    if (!_isInstalledPhone(context)) _answerFocusNode.requestFocus();
   }
 
   Future<void> _showNewAchievementPopups({
@@ -1496,7 +1497,7 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
             ? Padding(
                 padding: EdgeInsets.zero,
                 child: SizedBox(
-                  width: 110,
+                  width: 126,
                   child: FilledButton(
                     onPressed: enabled ? () => unawaited(_submitAnswer()) : null,
                     style: FilledButton.styleFrom(

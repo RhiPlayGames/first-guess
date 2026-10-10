@@ -345,7 +345,7 @@ class _DailyFlashGameScreenState
       // the same question available to retry.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          guessFocusNode.requestFocus();
+          if (!_isInstalledPhone(context)) guessFocusNode.requestFocus();
         }
       });
 
@@ -845,6 +845,7 @@ class _DailyFlashGameScreenState
   // =========================================================
 
   Future<void> submitGuess() async {
+    if (_isInstalledPhone(context)) FocusScope.of(context).unfocus();
     if (questionFinished ||
         challengeFinished) {
       return;
@@ -1062,7 +1063,7 @@ class _DailyFlashGameScreenState
         return;
       }
 
-      guessFocusNode.requestFocus();
+      if (!_isInstalledPhone(context)) guessFocusNode.requestFocus();
 
       guessController.selection =
           TextSelection(
@@ -1157,7 +1158,7 @@ class _DailyFlashGameScreenState
     WidgetsBinding.instance
         .addPostFrameCallback((_) {
       if (mounted) {
-        guessFocusNode.requestFocus();
+        if (!_isInstalledPhone(context)) guessFocusNode.requestFocus();
       }
     });
   }
@@ -1311,7 +1312,7 @@ class _DailyFlashGameScreenState
     // lives or gives up.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        guessFocusNode.requestFocus();
+        if (!_isInstalledPhone(context)) guessFocusNode.requestFocus();
       }
     });
   }
@@ -2080,8 +2081,6 @@ class _DailyFlashGameScreenState
                                ),
                                const SizedBox(width: 10),
                                Expanded(child: Column(children: <Widget>[
-                                 _phoneClassicButton('GUESS', !questionFinished && !challengeFinished, submitGuess, guess: true),
-                                 const SizedBox(height: 5),
                                  _phoneClassicButton('NEXT CLUE', !questionFinished && !challengeFinished && !isLastClue, nextCluePressed),
                                  const SizedBox(height: 5),
                                  _phoneClassicButton('GIVE UP', !questionFinished && !challengeFinished, finishFailedQuestion, destructive: true),
@@ -2090,23 +2089,43 @@ class _DailyFlashGameScreenState
                            );
                          }),
                          const SizedBox(height: 7),
-                         TextField(
-                           controller: guessController,
-                           focusNode: guessFocusNode,
-                           enabled: !questionFinished && !challengeFinished,
-                           autofocus: false,
-                           textCapitalization: TextCapitalization.words,
-                           textInputAction: TextInputAction.done,
-                           onSubmitted: (_) { if (!questionFinished && !challengeFinished) submitGuess(); },
-                           style: const TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 16),
-                           decoration: InputDecoration(
-                             hintText: 'Type your guess...',
-                             hintStyle: const TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 16),
-                             filled: true, fillColor: AppColors.panel,
-                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.orange)),
-                             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.orange, width: 2)),
+                         Container(
+                           height: 54,
+                           decoration: BoxDecoration(
+                             color: AppColors.panel,
+                             border: Border.all(color: AppColors.orange, width: 1.5),
+                             borderRadius: BorderRadius.circular(14),
                            ),
+                           clipBehavior: Clip.antiAlias,
+                           child: Row(children: <Widget>[
+                             Expanded(child: TextField(
+                               controller: guessController,
+                               focusNode: guessFocusNode,
+                               enabled: !questionFinished && !challengeFinished,
+                               autofocus: false,
+                               textCapitalization: TextCapitalization.words,
+                               textInputAction: TextInputAction.done,
+                               onSubmitted: (_) { if (!questionFinished && !challengeFinished) submitGuess(); },
+                               style: const TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 16),
+                               decoration: const InputDecoration(
+                                 hintText: 'Type your guess...',
+                                 hintStyle: TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 16),
+                                 border: InputBorder.none,
+                                 contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+                               ),
+                             )),
+                             SizedBox(width: 126, height: double.infinity, child: FilledButton(
+                               onPressed: !questionFinished && !challengeFinished
+                                 ? () { FocusScope.of(context).unfocus(); submitGuess(); } : null,
+                               style: FilledButton.styleFrom(
+                                 backgroundColor: const Color(0xFFFE5E02),
+                                 foregroundColor: Colors.white,
+                                 padding: EdgeInsets.zero,
+                                 shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(topRight: Radius.circular(12), bottomRight: Radius.circular(12))),
+                               ),
+                               child: const Text('GUESS', style: TextStyle(fontFamily: 'Oswald', fontSize: 17, fontWeight: FontWeight.w700)),
+                             )),
+                           ]),
                          ),
                        ] else ...<Widget>[
                       _DailyFlashQuestionImagePanel(

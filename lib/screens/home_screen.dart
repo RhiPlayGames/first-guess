@@ -540,7 +540,7 @@ class _DailyFlashHomeBannerState
         BoxConstraints constraints,
       ) {
         final bool isDesktop = constraints.maxWidth >= 900;
-        // Only installed iOS/Android phones use the new, taller artwork.
+        // Only installed iOS/Android phones use the compact Daily Flash artwork.
         // Tablets and all website layouts retain their original banner.
         const bool isWeb = bool.fromEnvironment('dart.library.js_interop');
         final TargetPlatform platform = Theme.of(context).platform;
@@ -551,6 +551,9 @@ class _DailyFlashHomeBannerState
 
         if (isNativePhone) {
           final double width = constraints.maxWidth;
+          // The app-only banner is 2172 x 724 (a 3:1 aspect ratio).
+          // Keep the image proportional so it is shorter without cropping.
+          final double bannerHeight = width / 3;
           return Material(
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(14),
@@ -560,7 +563,7 @@ class _DailyFlashHomeBannerState
               borderRadius: BorderRadius.circular(14),
               child: SizedBox(
                 width: double.infinity,
-                height: width / 2, // Mobile artwork supplied at 2:1.
+                height: bannerHeight,
                 child: Stack(
                   fit: StackFit.expand,
                   children: <Widget>[
@@ -569,27 +572,30 @@ class _DailyFlashHomeBannerState
                       fit: BoxFit.fill,
                       filterQuality: FilterQuality.high,
                     ),
-                    // "ENDS IN" is already printed on the artwork.
-                    // Overlay *only* the live value in its empty black area.
+                    // "ENDS IN:" is printed on the image. The timer remains
+                    // live Flutter text, positioned in the clear area to its
+                    // right, with no timer box or extra background.
                     Positioned(
-                      left: width * 0.59,
-                      width: width * 0.36,
-                      top: width * 0.285,
-                      height: width * 0.065,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.center,
-                        child: Text(
-                          _countdownText,
-                          maxLines: 1,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontFamily: 'Oswald',
-                            color: Color(0xFFFFC94A),
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.2,
-                            height: 1,
+                      left: width * 0.705,
+                      width: width * 0.255,
+                      top: bannerHeight * 0.60,
+                      height: bannerHeight * 0.20,
+                      child: Center(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            _countdownText,
+                            maxLines: 1,
+                            textAlign: TextAlign.left,
+                            style: const TextStyle(
+                              fontFamily: 'Oswald',
+                              color: Color(0xFFFFC94A),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.1,
+                              height: 1,
+                            ),
                           ),
                         ),
                       ),

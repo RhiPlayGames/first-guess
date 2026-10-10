@@ -254,7 +254,7 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          _guessFocusNode.requestFocus();
+          if (!_isInstalledPhone(context)) _guessFocusNode.requestFocus();
         }
       });
     } catch (_) {
@@ -385,6 +385,7 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
   }
 
   Future<void> _submitGuess() async {
+    if (_isInstalledPhone(context)) FocusScope.of(context).unfocus();
     final _FirstWordQuestion? question = _question;
     if (question == null || _roundFinished || _lives <= 0) {
       return;
@@ -454,7 +455,7 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _guessFocusNode.requestFocus();
+        if (!_isInstalledPhone(context)) _guessFocusNode.requestFocus();
       }
     });
   }
@@ -473,7 +474,7 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _guessFocusNode.requestFocus();
+        if (!_isInstalledPhone(context)) _guessFocusNode.requestFocus();
       }
     });
   }
@@ -1285,7 +1286,7 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
           controller: _guessController,
           focusNode: _guessFocusNode,
           enabled: enabled,
-          autofocus: enabled,
+          autofocus: enabled && !_isInstalledPhone(context),
           onSubmitted: (_) {
             if (enabled) {
               _submitGuess();
@@ -1303,7 +1304,7 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
                 ? Padding(
                     padding: EdgeInsets.zero,
                     child: SizedBox(
-                      width: 110,
+                      width: 126,
                       child: FilledButton(
                         onPressed: enabled ? _submitGuess : null,
                         style: FilledButton.styleFrom(

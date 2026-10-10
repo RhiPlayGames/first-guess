@@ -772,13 +772,6 @@ extension _GameScreenView on _GameScreenState {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                            _keyboardSideButton(
-                             label: 'GUESS',
-                             enabled: canPlay,
-                             onPressed: submitGuess,
-                             guess: true,
-                           ),
-                           const SizedBox(height: 8),
-                           _keyboardSideButton(
                              label: 'NEXT CLUE',
                              enabled: canPlay && !isLastClue,
                              onPressed: showNextClue,
@@ -801,50 +794,50 @@ extension _GameScreenView on _GameScreenState {
             SizedBox(height: keyboardOpen ? 8 : 14),
             // Never conditionally replace this TextField: iOS must retain
             // its first-responder connection as the keyboard opens.
-            TextField(
-              controller: guessController,
-              focusNode: guessFocusNode,
-              enabled: canPlay,
-              autofocus: false,
-              onSubmitted: (_) {
-                if (canPlay) submitGuess();
-              },
-              textCapitalization: TextCapitalization.words,
-              textInputAction: TextInputAction.done,
-              scrollPadding: const EdgeInsets.only(bottom: 120),
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                color: AppColors.white,
-                fontSize: 17,
+            Container(
+              height: 54,
+              decoration: BoxDecoration(
+                color: AppColors.panel,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.orange, width: 1.5),
               ),
-              decoration: InputDecoration(
-                hintText: 'Type your guess...',
-                hintStyle: const TextStyle(
-                  fontFamily: 'Inter',
-                  color: AppColors.white,
-                  fontSize: 17,
-                ),
-                filled: true,
-                fillColor: AppColors.panel,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 15,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: AppColors.orange),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(
-                    color: AppColors.orange,
-                    width: 2,
+              clipBehavior: Clip.antiAlias,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: guessController,
+                      focusNode: guessFocusNode,
+                      enabled: canPlay,
+                      autofocus: false,
+                      onSubmitted: (_) { if (canPlay) submitGuess(); },
+                      textCapitalization: TextCapitalization.words,
+                      textInputAction: TextInputAction.done,
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
+                      style: const TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 17),
+                      decoration: const InputDecoration(
+                        hintText: 'Type your guess...',
+                        hintStyle: TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 17),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                      ),
+                    ),
                   ),
-                ),
-                disabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: AppColors.darkGrey),
-                ),
+                  SizedBox(
+                    width: 126,
+                    height: double.infinity,
+                    child: FilledButton(
+                      onPressed: canPlay ? () { FocusScope.of(context).unfocus(); submitGuess(); } : null,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFFE5E02),
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.zero,
+                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(topRight: Radius.circular(14), bottomRight: Radius.circular(14))),
+                      ),
+                      child: const Text('GUESS', style: TextStyle(fontFamily: 'Oswald', fontSize: 17, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
