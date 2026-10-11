@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../services/analytics_service.dart';
 import '../../services/player_stats_service.dart';
 import '../services/daily_flash_game_progress_service.dart';
+import '../widgets/daily_flash_results_dialog.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/stats_panel.dart';
 import '../../widgets/app_home_button.dart';
@@ -619,50 +620,20 @@ class _DailyFlashFirstWordScreenState extends State<DailyFlashFirstWordScreen> {
 
     if (!mounted) return;
 
+    final int baseXp = progress.totalXp ~/ 2;
+    final int bonusXp = progress.totalXp - baseXp;
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppColors.panel,
-          title: Text(
-            perfect ? 'PERFECT 5!' : 'DAILY FLASH 5 COMPLETE',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          content: Text(
-            '${progress.questionsCorrect}/5 correct\n'
-            '${progress.firstGuesses} First Guesses\n\n'
-            '${progress.totalXp} XP earned',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.white,
-              height: 1.45,
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: <Widget>[
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.orange,
-                foregroundColor: AppColors.white,
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text(
-                'CONTINUE',
-                style: TextStyle(
-                  fontFamily: 'Oswald',
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+      builder: (BuildContext dialogContext) => DailyFlashResultsDialog(
+        perfect: perfect,
+        score: progress.questionsCorrect,
+        baseXp: baseXp,
+        bonusXp: bonusXp,
+        totalXp: progress.totalXp,
+        hasMilestone: false,
+        onContinue: () => Navigator.of(dialogContext).pop(),
+      ),
     );
 
     if (!mounted) return;
@@ -751,7 +722,7 @@ class _DailyFlashFirstWordScreenState extends State<DailyFlashFirstWordScreen> {
 
   void _goHome() {
     widget.onChallengeFinished?.call();
-    Navigator.of(context).maybePop();
+    Navigator.of(context).popUntil((Route<dynamic> route) => route.isFirst);
   }
 
   @override
@@ -871,7 +842,7 @@ class _DailyFlashFirstWordScreenState extends State<DailyFlashFirstWordScreen> {
               ],
               const SizedBox(height: 14),
             ...List<Widget>.generate(
-              _clueIndex + 1,
+              MediaQuery.sizeOf(context).width < 600 ? 1 : _clueIndex + 1,
               (int offset) {
                 final int clueNumber = _clueIndex - offset;
                 final bool isCurrent = offset == 0;

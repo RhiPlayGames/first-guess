@@ -379,31 +379,63 @@ class _DailyFlashFirstMatchScreenState
     });
   }
 
-  void _selectLeft(int index) {
+  void _selectLeft(int leftIndex) {
     if (_roundFinished ||
-        _lockedLeftIndexes.contains(index)) {
+        _lockedLeftIndexes.contains(leftIndex)) {
       return;
     }
 
     setState(() {
-      _selectedLeftIndex = index;
+      if (_tentativeMatches.containsKey(leftIndex)) {
+        _tentativeMatches.remove(leftIndex);
+        _selectedLeftIndex = null;
+        return;
+      }
+
+      _selectedLeftIndex =
+          _selectedLeftIndex == leftIndex
+              ? null
+              : leftIndex;
     });
   }
 
   void _selectRight(int rightIndex) {
-    final int? leftIndex = _selectedLeftIndex;
-
     if (_roundFinished ||
-        leftIndex == null ||
         _lockedRightIndexes.contains(rightIndex)) {
       return;
     }
 
-    setState(() {
-      _tentativeMatches.removeWhere(
-        (int left, int right) =>
-            left == leftIndex || right == rightIndex,
+    final int? leftIndex = _selectedLeftIndex;
+
+    if (leftIndex == null) {
+      final int? currentlyPairedLeft =
+          _leftForRight(rightIndex);
+
+      if (currentlyPairedLeft != null &&
+          !_lockedLeftIndexes.contains(currentlyPairedLeft)) {
+        setState(() {
+          _tentativeMatches.remove(currentlyPairedLeft);
+          _selectedLeftIndex = null;
+        });
+        return;
+      }
+
+      _showTemporaryMessage(
+        'SELECT AN ITEM ON THE LEFT FIRST',
+        duration: const Duration(milliseconds: 1300),
       );
+      return;
+    }
+
+    setState(() {
+      // If this right choice was tentatively paired elsewhere,
+      // remove that old pairing first.
+      final int? oldLeft = _leftForRight(rightIndex);
+      if (oldLeft != null &&
+          !_lockedLeftIndexes.contains(oldLeft)) {
+        _tentativeMatches.remove(oldLeft);
+      }
+
       _tentativeMatches[leftIndex] = rightIndex;
       _selectedLeftIndex = null;
     });

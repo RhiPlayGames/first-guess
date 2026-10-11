@@ -677,10 +677,15 @@ class _DailyFlashFirstOrderScreenState
     );
   }
 
+  bool _advancingResult = false;
+
   Future<void> _advanceAfterResult() async {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted || _advancingResult) return;
+    _advancingResult = true;
+    // The popup is a route: dismiss it before rendering the next question.
+    final NavigatorState navigator = Navigator.of(context, rootNavigator: true);
+    if (navigator.canPop()) navigator.pop();
+    if (!mounted) return;
 
     final DailyFlashGameProgress? progress = _dailyProgress;
 
@@ -690,10 +695,12 @@ class _DailyFlashFirstOrderScreenState
 
     if (progress.allQuestionsAttempted) {
       await _finishDailyFlash();
+      _advancingResult = false;
       return;
     }
 
     await _loadDailyFlash();
+    _advancingResult = false;
   }
 
   Future<void> _finishDailyFlash() async {

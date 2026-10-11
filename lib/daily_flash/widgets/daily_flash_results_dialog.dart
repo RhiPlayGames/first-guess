@@ -254,16 +254,10 @@ class _DailyFlashResultsDialogState
                   height: 52,
                   child: FilledButton.icon(
                     onPressed: widget.onContinue,
-                    icon: Icon(
-                      widget.hasMilestone
-                          ? Icons.arrow_forward_rounded
-                          : Icons.home_rounded,
-                    ),
-                    label: Text(
-                      widget.hasMilestone
-                          ? 'CONTINUE'
-                          : 'BACK TO HOME',
-                      style: const TextStyle(
+                    icon: const Icon(Icons.arrow_forward_rounded),
+                    label: const Text(
+                      'CONTINUE',
+                      style: TextStyle(
                         fontFamily: 'Oswald',
                         fontSize: 17,
                         fontWeight: FontWeight.w600,

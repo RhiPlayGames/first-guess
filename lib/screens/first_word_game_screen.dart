@@ -1127,7 +1127,7 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
               ],
               const SizedBox(height: 14),
             ...List<Widget>.generate(
-              _clueIndex + 1,
+              MediaQuery.sizeOf(context).width < 600 ? 1 : _clueIndex + 1,
               (int offset) {
                 final int clueNumber = _clueIndex - offset;
                 final bool isCurrent = offset == 0;

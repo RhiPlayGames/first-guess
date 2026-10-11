@@ -11,6 +11,7 @@ import '../../widgets/app_home_button.dart';
 import '../../widgets/game_dialogs.dart';
 import '../../widgets/lives_display.dart';
 import '../services/daily_flash_game_progress_service.dart';
+import '../services/daily_flash_schedule_service.dart';
 import '../widgets/daily_flash_results_dialog.dart';
 
 bool _isInstalledPhone(BuildContext context) {
@@ -124,12 +125,7 @@ class _DailyFlashFirstDateScreenState
     super.dispose();
   }
 
-  String _todayKey() {
-    final DateTime now = DateTime.now();
-    return '${now.year.toString().padLeft(4, '0')}-'
-        '${now.month.toString().padLeft(2, '0')}-'
-        '${now.day.toString().padLeft(2, '0')}';
-  }
+  String _todayKey() => DailyFlashScheduleService.activeDateKey();
 
   String _compactDateKey(String dateKey) =>
       dateKey.replaceAll('-', '');

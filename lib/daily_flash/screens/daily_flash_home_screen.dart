@@ -625,8 +625,8 @@ class _DailyFlashGameCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final int progress = data.progress.clamp(0, 5);
     final bool complete = progress >= 5;
-    const Color dailyGold = Color(0xFFFFC94A);
-    const Color dailyGoldDeep = Color(0xFFD69A19);
+    const Color dailyGold = Color(0xFFFE5E02);
+    const Color dailyGoldDeep = Color(0xFFFE5E02);
 
     final String ctaText = complete
         ? 'COMPLETE'
@@ -714,7 +714,7 @@ class _DailyFlashGameCard extends StatelessWidget {
                     Text(
                       '$progress/5',
                       style: AppTextStyles.label.copyWith(
-                        color: complete ? dailyGold : AppColors.grey,
+                        color: AppColors.orange,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),
@@ -728,7 +728,7 @@ class _DailyFlashGameCard extends StatelessWidget {
           Material(
             color: complete || !data.enabled
                 ? AppColors.darkGrey
-                : const Color(0xFFE9680B),
+                : AppColors.orange,
             borderRadius: BorderRadius.circular(10),
             child: InkWell(
               onTap: complete ? null : data.onPressed,
@@ -742,7 +742,7 @@ class _DailyFlashGameCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: AppTextStyles.label.copyWith(
                       color: complete
-                          ? dailyGold
+                          ? AppColors.orange
                           : AppColors.white,
                       fontSize: ctaText == 'COMING SOON' ? 9.5 : 11.5,
                       fontWeight: FontWeight.w800,
