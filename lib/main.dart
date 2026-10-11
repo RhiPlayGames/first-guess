@@ -6,6 +6,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
@@ -13,6 +14,19 @@ import 'theme/app_colors.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Restrict installed Android phones to portrait; leave tablets free to rotate.
+  // iPhone and iPad orientations are configured separately in Info.plist.
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    final display = WidgetsBinding.instance.platformDispatcher.displays.first;
+    final double shortestSide =
+        display.size.shortestSide / display.devicePixelRatio;
+    await SystemChrome.setPreferredOrientations(
+      shortestSide < 600
+          ? <DeviceOrientation>[DeviceOrientation.portraitUp]
+          : <DeviceOrientation>[],
+    );
+  }
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
