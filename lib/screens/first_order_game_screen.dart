@@ -523,7 +523,9 @@ class _FirstOrderGameScreenState extends State<FirstOrderGameScreen> {
     });
 
     _showTemporaryMessage(
-      'Not quite — correct cards are locked. One life lost.',
+      newlyCorrect.isEmpty
+          ? 'No correct positions this time. One life lost. Try a different order!'
+          : 'Good progress! Correct cards are locked. One life lost.',
     );
   }
 

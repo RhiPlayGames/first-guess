@@ -217,7 +217,7 @@ class _GuessPanelState extends State<GuessPanel> {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
           height: 48,

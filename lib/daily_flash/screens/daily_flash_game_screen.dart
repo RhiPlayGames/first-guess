@@ -2067,7 +2067,7 @@ class _DailyFlashGameScreenState
 
                        if (_isInstalledPhone(context)) ...<Widget>[
                          LayoutBuilder(builder: (context, constraints) {
-                           final double side = ((constraints.maxWidth - 10) * 0.51).clamp(122.0, 188.0);
+                           final double side = ((constraints.maxWidth - 10) * 0.54).clamp(122.0, 196.0);
                            return Row(
                              children: <Widget>[
                                SizedBox(width: side, height: side,
@@ -2083,7 +2083,7 @@ class _DailyFlashGameScreenState
                                const SizedBox(width: 10),
                                Expanded(child: Column(children: <Widget>[
                                  _phoneClassicButton('NEXT CLUE', !questionFinished && !challengeFinished && !isLastClue, nextCluePressed),
-                                 const SizedBox(height: 5),
+                                 const SizedBox(height: 14),
                                  _phoneClassicButton('GIVE UP', !questionFinished && !challengeFinished, finishFailedQuestion, destructive: true),
                                ])),
                              ],
@@ -2713,9 +2713,7 @@ class _DailyFlashQuestionImagePanel
       height:
           height ?? (isSmall ? 270 : 320),
       width: double.infinity,
-      padding: EdgeInsets.all(
-        _isInstalledPhone(context) ? 0 : (isSmall ? 16 : 20),
-      ),
+      padding: EdgeInsets.zero,
       decoration: BoxDecoration(
         color: Colors.black,
         borderRadius:
@@ -2727,7 +2725,9 @@ class _DailyFlashQuestionImagePanel
           width: 1.3,
         ),
       ),
-      child: Image.asset(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.asset(
         imagePath,
         key: ValueKey<String>(
           '$imagePath-$retryVersion',
@@ -2748,6 +2748,7 @@ class _DailyFlashQuestionImagePanel
 
           return const SizedBox.shrink();
         },
+        ),
       ),
     );
   }

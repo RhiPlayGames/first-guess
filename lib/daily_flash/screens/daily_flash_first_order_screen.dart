@@ -458,8 +458,8 @@ class _DailyFlashFirstOrderScreenState
 
     _showTemporaryMessage(
       newlyCorrect.isEmpty
-          ? 'Not quite — no positions locked. One life lost.'
-          : 'Not quite — correct cards are locked. One life lost.',
+          ? 'No correct positions this time. One life lost. Try a different order!'
+          : 'Good progress! Correct cards are locked. One life lost.',
     );
   }
 

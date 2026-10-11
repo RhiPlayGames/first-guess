@@ -26,7 +26,7 @@ class SilhouettePanel extends StatelessWidget {
         return Container(
           width: double.infinity,
           height: double.infinity,
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.zero,
           decoration: BoxDecoration(
             color: AppColors.silhouetteBackground,
             borderRadius: BorderRadius.circular(18),

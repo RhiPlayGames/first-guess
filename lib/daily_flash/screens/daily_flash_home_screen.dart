@@ -626,7 +626,7 @@ class _DailyFlashGameCard extends StatelessWidget {
     final int progress = data.progress.clamp(0, 5);
     final bool complete = progress >= 5;
     const Color dailyGold = Color(0xFFFE5E02);
-    const Color dailyGoldDeep = Color(0xFFFE5E02);
+    const Color bannerGold = Color(0xFFFFC94A);
 
     final String ctaText = complete
         ? 'COMPLETE'
@@ -640,17 +640,13 @@ class _DailyFlashGameCard extends StatelessWidget {
         color: AppColors.panel,
         borderRadius: BorderRadius.circular(isDesktop ? 16 : 18),
         border: Border.all(
-          color: complete
-              ? dailyGold
-              : data.enabled
-                  ? dailyGoldDeep
-                  : AppColors.border,
+          color: bannerGold,
           width: complete || data.enabled ? 1.35 : 1,
         ),
         boxShadow: complete
             ? <BoxShadow>[
                 BoxShadow(
-                  color: dailyGold.withValues(alpha: 0.12),
+                  color: bannerGold.withValues(alpha: 0.12),
                   blurRadius: 12,
                   spreadRadius: 1,
                 ),
@@ -667,9 +663,7 @@ class _DailyFlashGameCard extends StatelessWidget {
               color: AppColors.background,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: complete || data.enabled
-                    ? dailyGoldDeep
-                    : AppColors.darkGrey,
+                color: bannerGold,
               ),
             ),
             child: Image.asset(

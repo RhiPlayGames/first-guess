@@ -74,7 +74,7 @@ class RevealImagePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: height,
-      padding: const EdgeInsets.all(6),
+      padding: EdgeInsets.zero,
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(22),

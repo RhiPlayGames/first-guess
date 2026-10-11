@@ -94,7 +94,7 @@ class _DailyFlashFirstDateScreenState
   int get _currentClueNumber => _clueIndex + 1;
 
   int get _pointsAvailable =>
-      _roundFinished ? 0 : _basePoints[_clueIndex.clamp(0, 9)];
+      _roundFinished ? 0 : _basePoints[_clueIndex.clamp(0, 4)];
 
   int get _playTimeSeconds =>
       DateTime.now().difference(_roundStartedAt).inSeconds;
@@ -280,7 +280,7 @@ class _DailyFlashFirstDateScreenState
     }
 
     final List<String> clues = <String>[
-      for (int index = 1; index <= 10; index++)
+      for (int index = 1; index <= 5; index++)
         (data['clue$index'] ?? '').toString().trim(),
     ];
 
@@ -1009,7 +1009,7 @@ class _DailyFlashFirstDateScreenState
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(
-                'CLUE $_currentClueNumber / 10',
+                'CLUE $_currentClueNumber / 5',
                 maxLines: 1,
                 style: const TextStyle(
                   fontFamily: 'Oswald',
