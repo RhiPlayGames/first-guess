@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../daily_flash/screens/daily_flash_home_screen.dart';
 import '../daily_flash/services/daily_flash_schedule_service.dart';
@@ -14,6 +15,7 @@ import 'classic_first_guess_screen.dart';
 import 'first_connection_game_screen.dart';
 import 'first_date_game_screen.dart';
 import 'first_match_game_screen.dart';
+import 'first_pick_game_screen.dart';
 import 'first_order_game_screen.dart';
 import 'first_word_game_screen.dart';
 import 'profile_screen.dart';
@@ -133,6 +135,18 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _openFirstPick() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const FirstPickGameScreen(),
+      ),
+    );
+    if (mounted) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      await _loadPlayerStats();
+    }
+  }
+
   Future<void> _openFirstWord() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -240,6 +254,17 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: _openFirstOrder,
         ctaLabel: 'PLAY',
       ),
+      if (kIsWeb)
+        _CategoryData(
+          title: 'First Pick',
+          subtitle: isPhone
+              ? '6 options. Can you pick right?'
+              : 'Six choices. Three tries. Can you pick the correct answer?',
+          imagePath: 'assets/images/categories/first_pick/firstpick_icon.webp',
+          isAvailable: true,
+          onPressed: _openFirstPick,
+          ctaLabel: 'PLAY',
+        ),
       _CategoryData(
         title: 'First Word',
         subtitle: isPhone

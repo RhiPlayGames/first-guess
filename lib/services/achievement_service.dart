@@ -14,6 +14,7 @@ enum AchievementCategory {
   xp,
   dailyFlash,
   firstConnection,
+  firstPick,
   firstDate,
   firstMatch,
   firstOrder,
@@ -388,6 +389,66 @@ class AchievementService {
       popupLabel: 'QUESTIONS IN A ROW',
       progressSelector: (stats) =>
           (stats.categoryLongestStreakCounts['first_connection'] ?? 0),
+    ),
+    Achievement(
+      id: 'first_pick_10',
+      title: 'First Pick Starter',
+      description: 'Answer 10 First Pick questions correctly',
+      rarity: AchievementRarity.bronze,
+      category: AchievementCategory.firstPick,
+      target: 10,
+      achievementPoints: 0,
+      milestoneSeries: 'first_pick_completions',
+      popupLabel: 'QUESTIONS CORRECT',
+      progressSelector: (stats) => stats.categoryCorrectCounts['first_pick'] ?? 0,
+    ),
+    Achievement(
+      id: 'first_pick_50',
+      title: 'First Pick Advanced',
+      description: 'Answer 50 First Pick questions correctly',
+      rarity: AchievementRarity.silver,
+      category: AchievementCategory.firstPick,
+      target: 50,
+      achievementPoints: 0,
+      milestoneSeries: 'first_pick_completions',
+      popupLabel: 'QUESTIONS CORRECT',
+      progressSelector: (stats) => stats.categoryCorrectCounts['first_pick'] ?? 0,
+    ),
+    Achievement(
+      id: 'first_pick_150',
+      title: 'First Pick Expert',
+      description: 'Answer 150 First Pick questions correctly',
+      rarity: AchievementRarity.gold,
+      category: AchievementCategory.firstPick,
+      target: 150,
+      achievementPoints: 0,
+      milestoneSeries: 'first_pick_completions',
+      popupLabel: 'QUESTIONS CORRECT',
+      progressSelector: (stats) => stats.categoryCorrectCounts['first_pick'] ?? 0,
+    ),
+    Achievement(
+      id: 'first_pick_500',
+      title: 'First Pick Master',
+      description: 'Answer 500 First Pick questions correctly',
+      rarity: AchievementRarity.gold,
+      category: AchievementCategory.firstPick,
+      target: 500,
+      achievementPoints: 0,
+      milestoneSeries: 'first_pick_completions',
+      popupLabel: 'QUESTIONS CORRECT',
+      progressSelector: (stats) => stats.categoryCorrectCounts['first_pick'] ?? 0,
+    ),
+    Achievement(
+      id: 'first_pick_1000',
+      title: 'First Pick Legend',
+      description: 'Answer 1000 First Pick questions correctly',
+      rarity: AchievementRarity.diamond,
+      category: AchievementCategory.firstPick,
+      target: 1000,
+      achievementPoints: 0,
+      milestoneSeries: 'first_pick_completions',
+      popupLabel: 'QUESTIONS CORRECT',
+      progressSelector: (stats) => stats.categoryCorrectCounts['first_pick'] ?? 0,
     ),
     Achievement(
       id: 'first_date_1',
@@ -1809,6 +1870,8 @@ class AchievementService {
         return 'XP';
       case AchievementCategory.dailyFlash:
         return 'DAILY FLASH 5s';
+      case AchievementCategory.firstPick:
+        return 'FIRST PICK';
       case AchievementCategory.firstConnection:
         return 'FIRST CONNECTION';
       case AchievementCategory.firstDate:
@@ -1933,7 +1996,7 @@ class AchievementService {
           EarnedBadge(
             name: '$gameLabel $displayTier Badge',
             imageAsset:
-                'assets/images/badges/final/game_badges/${gameKey}_${tier.value}.webp',
+                'assets/images/badges/final/game_badges/${gameKey == 'first_pick' && tier.value == 'starter' ? 'first_pick_strater' : '${gameKey}_${tier.value}'}.webp',
           ),
         );
       }

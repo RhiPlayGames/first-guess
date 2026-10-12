@@ -757,6 +757,9 @@ class _AchievementIcon extends StatelessWidget {
       case AchievementCategory.dailyFlash:
         return 'assets/images/stats/my_stats/daily_flash_completed.webp';
 
+      case AchievementCategory.firstPick:
+        return 'assets/images/categories/first_pick/firstpick_icon.webp';
+
       case AchievementCategory.firstConnection:
         return 'assets/images/categories/first_connection/firstconnections_icon128.webp';
 
