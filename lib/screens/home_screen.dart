@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+
+import '../services/home_keyboard_route_observer.dart';
 
 import '../daily_flash/screens/daily_flash_home_screen.dart';
 import '../daily_flash/services/daily_flash_schedule_service.dart';
@@ -15,7 +17,7 @@ import 'classic_first_guess_screen.dart';
 import 'first_connection_game_screen.dart';
 import 'first_date_game_screen.dart';
 import 'first_match_game_screen.dart';
-import 'first_pick_game_screen.dart';
+import 'first_pick_categories_screen.dart';
 import 'first_order_game_screen.dart';
 import 'first_word_game_screen.dart';
 import 'profile_screen.dart';
@@ -28,7 +30,39 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
+  bool _routeSubscribed = false;
+
+  void _dismissStaleKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_routeSubscribed) {
+      final route = ModalRoute.of(context);
+      if (route != null) {
+        homeKeyboardRouteObserver.subscribe(this, route);
+        _routeSubscribed = true;
+      }
+    }
+  }
+
+  @override
+  void didPopNext() {
+    _dismissStaleKeyboard();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _dismissStaleKeyboard();
+    });
+  }
+
+  @override
+  void dispose() {
+    homeKeyboardRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
   String? _selectedAvatarPath;
 
   PlayerStats _playerStats = const PlayerStats();
@@ -40,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadSelectedAvatar();
     _loadPlayerStats();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) FocusManager.instance.primaryFocus?.unfocus();
+      if (mounted) _dismissStaleKeyboard();
     });
   }
 
@@ -83,6 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // ignore: unused_element - retained for the First Connection launch.
   Future<void> _openFirstConnection() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -138,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _openFirstPick() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => const FirstPickGameScreen(),
+        builder: (context) => const FirstPickCategoriesScreen(),
       ),
     );
     if (mounted) {
@@ -175,32 +210,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _openProfile(BuildContext context) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const ProfileScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const ProfileScreen()),
     );
 
-    await Future.wait([
-      _loadSelectedAvatar(),
-      _loadPlayerStats(),
-    ]);
+    await Future.wait([_loadSelectedAvatar(), _loadPlayerStats()]);
   }
 
   Future<void> _openSettings() async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const SettingsScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const SettingsScreen()),
     );
 
     if (!mounted) {
       return;
     }
 
-    await Future.wait([
-      _loadSelectedAvatar(),
-      _loadPlayerStats(),
-    ]);
+    await Future.wait([_loadSelectedAvatar(), _loadPlayerStats()]);
   }
 
   @override
@@ -226,8 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
         subtitle: isPhone
             ? '5 events. Know the year?'
             : 'Ten events. One date. Can you piece it together?',
-        imagePath:
-            'assets/images/categories/first_date/firstdateicon128.webp',
+        imagePath: 'assets/images/categories/first_date/firstdateicon128.webp',
         isAvailable: true,
         onPressed: _openFirstDate,
         ctaLabel: 'PLAY',
@@ -254,8 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: _openFirstOrder,
         ctaLabel: 'PLAY',
       ),
-      if (kIsWeb)
-        _CategoryData(
+      _CategoryData(
           title: 'First Pick',
           subtitle: isPhone
               ? '6 options. Can you pick right?'
@@ -270,8 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
         subtitle: isPhone
             ? '5 clues. Can you uncover it?'
             : 'Five clues. One hidden word. How soon can you uncover it?',
-        imagePath:
-            'assets/images/categories/first_word/firstword_128.webp',
+        imagePath: 'assets/images/categories/first_word/firstword_128.webp',
         isAvailable: true,
         onPressed: _openFirstWord,
         ctaLabel: 'PLAY',
@@ -307,20 +329,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       bottom: isDesktop ? 18 : 10,
                     ),
                     child: StatsPanel(
-                      totalScore:
-                          _statsLoaded ? _playerStats.totalScore : 0,
-                      currentStreak:
-                          _statsLoaded ? _playerStats.currentStreak : 0,
-                      firstGuesses:
-                          _statsLoaded ? _playerStats.firstGuesses : 0,
-                      gamesPlayed:
-                          _statsLoaded ? _playerStats.gamesPlayed : 0,
+                      totalScore: _statsLoaded ? _playerStats.totalScore : 0,
+                      currentStreak: _statsLoaded
+                          ? _playerStats.currentStreak
+                          : 0,
+                      firstGuesses: _statsLoaded
+                          ? _playerStats.firstGuesses
+                          : 0,
+                      gamesPlayed: _statsLoaded ? _playerStats.gamesPlayed : 0,
                     ),
                   ),
                   SizedBox(height: isDesktop ? 6 : 8),
-                  _DailyFlashHomeBanner(
-                    onPressed: _openDailyFlashHub,
-                  ),
+                  _DailyFlashHomeBanner(onPressed: _openDailyFlashHub),
                   SizedBox(height: isDesktop ? 18 : 14),
                   const _ChallengeHeading(),
                   SizedBox(height: isDesktop ? 12 : 10),
@@ -329,12 +349,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: modes
                           .map(
                             (_CategoryData mode) => Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: 12,
-                              ),
-                              child: _CategoryCard(
-                                category: mode,
-                              ),
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _CategoryCard(category: mode),
                             ),
                           )
                           .toList(),
@@ -342,23 +358,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   else
                     GridView.builder(
                       shrinkWrap: true,
-                      physics:
-                          const NeverScrollableScrollPhysics(),
+                      physics: const NeverScrollableScrollPhysics(),
                       itemCount: modes.length,
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 14,
-                        mainAxisSpacing: 12,
-                        mainAxisExtent: 96,
-                      ),
-                      itemBuilder: (
-                        BuildContext context,
-                        int index,
-                      ) {
-                        return _CategoryCard(
-                          category: modes[index],
-                        );
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 14,
+                            mainAxisSpacing: 12,
+                            mainAxisExtent: 96,
+                          ),
+                      itemBuilder: (BuildContext context, int index) {
+                        return _CategoryCard(category: modes[index]);
                       },
                     ),
                   SizedBox(height: isDesktop ? 16 : 4),
@@ -387,22 +397,16 @@ class _HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (
-        BuildContext context,
-        BoxConstraints constraints,
-      ) {
+      builder: (BuildContext context, BoxConstraints constraints) {
         final bool isNarrow = constraints.maxWidth < 390;
         final bool isDesktop = constraints.maxWidth >= 1200;
 
         final double logoWidth = isNarrow ? 58 : 68;
         final double logoHeight = isNarrow ? 66 : 76;
         final double titleHeight = isNarrow ? 48 : 56;
-        final double headerHeight =
-            isDesktop ? 104 : (isNarrow ? 78 : 88);
-        final double avatarSize =
-            isDesktop ? 72 : (isNarrow ? 40 : 44);
-        final double settingsSize =
-            isDesktop ? 72 : (isNarrow ? 38 : 42);
+        final double headerHeight = isDesktop ? 104 : (isNarrow ? 78 : 88);
+        final double avatarSize = isDesktop ? 72 : (isNarrow ? 40 : 44);
+        final double settingsSize = isDesktop ? 72 : (isNarrow ? 38 : 42);
 
         return SizedBox(
           height: headerHeight,
@@ -412,9 +416,7 @@ class _HomeHeader extends StatelessWidget {
               Align(
                 alignment: Alignment.center,
                 child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isNarrow ? 72 : 84,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: isNarrow ? 72 : 84),
                   child: Image.asset(
                     'assets/images/first_guess_header.png',
                     height: titleHeight,
@@ -438,15 +440,13 @@ class _HomeHeader extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment:
-                      CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: onProfilePressed,
-                        borderRadius:
-                            BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12),
                         child: SizedBox(
                           width: avatarSize,
                           height: avatarSize,
@@ -454,32 +454,25 @@ class _HomeHeader extends StatelessWidget {
                             selectedAvatarPath ??
                                 'assets/images/avatars/Final/optimized/default_avatar.webp',
                             fit: BoxFit.contain,
-                            filterQuality:
-                                FilterQuality.high,
+                            filterQuality: FilterQuality.high,
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(
-                      width: isDesktop ? 16 : 14,
-                    ),
+                    SizedBox(width: isDesktop ? 16 : 14),
                     Tooltip(
                       message: 'Settings',
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: onSettingsPressed,
-                          borderRadius:
-                              BorderRadius.circular(
-                            settingsSize / 2,
-                          ),
+                          borderRadius: BorderRadius.circular(settingsSize / 2),
                           child: SizedBox(
                             width: settingsSize,
                             height: settingsSize,
                             child: Icon(
                               Icons.settings_rounded,
-                              color:
-                                  const Color(0xFFB8BCC2),
+                              color: const Color(0xFFB8BCC2),
                               size: settingsSize,
                             ),
                           ),
@@ -500,17 +493,13 @@ class _HomeHeader extends StatelessWidget {
 class _DailyFlashHomeBanner extends StatefulWidget {
   final VoidCallback onPressed;
 
-  const _DailyFlashHomeBanner({
-    required this.onPressed,
-  });
+  const _DailyFlashHomeBanner({required this.onPressed});
 
   @override
-  State<_DailyFlashHomeBanner> createState() =>
-      _DailyFlashHomeBannerState();
+  State<_DailyFlashHomeBanner> createState() => _DailyFlashHomeBannerState();
 }
 
-class _DailyFlashHomeBannerState
-    extends State<_DailyFlashHomeBanner> {
+class _DailyFlashHomeBannerState extends State<_DailyFlashHomeBanner> {
   Timer? _countdownTimer;
   Duration _timeRemaining = Duration.zero;
 
@@ -531,25 +520,21 @@ class _DailyFlashHomeBannerState
   }
 
   void _updateCountdown() {
-    final Duration remaining =
-        DailyFlashScheduleService.timeUntilNextRelease();
+    final Duration remaining = DailyFlashScheduleService.timeUntilNextRelease();
 
     if (!mounted) {
       return;
     }
 
     setState(() {
-      _timeRemaining =
-          remaining.isNegative ? Duration.zero : remaining;
+      _timeRemaining = remaining.isNegative ? Duration.zero : remaining;
     });
   }
 
   String get _countdownText {
     final int hours = _timeRemaining.inHours;
-    final int minutes =
-        _timeRemaining.inMinutes.remainder(60);
-    final int seconds =
-        _timeRemaining.inSeconds.remainder(60);
+    final int minutes = _timeRemaining.inMinutes.remainder(60);
+    final int seconds = _timeRemaining.inSeconds.remainder(60);
 
     return '${hours.toString().padLeft(2, '0')}:'
         '${minutes.toString().padLeft(2, '0')}:'
@@ -559,16 +544,14 @@ class _DailyFlashHomeBannerState
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (
-        BuildContext context,
-        BoxConstraints constraints,
-      ) {
+      builder: (BuildContext context, BoxConstraints constraints) {
         final bool isDesktop = constraints.maxWidth >= 900;
         // Only installed iOS/Android phones use the compact Daily Flash artwork.
         // Tablets and all website layouts retain their original banner.
         const bool isWeb = bool.fromEnvironment('dart.library.js_interop');
         final TargetPlatform platform = Theme.of(context).platform;
-        final bool isNativePhone = !isWeb &&
+        final bool isNativePhone =
+            !isWeb &&
             (platform == TargetPlatform.iOS ||
                 platform == TargetPlatform.android) &&
             MediaQuery.sizeOf(context).shortestSide < 600;
@@ -686,9 +669,7 @@ class _DailyFlashHomeBannerState
                                   height: 1.0,
                                 ),
                               ),
-                              SizedBox(
-                                height: isDesktop ? 5 : 2,
-                              ),
+                              SizedBox(height: isDesktop ? 5 : 2),
                               Text(
                                 _countdownText,
                                 maxLines: 1,
@@ -722,17 +703,12 @@ class _ChallengeHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDesktop =
-        MediaQuery.sizeOf(context).width >= 1200;
+    final bool isDesktop = MediaQuery.sizeOf(context).width >= 1200;
 
     return Row(
       children: [
-        const Expanded(
-          child: _ChallengeLine(),
-        ),
-        SizedBox(
-          width: isDesktop ? 16 : 10,
-        ),
+        const Expanded(child: _ChallengeLine()),
+        SizedBox(width: isDesktop ? 16 : 10),
         Text(
           'CHOOSE YOUR GAME',
           textAlign: TextAlign.center,
@@ -743,14 +719,8 @@ class _ChallengeHeading extends StatelessWidget {
             letterSpacing: 0.5,
           ),
         ),
-        SizedBox(
-          width: isDesktop ? 16 : 10,
-        ),
-        const Expanded(
-          child: _ChallengeLine(
-            reverse: true,
-          ),
-        ),
+        SizedBox(width: isDesktop ? 16 : 10),
+        const Expanded(child: _ChallengeLine(reverse: true)),
       ],
     );
   }
@@ -759,9 +729,7 @@ class _ChallengeHeading extends StatelessWidget {
 class _ChallengeLine extends StatelessWidget {
   final bool reverse;
 
-  const _ChallengeLine({
-    this.reverse = false,
-  });
+  const _ChallengeLine({this.reverse = false});
 
   @override
   Widget build(BuildContext context) {
@@ -769,23 +737,11 @@ class _ChallengeLine extends StatelessWidget {
       height: 1.5,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: reverse
-              ? Alignment.centerRight
-              : Alignment.centerLeft,
-          end: reverse
-              ? Alignment.centerLeft
-              : Alignment.centerRight,
-          colors: const [
-            Colors.transparent,
-            AppColors.orange,
-          ],
+          begin: reverse ? Alignment.centerRight : Alignment.centerLeft,
+          end: reverse ? Alignment.centerLeft : Alignment.centerRight,
+          colors: const [Colors.transparent, AppColors.orange],
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x55FE5E02),
-            blurRadius: 5,
-          ),
-        ],
+        boxShadow: const [BoxShadow(color: Color(0x55FE5E02), blurRadius: 5)],
       ),
     );
   }
@@ -812,52 +768,37 @@ class _CategoryData {
 class _CategoryCard extends StatelessWidget {
   final _CategoryData category;
 
-  const _CategoryCard({
-    required this.category,
-  });
+  const _CategoryCard({required this.category});
 
   @override
   Widget build(BuildContext context) {
-    final bool isAvailable =
-        category.isAvailable;
+    final bool isAvailable = category.isAvailable;
 
-    final bool isDesktop =
-        MediaQuery.sizeOf(context).width >= 1200;
+    final bool isDesktop = MediaQuery.sizeOf(context).width >= 1200;
 
-    final double radius =
-        isDesktop ? 16 : 22;
+    final double radius = isDesktop ? 16 : 22;
 
     return AnimatedOpacity(
-      duration:
-          const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 200),
       opacity: isAvailable ? 1 : 0.52,
       child: Material(
         color: Colors.transparent,
-        borderRadius:
-            BorderRadius.circular(radius),
+        borderRadius: BorderRadius.circular(radius),
         child: InkWell(
-          onTap: isAvailable
-              ? category.onPressed
-              : null,
-          borderRadius:
-              BorderRadius.circular(radius),
+          onTap: isAvailable ? category.onPressed : null,
+          borderRadius: BorderRadius.circular(radius),
           child: Ink(
             decoration: BoxDecoration(
               color: AppColors.panel,
-              borderRadius:
-                  BorderRadius.circular(radius),
+              borderRadius: BorderRadius.circular(radius),
               border: Border.all(
-                color: isAvailable
-                    ? AppColors.orange
-                    : AppColors.darkGrey,
-                width:
-                    isAvailable ? 1.8 : 1.2,
+                color: isAvailable ? AppColors.orange : AppColors.darkGrey,
+                width: isAvailable ? 1.8 : 1.2,
               ),
               boxShadow: isAvailable
                   ? const [
                       BoxShadow(
-                        color:
-                            Color(0x2BFE5E02),
+                        color: Color(0x2BFE5E02),
                         blurRadius: 12,
                         spreadRadius: 0.5,
                       ),
@@ -865,32 +806,20 @@ class _CategoryCard extends StatelessWidget {
                   : null,
             ),
             child: Padding(
-              padding:
-                  EdgeInsets.symmetric(
-                horizontal:
-                    isDesktop ? 12 : 14,
-                vertical:
-                    isDesktop ? 10 : 14,
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 12 : 14,
+                vertical: isDesktop ? 10 : 14,
               ),
               child: Row(
                 children: [
                   Container(
-                    width:
-                        isDesktop ? 58 : 60,
-                    height:
-                        isDesktop ? 58 : 60,
-                    alignment:
-                        Alignment.center,
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          AppColors.background,
-                      borderRadius:
-                          BorderRadius.circular(
-                        isDesktop ? 14 : 17,
-                      ),
-                      border:
-                          Border.all(
+                    width: isDesktop ? 58 : 60,
+                    height: isDesktop ? 58 : 60,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(isDesktop ? 14 : 17),
+                      border: Border.all(
                         color: isAvailable
                             ? AppColors.orange
                             : AppColors.darkGrey,
@@ -898,73 +827,47 @@ class _CategoryCard extends StatelessWidget {
                       ),
                     ),
                     child: Padding(
-                      padding:
-                          const EdgeInsets.all(
-                        4,
-                      ),
+                      padding: const EdgeInsets.all(4),
                       child: ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(
+                        borderRadius: BorderRadius.circular(
                           isDesktop ? 10 : 13,
                         ),
                         child: Image.asset(
                           category.imagePath,
                           fit: BoxFit.contain,
-                          filterQuality:
-                              FilterQuality.high,
+                          filterQuality: FilterQuality.high,
                         ),
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width:
-                        isDesktop ? 12 : 15,
-                  ),
+                  SizedBox(width: isDesktop ? 12 : 15),
                   Expanded(
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          category.title
-                              .toUpperCase(),
+                          category.title.toUpperCase(),
                           maxLines: 1,
-                          overflow:
-                              TextOverflow.ellipsis,
-                          style:
-                              AppTextStyles.category
-                                  .copyWith(
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.category.copyWith(
                             color: isAvailable
                                 ? AppColors.white
                                 : AppColors.grey,
-                            fontSize:
-                                isDesktop
-                                    ? 20
-                                    : 17,
-                            letterSpacing:
-                                0.15,
+                            fontSize: isDesktop ? 20 : 17,
+                            letterSpacing: 0.15,
                           ),
                         ),
-                        if (category
-                            .subtitle.isNotEmpty) ...[
-                          const SizedBox(
-                            height: 4,
-                          ),
+                        if (category.subtitle.isNotEmpty) ...[
+                          const SizedBox(height: 4),
                           Text(
                             category.subtitle,
                             maxLines: 2,
-                            overflow:
-                                TextOverflow.ellipsis,
-                            style:
-                                AppTextStyles.body
-                                    .copyWith(
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.body.copyWith(
                               color: isAvailable
                                   ? AppColors.white
                                   : AppColors.grey,
-                              fontSize:
-                                  isDesktop
-                                      ? 15.5
-                                      : 13.5,
+                              fontSize: isDesktop ? 15.5 : 13.5,
                               height: 1.25,
                             ),
                           ),
@@ -972,22 +875,14 @@ class _CategoryCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(
-                    width:
-                        isDesktop ? 12 : 10,
-                  ),
+                  SizedBox(width: isDesktop ? 12 : 10),
                   if (isDesktop)
                     _DesktopCategoryCta(
-                      text:
-                          category.ctaLabel,
-                      isAvailable:
-                          isAvailable,
+                      text: category.ctaLabel,
+                      isAvailable: isAvailable,
                     )
                   else if (isAvailable)
-                    _AvailableCategoryStatus(
-                      text:
-                          category.ctaLabel,
-                    )
+                    _AvailableCategoryStatus(text: category.ctaLabel)
                   else
                     const _LockedCategoryStatus(),
                 ],
@@ -1000,20 +895,15 @@ class _CategoryCard extends StatelessWidget {
   }
 }
 
-class _DesktopCategoryCta
-    extends StatelessWidget {
+class _DesktopCategoryCta extends StatelessWidget {
   final String text;
   final bool isAvailable;
 
-  const _DesktopCategoryCta({
-    required this.text,
-    required this.isAvailable,
-  });
+  const _DesktopCategoryCta({required this.text, required this.isAvailable});
 
   @override
   Widget build(BuildContext context) {
-    final bool isCompleted =
-        text == 'COMPLETED';
+    final bool isCompleted = text == 'COMPLETED';
 
     return Container(
       width: 118,
@@ -1021,21 +911,12 @@ class _DesktopCategoryCta
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: isAvailable
-            ? (
-                isCompleted
-                    ? AppColors.darkGrey
-                    : AppColors.orange
-              )
+            ? (isCompleted ? AppColors.darkGrey : AppColors.orange)
             : AppColors.background,
-        borderRadius:
-            BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isAvailable
-              ? (
-                  isCompleted
-                      ? AppColors.darkGrey
-                      : AppColors.orange
-                )
+              ? (isCompleted ? AppColors.darkGrey : AppColors.orange)
               : AppColors.darkGrey,
           width: 1.2,
         ),
@@ -1046,9 +927,7 @@ class _DesktopCategoryCta
         textAlign: TextAlign.center,
         overflow: TextOverflow.ellipsis,
         style: AppTextStyles.label.copyWith(
-          color: isAvailable
-              ? AppColors.white
-              : AppColors.grey,
+          color: isAvailable ? AppColors.white : AppColors.grey,
           fontSize: 12.5,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.1,
@@ -1058,32 +937,25 @@ class _DesktopCategoryCta
   }
 }
 
-class _AvailableCategoryStatus
-    extends StatelessWidget {
-  const _AvailableCategoryStatus({
-    required this.text,
-  });
+class _AvailableCategoryStatus extends StatelessWidget {
+  const _AvailableCategoryStatus({required this.text});
 
   final String text;
 
   @override
   Widget build(BuildContext context) {
-    final bool isCompleted =
-        text == 'COMPLETED';
+    final bool isCompleted = text == 'COMPLETED';
 
     return SubcategoryStatusBadge(
       text: text,
-      color: isCompleted
-          ? AppColors.darkGrey
-          : AppColors.orange,
+      color: isCompleted ? AppColors.darkGrey : AppColors.orange,
       filled: true,
       compact: true,
     );
   }
 }
 
-class _LockedCategoryStatus
-    extends StatelessWidget {
+class _LockedCategoryStatus extends StatelessWidget {
   const _LockedCategoryStatus();
 
   @override
@@ -1093,34 +965,21 @@ class _LockedCategoryStatus
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.lock_rounded,
-            color: AppColors.grey,
-            size: 21,
-          ),
+          const Icon(Icons.lock_rounded, color: AppColors.grey, size: 21),
           const SizedBox(height: 6),
           Container(
             width: double.infinity,
-            padding:
-                const EdgeInsets.symmetric(
-              horizontal: 6,
-              vertical: 6,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             decoration: BoxDecoration(
               color: AppColors.background,
-              borderRadius:
-                  BorderRadius.circular(15),
-              border: Border.all(
-                color: AppColors.orange,
-                width: 1,
-              ),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: AppColors.orange, width: 1),
             ),
             child: Text(
               'COMING SOON',
               textAlign: TextAlign.center,
               maxLines: 1,
-              style:
-                  AppTextStyles.label.copyWith(
+              style: AppTextStyles.label.copyWith(
                 color: AppColors.grey,
                 fontSize: 8,
                 letterSpacing: 0.2,
@@ -1133,6 +992,7 @@ class _LockedCategoryStatus
   }
 }
 
+// ignore: unused_element - reserved for a future advertisement placement.
 class _AdSpace extends StatelessWidget {
   const _AdSpace();
 
@@ -1143,11 +1003,8 @@ class _AdSpace extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.panel,
-        borderRadius:
-            BorderRadius.circular(18),
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
       ),
       child: Text(
         'ADVERTISEMENT',

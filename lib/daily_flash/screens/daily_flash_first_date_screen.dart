@@ -1324,7 +1324,7 @@ class _DailyFlashFirstDateScreenState
               child: FilledButton(
                 onPressed: enabled ? () => unawaited(_giveUp()) : null,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFAF3932),
+                  backgroundColor: const Color(0xFFD32F2F),
                   foregroundColor: AppColors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
                 ),

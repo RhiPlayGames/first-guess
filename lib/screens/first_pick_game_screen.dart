@@ -1,23 +1,36 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import '../services/content_consumption_service.dart';
-import '../services/firebase_challenge_service.dart';
 import '../services/player_stats_service.dart';
 import '../theme/app_colors.dart';
 
 class FirstPickGameScreen extends StatefulWidget {
-  const FirstPickGameScreen({super.key});
+  const FirstPickGameScreen({
+    super.key,
+    required this.subcategory,
+    required this.categoryTitle,
+  });
+
+  final String subcategory;
+  final String categoryTitle;
 
   @override
   State<FirstPickGameScreen> createState() => _FirstPickGameScreenState();
 }
 
 class _PickQuestion {
-  const _PickQuestion(this.id, this.category, this.question, this.options,
-      this.correctIndex, this.explanation);
+  const _PickQuestion(
+    this.id,
+    this.category,
+    this.question,
+    this.options,
+    this.correctIndex,
+    this.explanation,
+  );
   final String id;
   final String category;
   final String question;
@@ -64,15 +77,50 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
     }
     final question = (data['question'] ?? '').toString().trim();
     if (question.isEmpty) return null;
-    return _PickQuestion(doc.id, (data['subcategory'] ?? '').toString(),
-        question, answers, answerIndex,
-        (data['explanation'] ?? '').toString());
+    return _PickQuestion(
+      doc.id,
+      (data['subcategory'] ?? '').toString(),
+      question,
+      answers,
+      answerIndex,
+      (data['explanation'] ?? '').toString(),
+    );
   }
 
   Future<void> _init() async {
+    if (!mounted) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      final docs = await FirebaseChallengeService.loadLiveCategoryDocuments(category: 'first_pick');
-      final questions = docs.map(_parse).whereType<_PickQuestion>().toList();
+      debugPrint(
+        '[FIRST PICK] project=${Firebase.app().options.projectId} subcategory=${widget.subcategory}',
+      );
+      // The category-only query avoids requiring a composite index, and
+      // the server source prevents a stale local cache from hiding questions.
+      final QuerySnapshot<Map<String, dynamic>> serverSnapshot =
+          await FirebaseFirestore.instance
+              .collection('challenges')
+              .where('category', isEqualTo: 'first_pick')
+              .get(const GetOptions(source: Source.server));
+      final liveDocs = serverSnapshot.docs
+          .where((doc) => (doc.data()['status'] ?? '').toString() == 'live')
+          .toList();
+      final selectedDocs = liveDocs
+          .where(
+            (doc) =>
+                (doc.data()['subcategory'] ?? '').toString() ==
+                widget.subcategory,
+          )
+          .toList();
+      final questions = selectedDocs
+          .map(_parse)
+          .whereType<_PickQuestion>()
+          .toList();
+      debugPrint(
+        '[FIRST PICK] server category=${serverSnapshot.docs.length} live=${liveDocs.length} selected=${selectedDocs.length} parsed=${questions.length}',
+      );
       final played = await QuestionHistoryService.loadPlayedQuestionIds();
       final stats = await PlayerStatsService.loadStats();
       if (!mounted) return;
@@ -84,23 +132,45 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
         _error = null;
       });
       _next();
-    } catch (e) {
+    } on FirebaseException catch (e, st) {
+      debugPrint(
+        '[FIRST PICK] Firebase error code=${e.code} message=${e.message}',
+      );
+      debugPrintStack(stackTrace: st);
       if (!mounted) return;
-      setState(() { _loading = false; _error = 'Could not load First Pick questions. Please try again.'; });
+      setState(() {
+        _loading = false;
+        _error = 'Could not load First Pick (${e.code}). Please try again.';
+      });
+    } catch (e, st) {
+      debugPrint('[FIRST PICK] loading error: $e');
+      debugPrintStack(stackTrace: st);
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = 'Could not load First Pick questions. Please try again.';
+      });
     }
   }
 
   void _next() {
-    final pool = _questions.where((q) => _practice
-        ? !_seenThisSession.contains(q.id)
-        : !_playedIds.contains(q.id)).toList();
+    final pool = _questions
+        .where(
+          (q) => _practice
+              ? !_seenThisSession.contains(q.id)
+              : !_playedIds.contains(q.id),
+        )
+        .toList();
     if (pool.isEmpty && _practice && _questions.isNotEmpty) {
       _seenThisSession.clear();
       _next();
       return;
     }
     if (pool.isEmpty) {
-      setState(() { _current = null; _finished = false; });
+      setState(() {
+        _current = null;
+        _finished = false;
+      });
       return;
     }
     final question = pool[_random.nextInt(pool.length)];
@@ -118,7 +188,12 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
 
   Future<void> _pick(int index) async {
     final question = _current;
-    if (question == null || _finished || _submitting || _wrongOptions.contains(index)) return;
+    if (question == null ||
+        _finished ||
+        _submitting ||
+        _wrongOptions.contains(index)) {
+      return;
+    }
     final attempt = index == -1 ? 3 : _attempts + 1;
     final correct = index == question.correctIndex;
     final finished = correct || attempt == 3;
@@ -135,25 +210,43 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
         // Mark completed regardless of outcome so no XP can be farmed by replay.
         await QuestionHistoryService.recordPlayedQuestion(question.id);
         await ContentConsumptionService.recordQuestionCompleted(
-          gameKey: 'first_pick', category: 'first_pick',
-          subcategory: question.category, questionId: question.id,
-          totalQuestionsAvailable: _questions.length,
+          gameKey: 'first_pick',
+          category: 'first_pick',
+          subcategory: question.category,
+          questionId: question.id,
+          totalQuestionsAvailable: 1000,
         );
         final seconds = DateTime.now().difference(_startedAt).inSeconds;
         final updated = correct
             ? await PlayerStatsService.recordCorrectGame(
-                currentStats: _stats, category: GameCategory.other,
+                currentStats: _stats,
+                category: GameCategory.other,
                 pointsWon: const [100, 60, 30][attempt - 1],
-                clueNumber: attempt, wasFirstGuess: attempt == 1,
-                playTimeSeconds: seconds, mainCategoryKey: 'first_pick')
+                clueNumber: attempt,
+                wasFirstGuess: attempt == 1,
+                playTimeSeconds: seconds,
+                mainCategoryKey: 'first_pick',
+              )
             : await PlayerStatsService.recordFailedGame(
-                currentStats: _stats, playTimeSeconds: seconds,
-                mainCategoryKey: 'first_pick');
-        if (mounted) setState(() { _stats = updated; _playedIds.add(question.id); });
+                currentStats: _stats,
+                playTimeSeconds: seconds,
+                mainCategoryKey: 'first_pick',
+              );
+        if (mounted) {
+          setState(() {
+            _stats = updated;
+            _playedIds.add(question.id);
+          });
+        }
       }
     } catch (e) {
       // Don't silently award duplicate score after a persistence failure.
-      if (mounted) setState(() => _error = 'Progress could not be saved. Please check your connection before continuing.');
+      if (mounted) {
+        setState(
+          () => _error =
+              'Progress could not be saved. Please check your connection before continuing.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -164,76 +257,161 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
     final q = _current;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(backgroundColor: AppColors.background,
-        title: const Text('FIRST PICK', style: TextStyle(fontFamily: 'Oswald'))),
-      body: SafeArea(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 760),
-        child: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null && q == null
-            ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text(_error!, textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                FilledButton(onPressed: _init, child: const Text('RETRY'))])
-            : q == null
-              ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text(_questions.isEmpty ? 'No First Pick questions are live yet.' :
-                      'You have completed all ${_questions.length} First Pick questions!',
-                      textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  if (_questions.isNotEmpty) FilledButton(
-                    onPressed: () { setState(() => _practice = true); _next(); },
-                    child: const Text('PRACTICE (0 XP)')),
-                ])
-              : SingleChildScrollView(padding: const EdgeInsets.all(18), child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(q.category.replaceAll('_',' ').toUpperCase(),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Color(0xFFFE5E02), fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Text(_practice ? 'PRACTICE · 0 XP' :
-                        'Attempt ${(_attempts + 1).clamp(1, 3)} of 3 · ${const [100,60,30][_attempts < 3 ? _attempts : 2]} XP available',
-                        textAlign: TextAlign.center),
-                    const SizedBox(height: 20),
-                    Text(q.question, textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 20),
-                    for (var i = 0; i < 6; i++) Padding(
-                      padding: const EdgeInsets.only(bottom: 9),
-                      child: OutlinedButton(
-                        onPressed: _finished || _wrongOptions.contains(i) ? null : () => _pick(i),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
-                          side: BorderSide(color: _finished && i == q.correctIndex
-                              ? Colors.green : _wrongOptions.contains(i) ? Colors.red :
-                                  const Color(0xFFFE5E02)),
-                          foregroundColor: Colors.white),
-                        child: Row(children: [
-                          Text('${String.fromCharCode(65+i)}.  '),
-                          Expanded(child: Text(q.options[i])),
-                          if (_finished && i == q.correctIndex) const Icon(Icons.check, color: Colors.green),
-                        ]),
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        title: Text(
+          'FIRST PICK · ${widget.categoryTitle.toUpperCase()}',
+          style: const TextStyle(fontFamily: 'Oswald', fontSize: 19),
+        ),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null && q == null
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_error!, textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: _init,
+                        child: const Text('RETRY'),
                       ),
-                    ),
-                    if (_finished) ...[
-                      const SizedBox(height: 8),
-                      Text(_picked == q.correctIndex ? 'CORRECT!' : 'OUT OF TRIES',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      Text(q.explanation, textAlign: TextAlign.center),
-                      const SizedBox(height: 12),
-                      if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
-                      FilledButton(onPressed: _submitting || _error != null ? null : _next,
-                          child: const Text('NEXT QUESTION')),
-                    ] else ...[
-                      Text('${3 - _attempts} tries remaining', textAlign: TextAlign.center),
-                      TextButton(onPressed: () => _pick(-1), child: const Text('GIVE UP', style: TextStyle(color: Colors.red))),
                     ],
-                  ],
-                )),
-      ))),
+                  )
+                : q == null
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _questions.isEmpty
+                            ? 'No live questions found for ${widget.categoryTitle}.'
+                            : 'You have completed all ${_questions.length} ${widget.categoryTitle} questions!',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      if (_questions.isNotEmpty)
+                        FilledButton(
+                          onPressed: () {
+                            setState(() => _practice = true);
+                            _next();
+                          },
+                          child: const Text('PRACTICE (0 XP)'),
+                        ),
+                    ],
+                  )
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          q.category.replaceAll('_', ' ').toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Color(0xFFFE5E02),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _practice
+                              ? 'PRACTICE · 0 XP'
+                              : 'Attempt ${(_attempts + 1).clamp(1, 3)} of 3 · ${const [100, 60, 30][_attempts < 3 ? _attempts : 2]} XP available',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          q.question,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 23,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        for (var i = 0; i < 6; i++)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 9),
+                            child: OutlinedButton(
+                              onPressed: _finished || _wrongOptions.contains(i)
+                                  ? null
+                                  : () => _pick(i),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                  horizontal: 14,
+                                ),
+                                side: BorderSide(
+                                  color: _finished && i == q.correctIndex
+                                      ? Colors.green
+                                      : _wrongOptions.contains(i)
+                                      ? Colors.red
+                                      : const Color(0xFFFE5E02),
+                                ),
+                                foregroundColor: Colors.white,
+                              ),
+                              child: Row(
+                                children: [
+                                  Text('${String.fromCharCode(65 + i)}.  '),
+                                  Expanded(child: Text(q.options[i])),
+                                  if (_finished && i == q.correctIndex)
+                                    const Icon(
+                                      Icons.check,
+                                      color: Colors.green,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        if (_finished) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            _picked == q.correctIndex
+                                ? 'CORRECT!'
+                                : 'OUT OF TRIES',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(q.explanation, textAlign: TextAlign.center),
+                          const SizedBox(height: 12),
+                          if (_error != null)
+                            Text(
+                              _error!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          FilledButton(
+                            onPressed: _submitting || _error != null
+                                ? null
+                                : _next,
+                            child: const Text('NEXT QUESTION'),
+                          ),
+                        ] else ...[
+                          Text(
+                            '${3 - _attempts} tries remaining',
+                            textAlign: TextAlign.center,
+                          ),
+                          TextButton(
+                            onPressed: () => _pick(-1),
+                            child: const Text(
+                              'GIVE UP',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -2,7 +2,7 @@ name: first_guess
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+13
+version: 1.0.0+14
 
 environment:
   sdk: ">=3.12.2 <4.0.0"
@@ -97,6 +97,7 @@ flutter:
     - assets/images/categories/sports/
     - assets/images/categories/watch_play/
     - assets/images/categories/first_word/
+    - assets/images/categories/first_pick/
     - assets/images/categories/creative_world/
     - assets/images/categories/science_nature/
     - assets/images/badges/

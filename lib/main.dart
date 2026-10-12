@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'firebase_options.dart';
+import 'services/home_keyboard_route_observer.dart';
 import 'screens/home_screen.dart';
 import 'theme/app_colors.dart';
 
@@ -83,6 +84,7 @@ class FirstGuessApp extends StatelessWidget {
       title: 'First Guess',
       debugShowCheckedModeBanner: false,
       navigatorObservers: <NavigatorObserver>[
+        homeKeyboardRouteObserver,
         FirebaseAnalyticsObserver(
           analytics: FirebaseAnalytics.instance,
         ),

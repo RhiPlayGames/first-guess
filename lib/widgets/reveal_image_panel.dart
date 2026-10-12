@@ -92,8 +92,9 @@ class RevealImagePanel extends StatelessWidget {
               ]
             : null,
       ),
+      clipBehavior: Clip.antiAlias,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         child: Center(
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 350),

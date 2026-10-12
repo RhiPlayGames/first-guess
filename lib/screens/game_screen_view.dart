@@ -740,7 +740,7 @@ extension _GameScreenView on _GameScreenState {
                 final double available = constraints.maxWidth - gap;
                 final double imageSide = keyboardOpen
                     ? (available * 0.46).clamp(106.0, 164.0)
-                    : (available * 0.55);
+                    : (available * 0.57).clamp(126.0, 205.0);
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -778,7 +778,7 @@ extension _GameScreenView on _GameScreenState {
                              enabled: canPlay && !isLastClue,
                              onPressed: showNextClue,
                            ),
-                           const SizedBox(height: 20),
+                           SizedBox(height: keyboardOpen ? 10 : 20),
                            _keyboardSideButton(
                              label: 'GIVE UP',
                              enabled: canPlay,

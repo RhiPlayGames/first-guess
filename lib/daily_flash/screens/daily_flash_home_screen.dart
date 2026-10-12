@@ -62,33 +62,21 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
 
       final List<Future<dynamic>> futures = <Future<dynamic>>[
         DailyFlashProgressService.loadToday(),
-        DailyFlashGameProgressService.loadToday(
-          gameKey: 'first_word',
-        ),
-        DailyFlashGameProgressService.loadToday(
-          gameKey: 'first_date',
-        ),
-        DailyFlashGameProgressService.loadToday(
-          gameKey: 'first_match',
-        ),
-        DailyFlashGameProgressService.loadToday(
-          gameKey: 'first_order',
-        ),
+        DailyFlashGameProgressService.loadToday(gameKey: 'first_word'),
+        DailyFlashGameProgressService.loadToday(gameKey: 'first_date'),
+        DailyFlashGameProgressService.loadToday(gameKey: 'first_match'),
+        DailyFlashGameProgressService.loadToday(gameKey: 'first_order'),
         if (firstConnectionEnabled)
-          DailyFlashGameProgressService.loadToday(
-            gameKey: 'first_connection',
-          ),
+          DailyFlashGameProgressService.loadToday(gameKey: 'first_connection'),
       ];
 
-      final List<dynamic> results =
-          await Future.wait<dynamic>(futures);
+      final List<dynamic> results = await Future.wait<dynamic>(futures);
 
       if (!mounted) {
         return;
       }
 
-      final DailyFlashProgress classic =
-          results[0] as DailyFlashProgress;
+      final DailyFlashProgress classic = results[0] as DailyFlashProgress;
       final DailyFlashGameProgress firstWord =
           results[1] as DailyFlashGameProgress;
       final DailyFlashGameProgress firstDate =
@@ -97,21 +85,16 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
           results[3] as DailyFlashGameProgress;
       final DailyFlashGameProgress firstOrder =
           results[4] as DailyFlashGameProgress;
-      final DailyFlashGameProgress? firstConnection =
-          firstConnectionEnabled
-              ? results[5] as DailyFlashGameProgress
-              : null;
+      final DailyFlashGameProgress? firstConnection = firstConnectionEnabled
+          ? results[5] as DailyFlashGameProgress
+          : null;
 
       setState(() {
         _classicProgress = classic.nextQuestionIndex.clamp(0, 5);
-        _firstWordProgress =
-            firstWord.nextQuestionIndex.clamp(0, 5);
-        _firstDateProgress =
-            firstDate.nextQuestionIndex.clamp(0, 5);
-        _firstMatchProgress =
-            firstMatch.nextQuestionIndex.clamp(0, 5);
-        _firstOrderProgress =
-            firstOrder.nextQuestionIndex.clamp(0, 5);
+        _firstWordProgress = firstWord.nextQuestionIndex.clamp(0, 5);
+        _firstDateProgress = firstDate.nextQuestionIndex.clamp(0, 5);
+        _firstMatchProgress = firstMatch.nextQuestionIndex.clamp(0, 5);
+        _firstOrderProgress = firstOrder.nextQuestionIndex.clamp(0, 5);
         _firstConnectionProgress =
             firstConnection?.nextQuestionIndex.clamp(0, 5) ?? 0;
         _firstConnectionEnabled = firstConnectionEnabled;
@@ -142,9 +125,8 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => DailyFlashLoadingScreen(
-          onChallengeFinished: _loadProgress,
-        ),
+        builder: (context) =>
+            DailyFlashLoadingScreen(onChallengeFinished: _loadProgress),
       ),
     );
 
@@ -160,9 +142,8 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => DailyFlashFirstWordScreen(
-          onChallengeFinished: _loadProgress,
-        ),
+        builder: (context) =>
+            DailyFlashFirstWordScreen(onChallengeFinished: _loadProgress),
       ),
     );
 
@@ -178,9 +159,8 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => DailyFlashFirstDateScreen(
-          onChallengeFinished: _loadProgress,
-        ),
+        builder: (context) =>
+            DailyFlashFirstDateScreen(onChallengeFinished: _loadProgress),
       ),
     );
 
@@ -196,9 +176,8 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => DailyFlashFirstMatchScreen(
-          onChallengeFinished: _loadProgress,
-        ),
+        builder: (context) =>
+            DailyFlashFirstMatchScreen(onChallengeFinished: _loadProgress),
       ),
     );
 
@@ -214,9 +193,8 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => DailyFlashFirstOrderScreen(
-          onChallengeFinished: _loadProgress,
-        ),
+        builder: (context) =>
+            DailyFlashFirstOrderScreen(onChallengeFinished: _loadProgress),
       ),
     );
 
@@ -225,17 +203,16 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
     }
   }
 
+  // ignore: unused_element - retained for the later First Connection launch.
   Future<void> _openFirstConnectionDailyFlash() async {
-    if (!_firstConnectionEnabled ||
-        _firstConnectionProgress >= 5) {
+    if (!_firstConnectionEnabled || _firstConnectionProgress >= 5) {
       return;
     }
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => DailyFlashFirstConnectionScreen(
-          onChallengeFinished: _loadProgress,
-        ),
+        builder: (context) =>
+            DailyFlashFirstConnectionScreen(onChallengeFinished: _loadProgress),
       ),
     );
 
@@ -261,10 +238,7 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
           content: const Text(
             'This resets today’s Daily Flash play progress for testing. '
             'It does not remove lifetime XP, badges or achievements.',
-            style: TextStyle(
-              color: AppColors.white,
-              height: 1.4,
-            ),
+            style: TextStyle(color: AppColors.white, height: 1.4),
           ),
           actions: <Widget>[
             TextButton(
@@ -308,12 +282,11 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text('Daily Flash reset for testing.'),
-        ),
+        const SnackBar(content: Text('Daily Flash reset for testing.')),
       );
   }
 
+  // ignore: unused_element - retained for an upcoming Daily Flash mode.
   void _showModeComingSoon(String gameName) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -333,10 +306,8 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
   }
 
   void _updateCountdown() {
-    final Duration remaining =
-        DailyFlashScheduleService.timeUntilNextRelease();
-    final String activeDateKey =
-        DailyFlashScheduleService.activeDateKey();
+    final Duration remaining = DailyFlashScheduleService.timeUntilNextRelease();
+    final String activeDateKey = DailyFlashScheduleService.activeDateKey();
     final bool dailyFlashChanged =
         _activeDailyFlashDateKey != null &&
         _activeDailyFlashDateKey != activeDateKey;
@@ -388,8 +359,7 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
       _DailyFlashGameData(
         title: 'First Date',
         subtitle: 'Five events. One date. Can you piece it together?',
-        imagePath:
-            'assets/images/categories/first_date/firstdateicon128.webp',
+        imagePath: 'assets/images/categories/first_date/firstdateicon128.webp',
         progress: _firstDateProgress,
         enabled: !_loading,
         onPressed: _openFirstDateDailyFlash,
@@ -415,8 +385,7 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
       _DailyFlashGameData(
         title: 'First Word',
         subtitle: 'Five clues. One hidden word. How soon can you solve it?',
-        imagePath:
-            'assets/images/categories/first_word/firstword_128.webp',
+        imagePath: 'assets/images/categories/first_word/firstword_128.webp',
         progress: _firstWordProgress,
         enabled: !_loading,
         onPressed: _openFirstWordDailyFlash,
@@ -454,19 +423,14 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
               30,
             ),
             children: [
-              _DailyFlashEventHero(
-                countdownText: _countdownText,
-              ),
+              _DailyFlashEventHero(countdownText: _countdownText),
               if (kDebugMode) ...<Widget>[
                 SizedBox(height: isDesktop ? 12 : 10),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
                     onPressed: _loading ? null : _resetDailyFlashForTesting,
-                    icon: const Icon(
-                      Icons.restart_alt_rounded,
-                      size: 18,
-                    ),
+                    icon: const Icon(Icons.restart_alt_rounded, size: 18),
                     label: const Text(
                       'RESET DAILY FLASH',
                       style: TextStyle(
@@ -482,17 +446,14 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
                 ),
               ],
               SizedBox(height: isDesktop ? 20 : 16),
-              const _SectionHeading(
-                text: 'TODAY\'S CHALLENGES',
-              ),
+              const _SectionHeading(text: 'TODAY\'S CHALLENGES'),
               SizedBox(height: isDesktop ? 16 : 12),
               if (isDesktop)
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: games.length,
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 14,
                     mainAxisSpacing: 14,
@@ -509,13 +470,9 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
                 ...games.map(
                   (_DailyFlashGameData game) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _DailyFlashGameCard(
-                      data: game,
-                      isDesktop: false,
-                    ),
+                    child: _DailyFlashGameCard(data: game, isDesktop: false),
                   ),
                 ),
-
             ],
           ),
         ),
@@ -527,9 +484,7 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
 class _SectionHeading extends StatelessWidget {
   final String text;
 
-  const _SectionHeading({
-    required this.text,
-  });
+  const _SectionHeading({required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -548,9 +503,7 @@ class _SectionHeading extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        const Expanded(
-          child: _HeadingLine(reverse: true),
-        ),
+        const Expanded(child: _HeadingLine(reverse: true)),
       ],
     );
   }
@@ -559,9 +512,7 @@ class _SectionHeading extends StatelessWidget {
 class _HeadingLine extends StatelessWidget {
   final bool reverse;
 
-  const _HeadingLine({
-    this.reverse = false,
-  });
+  const _HeadingLine({this.reverse = false});
 
   @override
   Widget build(BuildContext context) {
@@ -571,10 +522,7 @@ class _HeadingLine extends StatelessWidget {
         gradient: LinearGradient(
           begin: reverse ? Alignment.centerRight : Alignment.centerLeft,
           end: reverse ? Alignment.centerLeft : Alignment.centerRight,
-          colors: const <Color>[
-            Colors.transparent,
-            AppColors.orange,
-          ],
+          colors: const <Color>[Colors.transparent, AppColors.orange],
         ),
       ),
     );
@@ -603,10 +551,7 @@ class _DailyFlashGameCard extends StatelessWidget {
   final _DailyFlashGameData data;
   final bool isDesktop;
 
-  const _DailyFlashGameCard({
-    required this.data,
-    required this.isDesktop,
-  });
+  const _DailyFlashGameCard({required this.data, required this.isDesktop});
 
   @override
   Widget build(BuildContext context) {
@@ -618,8 +563,8 @@ class _DailyFlashGameCard extends StatelessWidget {
     final String ctaText = complete
         ? 'COMPLETE'
         : data.enabled
-            ? 'PLAY'
-            : 'COMING SOON';
+        ? 'PLAY'
+        : 'COMING SOON';
 
     return Container(
       padding: EdgeInsets.all(isDesktop ? 12 : 11),
@@ -649,9 +594,7 @@ class _DailyFlashGameCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.background,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: bannerGold,
-              ),
+              border: Border.all(color: bannerGold),
             ),
             child: Image.asset(
               data.imagePath,
@@ -722,9 +665,7 @@ class _DailyFlashGameCard extends StatelessWidget {
                     ctaText,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.label.copyWith(
-                      color: complete
-                          ? AppColors.orange
-                          : AppColors.white,
+                      color: complete ? AppColors.orange : AppColors.white,
                       fontSize: ctaText == 'COMING SOON' ? 9.5 : 11.5,
                       fontWeight: FontWeight.w800,
                     ),
@@ -739,21 +680,15 @@ class _DailyFlashGameCard extends StatelessWidget {
   }
 }
 
-
 class _DailyFlashEventHero extends StatelessWidget {
   final String countdownText;
 
-  const _DailyFlashEventHero({
-    required this.countdownText,
-  });
+  const _DailyFlashEventHero({required this.countdownText});
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (
-        BuildContext context,
-        BoxConstraints constraints,
-      ) {
+      builder: (BuildContext context, BoxConstraints constraints) {
         final bool isDesktop = constraints.maxWidth >= 900;
 
         final String bannerAsset = isDesktop
@@ -806,9 +741,7 @@ class _DailyFlashEventHero extends StatelessWidget {
                                 height: 1.0,
                               ),
                             ),
-                            SizedBox(
-                              height: isDesktop ? 5 : 2,
-                            ),
+                            SizedBox(height: isDesktop ? 5 : 2),
                             Text(
                               countdownText,
                               maxLines: 1,
@@ -835,4 +768,3 @@ class _DailyFlashEventHero extends StatelessWidget {
     );
   }
 }
-
