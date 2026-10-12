@@ -421,19 +421,6 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
         enabled: !_loading,
         onPressed: _openFirstWordDailyFlash,
       ),
-      _DailyFlashGameData(
-        title: 'First Connection',
-        subtitle: _firstConnectionEnabled
-            ? 'Six clues. One hidden link. Can you find the connection?'
-            : 'Six clues. One hidden link. Coming soon.',
-        imagePath:
-            'assets/images/categories/first_connection/firstconnections_icon128.webp',
-        progress: _firstConnectionProgress,
-        enabled: !_loading && _firstConnectionEnabled,
-        onPressed: _firstConnectionEnabled
-            ? _openFirstConnectionDailyFlash
-            : () => _showModeComingSoon('First Connection'),
-      ),
     ];
 
     return Scaffold(

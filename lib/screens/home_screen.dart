@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 
@@ -37,6 +37,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadSelectedAvatar();
     _loadPlayerStats();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) FocusManager.instance.primaryFocus?.unfocus();
+    });
   }
 
   Future<void> _loadPlayerStats() async {
@@ -73,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (mounted) {
+      FocusManager.instance.primaryFocus?.unfocus();
       await _loadPlayerStats();
     }
   }
@@ -85,6 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (mounted) {
+      FocusManager.instance.primaryFocus?.unfocus();
       await _loadPlayerStats();
     }
   }
@@ -97,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (mounted) {
+      FocusManager.instance.primaryFocus?.unfocus();
       await _loadPlayerStats();
     }
   }
@@ -109,6 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (mounted) {
+      FocusManager.instance.primaryFocus?.unfocus();
       await _loadPlayerStats();
     }
   }
@@ -121,6 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (mounted) {
+      FocusManager.instance.primaryFocus?.unfocus();
       await _loadPlayerStats();
     }
   }
@@ -133,6 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (mounted) {
+      FocusManager.instance.primaryFocus?.unfocus();
       await _loadPlayerStats();
     }
   }
@@ -145,6 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (mounted) {
+      FocusManager.instance.primaryFocus?.unfocus();
       await _loadPlayerStats();
     }
   }
@@ -241,17 +251,6 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: _openFirstWord,
         ctaLabel: 'PLAY',
       ),
-      _CategoryData(
-        title: 'First Connection',
-        subtitle: isPhone
-            ? '6 clues. Can you find the link?'
-            : 'Six clues. One hidden link. Can you find the connection?',
-        imagePath:
-            'assets/images/categories/first_connection/firstconnections_icon128.webp',
-        isAvailable: false,
-        onPressed: _openFirstConnection,
-        ctaLabel: 'PLAY',
-      ),
     ];
 
     return Scaffold(
@@ -338,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                   SizedBox(height: isDesktop ? 16 : 4),
-                  const _AdSpace(),
+                  // Bottom advertisement placeholder hidden for this release.
                 ],
               ),
             ),

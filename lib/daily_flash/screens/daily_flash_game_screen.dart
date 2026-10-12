@@ -2067,7 +2067,10 @@ class _DailyFlashGameScreenState
 
                        if (_isInstalledPhone(context)) ...<Widget>[
                          LayoutBuilder(builder: (context, constraints) {
-                           final double side = ((constraints.maxWidth - 10) * 0.54).clamp(122.0, 196.0);
+                           final bool keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
+                           final double side = keyboardVisible
+                               ? ((constraints.maxWidth - 10) * 0.45).clamp(106.0, 164.0)
+                               : ((constraints.maxWidth - 10) * 0.57).clamp(126.0, 205.0);
                            return Row(
                              children: <Widget>[
                                SizedBox(width: side, height: side,
@@ -2083,7 +2086,7 @@ class _DailyFlashGameScreenState
                                const SizedBox(width: 10),
                                Expanded(child: Column(children: <Widget>[
                                  _phoneClassicButton('NEXT CLUE', !questionFinished && !challengeFinished && !isLastClue, nextCluePressed),
-                                 const SizedBox(height: 14),
+                                 SizedBox(height: MediaQuery.viewInsetsOf(context).bottom > 0 ? 10 : 20),
                                  _phoneClassicButton('GIVE UP', !questionFinished && !challengeFinished, finishFailedQuestion, destructive: true),
                                ])),
                              ],
@@ -2725,8 +2728,9 @@ class _DailyFlashQuestionImagePanel
           width: 1.3,
         ),
       ),
+      clipBehavior: Clip.antiAlias,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.7),
         child: Image.asset(
         imagePath,
         key: ValueKey<String>(

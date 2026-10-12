@@ -730,17 +730,17 @@ extension _GameScreenView on _GameScreenState {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             buildClueHeaderBlock(),
-            SizedBox(height: keyboardOpen ? 6 : 10),
+            SizedBox(height: keyboardOpen ? 4 : 10),
             // The clue never moves below the image.
             CluePanel(clue: currentItem.clues[currentClueIndex]),
-            SizedBox(height: keyboardOpen ? 8 : 12),
+            SizedBox(height: keyboardOpen ? 5 : 12),
             LayoutBuilder(
               builder: (context, constraints) {
-                const double gap = 12;
+                const double gap = 10;
                 final double available = constraints.maxWidth - gap;
                 final double imageSide = keyboardOpen
-                    ? (available * 0.48).clamp(120.0, 180.0)
-                    : (available * 0.51);
+                    ? (available * 0.46).clamp(106.0, 164.0)
+                    : (available * 0.55);
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -778,7 +778,7 @@ extension _GameScreenView on _GameScreenState {
                              enabled: canPlay && !isLastClue,
                              onPressed: showNextClue,
                            ),
-                           const SizedBox(height: 8),
+                           const SizedBox(height: 20),
                            _keyboardSideButton(
                              label: 'GIVE UP',
                              enabled: canPlay,
@@ -793,7 +793,7 @@ extension _GameScreenView on _GameScreenState {
               },
             ),
             buildGameMessage(),
-            SizedBox(height: keyboardOpen ? 8 : 14),
+            SizedBox(height: keyboardOpen ? 5 : 14),
             // Never conditionally replace this TextField: iOS must retain
             // its first-responder connection as the keyboard opens.
             Container(
