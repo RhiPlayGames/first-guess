@@ -10,6 +10,7 @@ import '../services/achievement_service.dart';
 import '../widgets/game_dialogs.dart';
 import '../widgets/app_home_button.dart';
 import '../widgets/stats_panel.dart';
+import '../widgets/lives_display.dart';
 import '../widgets/milestone_reached_dialog.dart';
 import '../services/player_stats_service.dart';
 import '../theme/app_colors.dart';
@@ -46,6 +47,13 @@ class _PickQuestion {
 }
 
 class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
+  static const List<int> _baseXpByAttempt = <int>[50, 30, 10];
+  static const int _firstGuessBonusXp = 25;
+
+  static int _earnedXpForAttempt(int attempt) =>
+      _baseXpByAttempt[attempt - 1] +
+      (attempt == 1 ? _firstGuessBonusXp : 0);
+
   final Random _random = Random();
   final Set<String> _seenThisSession = {};
   List<_PickQuestion> _questions = [];
@@ -248,7 +256,7 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
             ? await PlayerStatsService.recordCorrectGame(
                 currentStats: _stats,
                 category: GameCategory.other,
-                pointsWon: const [100, 60, 30][attempt - 1],
+                pointsWon: _earnedXpForAttempt(attempt),
                 clueNumber: attempt,
                 wasFirstGuess: attempt == 1,
                 playTimeSeconds: seconds,
@@ -349,7 +357,7 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
     PlayerStats? updatedStats,
   }) async {
     if (!mounted) return;
-    final xp = correct && !_practice ? const [100, 60, 30][attempt - 1] : 0;
+    final xp = correct && !_practice ? _earnedXpForAttempt(attempt) : 0;
     return showGameResultDialog(
       context: context,
       title: correct ? (attempt == 1 ? 'FIRST GUESS!' : 'CORRECT!') : 'GAME OVER',
@@ -375,26 +383,26 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
     final wrong = _wrongOptions.contains(index);
     final right = _finished && index == q.correctIndex;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 6),
       child: InkWell(
         onTap: _finished || _submitting || wrong ? null : () => _pick(index),
         borderRadius: BorderRadius.circular(15),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          constraints: const BoxConstraints(minHeight: 54),
+          constraints: const BoxConstraints(minHeight: 44),
           decoration: BoxDecoration(
             color: right ? const Color(0xFF12311D) : const Color(0xFF191919),
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: right ? const Color(0xFF3CB963) : wrong ? const Color(0xFFD32F2F) : AppColors.orange,
+              color: right ? const Color(0xFF3CB963) : AppColors.orange,
               width: right || wrong ? 2 : 1.2,
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(children: [
               Expanded(child: Text(q.options[index], textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'Inter', fontSize: 16,
+                style: TextStyle(fontFamily: 'Inter', fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: wrong ? AppColors.grey : AppColors.white))),
               if (wrong) const Icon(Icons.close_rounded, color: Color(0xFFD32F2F))
@@ -422,10 +430,14 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
         toolbarHeight: isDesktop ? 80 : 72,
         title: GestureDetector(
           onTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
-          child: Text('FIRST PICK', style: TextStyle(
-            fontFamily: 'Oswald', fontSize: isDesktop ? 28 : 24,
-            fontWeight: FontWeight.w600,
-          )),
+          child: SizedBox(
+            height: isDesktop ? 76 : 64,
+            child: Image.asset(
+              'assets/images/categories/category_headers/first_pick_logo.webp',
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
+            ),
+          ),
         ),
         actions: [Padding(
           padding: const EdgeInsets.only(right: 16),
@@ -456,7 +468,7 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
                         ]),
                       ))
                     : SingleChildScrollView(
-                        padding: EdgeInsets.fromLTRB(isDesktop ? 32 : 16, 6, isDesktop ? 32 : 16, 28),
+                        padding: EdgeInsets.fromLTRB(isDesktop ? 32 : 12, 4, isDesktop ? 32 : 12, 16),
                         child: Center(child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 880),
                           child: Container(
@@ -474,33 +486,32 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
                                 gamesPlayed: _stats.gamesPlayed,
                                 showWebBorder: false,
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 6),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(15),
                                   color: AppColors.background,
                                   border: Border.all(color: const Color(0xFF444444)),
                                 ),
-                                child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                                  Flexible(child: Text(widget.categoryTitle.toUpperCase(),
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontFamily: 'Oswald', fontSize: 16, color: AppColors.orange))),
+                                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                  LivesDisplay(lives: (3 - _attempts).clamp(0, 3), maximumLives: 3),
+                                  const SizedBox(width: 10),
                                   Text('${3 - _attempts} ${3 - _attempts == 1 ? 'LIFE' : 'LIVES'} LEFT',
-                                    style: const TextStyle(fontFamily: 'Oswald', fontSize: 15)),
+                                    style: const TextStyle(fontFamily: 'Oswald', fontSize: 14)),
                                 ]),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 8),
                               Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.all(18),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                 decoration: BoxDecoration(
                                   color: AppColors.panel,
                                   border: Border.all(color: AppColors.orange, width: 1.3),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(q.question, textAlign: TextAlign.center,
-                                  style: const TextStyle(fontFamily: 'Oswald', fontSize: 23,
+                                  style: const TextStyle(fontFamily: 'Oswald', fontSize: 19,
                                     fontWeight: FontWeight.w600, color: AppColors.white)),
                               ),
                               AnimatedSwitcher(
@@ -509,18 +520,18 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
                                     ? const SizedBox(key: ValueKey('pick-empty'))
                                     : Padding(
                                         key: ValueKey(_message),
-                                        padding: const EdgeInsets.only(top: 14),
+                                        padding: const EdgeInsets.only(top: 8),
                                         child: GameMessagePanel(message: _message!, type: GameMessageType.error),
                                       ),
                               ),
-                              const SizedBox(height: 16),
-                              for (int i = 0; i < q.options.length; i++) _optionTile(q, i),
                               const SizedBox(height: 8),
+                              for (int i = 0; i < q.options.length; i++) _optionTile(q, i),
+                              const SizedBox(height: 4),
                               if (_error != null) Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: Text(_error!, style: const TextStyle(color: Color(0xFFD32F2F))),
                               ),
-                              SizedBox(height: 48, child: FilledButton(
+                              SizedBox(height: 44, child: FilledButton(
                                 onPressed: _finished || _submitting ? null : () => _pick(-1),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: const Color(0xFFD32F2F),

@@ -764,46 +764,43 @@ class _StatsDetailScreenState extends State<StatsDetailScreen> {
   }
 
   Future<void> _loadStats() async {
-    final List<dynamic> initialResults =
-        await Future.wait<dynamic>(<Future<dynamic>>[
-      PlayerStatsService.loadStats(),
-      FeatureFlagService.isFirstConnectionEnabled(),
-    ]);
+    // Display core stats as soon as they are ready. Daily Flash history and
+    // per-category counts refresh separately instead of blocking the page.
+    try {
+      final List<dynamic> initialResults = await Future.wait<dynamic>([
+        PlayerStatsService.loadStats(),
+        FeatureFlagService.isFirstConnectionEnabled(),
+      ]).timeout(const Duration(seconds: 15));
+      if (!mounted) return;
+      final bool firstConnectionEnabled = initialResults[1] as bool;
+      setState(() {
+        _stats = initialResults[0] as PlayerStats;
+        _firstConnectionEnabled = firstConnectionEnabled;
+        _isLoading = false;
+      });
 
-    final PlayerStats savedStats = initialResults[0] as PlayerStats;
-    final bool firstConnectionEnabled = initialResults[1] as bool;
-
-    final Map<String, int> dailyFlashGameCompletions =
-        await DailyFlashMilestoneService.loadGameCompletions();
-
-    final Map<String, int> dailyFlashGamePerfect5s =
-        await DailyFlashMilestoneService.loadGamePerfect5s();
-
-    final Set<String> playedQuestionIds =
-        await QuestionHistoryService.loadPlayedQuestionIds();
-
-    final Map<String, int> categoryPlayedCounts =
-        _buildCategoryPlayedCounts(playedQuestionIds);
-
-    final Map<_StatsGameMode, int> gamePlayedCounts =
-        _buildGamePlayedCounts(
-      playedQuestionIds,
-      firstConnectionEnabled: firstConnectionEnabled,
-    );
-
-    if (!mounted) {
-      return;
+      // Independent supplementary reads run together. A failed/slow read must
+      // not prevent the player seeing their core stats.
+      final List<dynamic> extras = await Future.wait<dynamic>([
+        DailyFlashMilestoneService.loadGameCompletions(),
+        DailyFlashMilestoneService.loadGamePerfect5s(),
+        QuestionHistoryService.loadPlayedQuestionIds(),
+      ]).timeout(const Duration(seconds: 15));
+      if (!mounted) return;
+      final Set<String> playedQuestionIds = extras[2] as Set<String>;
+      setState(() {
+        _dailyFlashGameCompletions = extras[0] as Map<String, int>;
+        _dailyFlashGamePerfect5s = extras[1] as Map<String, int>;
+        _categoryPlayedCounts = _buildCategoryPlayedCounts(playedQuestionIds);
+        _gamePlayedCounts = _buildGamePlayedCounts(
+          playedQuestionIds,
+          firstConnectionEnabled: firstConnectionEnabled,
+        );
+      });
+    } catch (error) {
+      debugPrint('Stats loading: $error');
+      if (mounted) setState(() => _isLoading = false);
     }
-
-    setState(() {
-      _stats = savedStats;
-      _dailyFlashGameCompletions = dailyFlashGameCompletions;
-      _dailyFlashGamePerfect5s = dailyFlashGamePerfect5s;
-      _categoryPlayedCounts = categoryPlayedCounts;
-      _gamePlayedCounts = gamePlayedCounts;
-      _firstConnectionEnabled = firstConnectionEnabled;
-      _isLoading = false;
-    });
   }
 
   Map<String, int> _buildCategoryPlayedCounts(

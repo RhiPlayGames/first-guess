@@ -62,7 +62,7 @@ class HowToPlayScreen extends StatelessWidget {
             _RuleCard(
               title: 'FIRST PICK',
               text:
-                  'Choose a category, then select the correct answer from six choices. You have three attempts per question. Earn 100 XP on your first attempt, 60 XP on your second or 30 XP on your third. After three incorrect answers, the correct answer is revealed.',
+                  'Choose a category, then select the correct answer from six choices. You have three attempts per question. Earn 50 XP on your first attempt, 30 XP on your second or 10 XP on your third, plus a 25 XP First Guess bonus for a correct first attempt (75 XP total). After three incorrect answers, the correct answer is revealed.',
             ),
             SizedBox(height: 12),
             _RuleCard(
@@ -74,13 +74,13 @@ class HowToPlayScreen extends StatelessWidget {
             _RuleCard(
               title: 'SCORING',
               text:
-                  'The earlier you solve a challenge, the more XP you earn. Different games have their own scoring structure, with the highest rewards for getting it right first time.',
+                  'Classic First Guess and First Date: 100 XP on clue 1, falling by 10 XP per clue. First Word, First Connection and First Order: 100/80/60/40/20 XP. First Match: 100/80/60/40/20 XP per submission. First Pick: 50/30/10 XP by attempt. First Guess bonuses apply separately.',
             ),
             SizedBox(height: 12),
             _HighlightCard(
               title: 'FIRST GUESS BONUS',
               text:
-                  'Solve a challenge on your first attempt to earn extra XP. In Classic First Guess, getting Clue 1 correct earns 100 XP plus a 50 XP First Guess bonus.',
+                  'Solve a challenge on your first attempt to earn extra XP. In Classic First Guess, getting Clue 1 correct earns 100 XP plus a 50 XP bonus. First Pick awards a 25 XP bonus for a correct first attempt. The other regular games award a 50 XP first-attempt bonus.',
             ),
             SizedBox(height: 12),
             _RuleCard(
@@ -92,7 +92,7 @@ class HowToPlayScreen extends StatelessWidget {
             _HighlightCard(
               title: 'DAILY FLASH 5',
               text:
-                  'Choose from the five live games and take on 5 new questions every day. Daily Flash 5 awards 2× XP.',
+                  'Play five new questions per available Daily Flash 5 game each day. Daily Flash 5 doubles earned XP, including the First Guess bonus. First Pick scores 50/30/10 XP by attempt, plus a 25 XP bonus for a correct first attempt. Its Daily Flash 5 scoring is doubled: 150/60/20 XP.',
             ),
           ],
         ),

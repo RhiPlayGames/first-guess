@@ -52,6 +52,15 @@ class _BadgesScreenState extends State<BadgesScreen> {
       }
     }
 
+    if (!mounted) return;
+    // Core badges are ready; do not block them on seven separate Case File
+    // reads (which may each require a network round-trip on Flutter web).
+    setState(() {
+      _stats = savedStats;
+      _firstConnectionEnabled = firstConnectionEnabled;
+      _isLoading = false;
+    });
+
     final List<CaseProgress?> caseResults = await Future.wait<CaseProgress?>([
       safeLoad(CasePathService.loadAnimalKingdomProgress),
       safeLoad(CasePathService.loadRoundTheWorldProgress),
@@ -62,13 +71,8 @@ class _BadgesScreenState extends State<BadgesScreen> {
       safeLoad(CasePathService.loadTheCreativeCodeProgress),
     ]);
 
-    if (!mounted) {
-      return;
-    }
-
+    if (!mounted) return;
     setState(() {
-      _stats = savedStats;
-      _firstConnectionEnabled = firstConnectionEnabled;
       _animalKingdomProgress = caseResults[0];
       _roundTheWorldProgress = caseResults[1];
       _secretsOfThePastProgress = caseResults[2];
@@ -76,7 +80,6 @@ class _BadgesScreenState extends State<BadgesScreen> {
       _natureOfDiscoveryProgress = caseResults[4];
       _theWrittenWordProgress = caseResults[5];
       _theCreativeCodeProgress = caseResults[6];
-      _isLoading = false;
     });
   }
 
