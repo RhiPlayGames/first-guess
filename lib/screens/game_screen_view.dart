@@ -415,6 +415,8 @@ extension _GameScreenView on _GameScreenState {
             ? caseToolbarHeight
             : useDesktopWebsiteLayout
             ? 70
+            : useNativePhoneLayout
+            ? 72
             : 92,
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.white,
@@ -476,16 +478,20 @@ extension _GameScreenView on _GameScreenState {
               padding: EdgeInsets.fromLTRB(
                 useDesktopWebsiteLayout
                     ? 28
+                    : useNativePhoneLayout
+                    ? 12
                     : keyboardOpen
                     ? 12
                     : 18,
-                keyboardOpen ? 2 : 8,
+                useNativePhoneLayout ? 5 : keyboardOpen ? 2 : 8,
                 useDesktopWebsiteLayout
                     ? 28
+                    : useNativePhoneLayout
+                    ? 12
                     : keyboardOpen
                     ? 12
                     : 18,
-                keyboardOpen ? 12 : 28,
+                useNativePhoneLayout ? 14 : keyboardOpen ? 12 : 28,
               ),
               child: useNativePhoneLayout
                   ? buildNativePhoneGamePanel(keyboardOpen: keyboardOpen)

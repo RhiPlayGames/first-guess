@@ -231,6 +231,7 @@ class _BadgeCollection extends StatelessWidget {
     final int firstDateCorrect = _gameCorrectCount(<String>['first_date']);
     final int firstMatchCorrect = _gameCorrectCount(<String>['first_match']);
     final int firstOrderCorrect = _gameCorrectCount(<String>['first_order']);
+    final int firstPickCorrect = _gameCorrectCount(<String>['first_pick']);
     final int firstConnectionCorrect =
         _gameCorrectCount(<String>['first_connection']);
 
@@ -372,6 +373,13 @@ class _BadgeCollection extends StatelessWidget {
         earned: firstOrderCorrect >= 10,
       ),
       _BadgeDisplayData(
+        imagePath: 'assets/images/badges/final/game_badges/first_pick_strater.webp',
+        tooltip: firstPickCorrect >= 10
+            ? 'First Pick Starter Badge'
+            : 'First Pick Starter Badge — not yet earned',
+        earned: firstPickCorrect >= 10,
+      ),
+      _BadgeDisplayData(
         imagePath:
             'assets/images/badges/final/game_badges/first_connection_starter.webp',
         tooltip: firstConnectionCorrect >= 10
@@ -420,6 +428,13 @@ class _BadgeCollection extends StatelessWidget {
             ? 'First Order Advanced Badge'
             : 'First Order Advanced Badge — not yet earned',
         earned: firstOrderCorrect >= 50,
+      ),
+      _BadgeDisplayData(
+        imagePath: 'assets/images/badges/final/game_badges/first_pick_advanced.webp',
+        tooltip: firstPickCorrect >= 50
+            ? 'First Pick Advanced Badge'
+            : 'First Pick Advanced Badge — not yet earned',
+        earned: firstPickCorrect >= 50,
       ),
       _BadgeDisplayData(
         imagePath:
@@ -472,6 +487,13 @@ class _BadgeCollection extends StatelessWidget {
         earned: firstOrderCorrect >= 150,
       ),
       _BadgeDisplayData(
+        imagePath: 'assets/images/badges/final/game_badges/first_pick_expert.webp',
+        tooltip: firstPickCorrect >= 150
+            ? 'First Pick Expert Badge'
+            : 'First Pick Expert Badge — not yet earned',
+        earned: firstPickCorrect >= 150,
+      ),
+      _BadgeDisplayData(
         imagePath:
             'assets/images/badges/final/game_badges/first_connection_expert.webp',
         tooltip: firstConnectionCorrect >= 150
@@ -522,6 +544,13 @@ class _BadgeCollection extends StatelessWidget {
         earned: firstOrderCorrect >= 500,
       ),
       _BadgeDisplayData(
+        imagePath: 'assets/images/badges/final/game_badges/first_pick_master.webp',
+        tooltip: firstPickCorrect >= 500
+            ? 'First Pick Master Badge'
+            : 'First Pick Master Badge — not yet earned',
+        earned: firstPickCorrect >= 500,
+      ),
+      _BadgeDisplayData(
         imagePath:
             'assets/images/badges/final/game_badges/first_connection_master.webp',
         tooltip: firstConnectionCorrect >= 500
@@ -570,6 +599,13 @@ class _BadgeCollection extends StatelessWidget {
             ? 'First Order Legend Badge'
             : 'First Order Legend Badge — not yet earned',
         earned: firstOrderCorrect >= 1000,
+      ),
+      _BadgeDisplayData(
+        imagePath: 'assets/images/badges/final/game_badges/first_pick_legend.webp',
+        tooltip: firstPickCorrect >= 1000
+            ? 'First Pick Legend Badge'
+            : 'First Pick Legend Badge — not yet earned',
+        earned: firstPickCorrect >= 1000,
       ),
       _BadgeDisplayData(
         imagePath:

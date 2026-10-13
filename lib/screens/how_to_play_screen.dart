@@ -60,6 +60,12 @@ class HowToPlayScreen extends StatelessWidget {
             ),
             SizedBox(height: 12),
             _RuleCard(
+              title: 'FIRST PICK',
+              text:
+                  'Choose a category, then select the correct answer from six choices. You have three attempts per question. Earn 100 XP on your first attempt, 60 XP on your second or 30 XP on your third. After three incorrect answers, the correct answer is revealed.',
+            ),
+            SizedBox(height: 12),
+            _RuleCard(
               title: 'FIRST ORDER',
               text:
                   'Put 5 items into the correct order. Arrange them carefully and solve the sequence in as few attempts as possible.',
@@ -126,7 +132,7 @@ class _IntroCard extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'Six different games. Each one tests you in a different way. Solve the challenge as early as you can to earn the most points.',
+            'Different games. Each one tests you in a different way. Solve the challenge as early as you can to earn the most points.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Inter',

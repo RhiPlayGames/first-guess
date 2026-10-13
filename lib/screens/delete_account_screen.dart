@@ -1,6 +1,7 @@
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
 import '../theme/app_colors.dart';
@@ -46,9 +47,17 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 'The server cannot validate this token.';
       }
     } on FirebaseException catch (error) {
-      result = 'App Check failed (Firebase error: ${error.code}).';
+      result = 'App Check failed.\n'
+          'Code: ${error.code}\n'
+          'Message: ${error.message ?? 'No detailed Firebase message provided.'}';
+    } on PlatformException catch (error) {
+      result = 'App Check platform error.\n'
+          'Code: ${error.code}\n'
+          'Message: ${error.message ?? 'No detailed platform message provided.'}';
     } catch (error) {
-      result = 'App Check token retrieval failed (${error.runtimeType}).';
+      result = 'App Check token retrieval failed.\n'
+          'Exception type: ${error.runtimeType}\n'
+          'Details: $error';
     } finally {
       if (mounted) setState(() => _checkingAppCheck = false);
     }
