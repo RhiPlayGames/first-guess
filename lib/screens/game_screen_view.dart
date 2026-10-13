@@ -739,13 +739,13 @@ extension _GameScreenView on _GameScreenState {
             SizedBox(height: keyboardOpen ? 4 : 10),
             // The clue never moves below the image.
             CluePanel(clue: currentItem.clues[currentClueIndex]),
-            SizedBox(height: keyboardOpen ? 5 : 12),
+            SizedBox(height: keyboardOpen ? 7 : 10),
             LayoutBuilder(
               builder: (context, constraints) {
                 const double gap = 10;
                 final double available = constraints.maxWidth - gap;
                 final double imageSide = keyboardOpen
-                    ? (available * 0.46).clamp(106.0, 164.0)
+                    ? (available * 0.45).clamp(106.0, 164.0)
                     : (available * 0.57).clamp(126.0, 205.0);
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -799,7 +799,7 @@ extension _GameScreenView on _GameScreenState {
               },
             ),
             buildGameMessage(),
-            SizedBox(height: keyboardOpen ? 5 : 14),
+            SizedBox(height: 7),
             // Never conditionally replace this TextField: iOS must retain
             // its first-responder connection as the keyboard opens.
             Container(
@@ -893,7 +893,7 @@ extension _GameScreenView on _GameScreenState {
                 backgroundColor: guess ? const Color(0xFFFE5E02) : const Color(0xFFD32F2F),
                 foregroundColor: AppColors.white,
                 disabledBackgroundColor: AppColors.darkGrey,
-                padding: const EdgeInsets.symmetric(horizontal: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 shape: RoundedRectangleBorder(borderRadius: radius),
               ),
               child: text,
@@ -904,7 +904,7 @@ extension _GameScreenView on _GameScreenState {
                 foregroundColor: AppColors.white,
                 disabledForegroundColor: AppColors.darkGrey,
                 side: BorderSide(color: enabled ? const Color(0xFF777777) : AppColors.darkGrey, width: 1.7),
-                padding: const EdgeInsets.symmetric(horizontal: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 shape: RoundedRectangleBorder(borderRadius: radius),
               ),
               child: text,

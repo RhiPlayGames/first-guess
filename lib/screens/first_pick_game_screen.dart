@@ -67,6 +67,7 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
   int _attempts = 0;
   final Set<int> _wrongOptions = {};
   bool _finished = false;
+  bool _lastPickWasCorrect = false;
   String? _message;
   Timer? _messageTimer;
   DateTime _startedAt = DateTime.now();
@@ -210,6 +211,7 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
       _attempts = 0;
       _wrongOptions.clear();
       _finished = false;
+      _lastPickWasCorrect = false;
       _submitting = false;
       _message = null;
       _error = null;
@@ -232,6 +234,7 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
       _attempts = attempt;
       if (!correct) _wrongOptions.add(index);
       _finished = finished;
+      _lastPickWasCorrect = correct;
       _submitting = finished;
     });
     if (!finished) {
@@ -362,7 +365,7 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
       context: context,
       title: correct ? (attempt == 1 ? 'FIRST GUESS!' : 'CORRECT!') : 'GAME OVER',
       message: correct
-          ? '${question.options[question.correctIndex]}\n\n${_practice ? 'PRACTICE MODE — 0 XP' : attempt == 1 ? '50 XP\n25 XP First Guess Bonus\n\n75 XP TOTAL' : '$xp XP'}${question.explanation.isEmpty ? '' : '\n\n${question.explanation}'}'
+          ? 'You identified ${question.options[question.correctIndex].toUpperCase()}\n\n${_practice ? 'PRACTICE MODE — 0 XP' : attempt == 1 ? '50 XP\n25 XP First Guess Bonus\n\n75 XP TOTAL' : '$xp XP'}'
           : 'The answer was ${question.options[question.correctIndex]}.',
       onPlayAgain: () => unawaited(_afterResult(
         goHome: false,
@@ -375,21 +378,21 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
         updatedStats: updatedStats,
       )),
       primaryButtonLabel: 'NEXT QUESTION',
-      secondaryButtonLabel: 'BACK TO HOME',
+      secondaryButtonLabel: 'HOME',
     );
   }
 
   Widget _optionTile(_PickQuestion q, int index) {
     final wrong = _wrongOptions.contains(index);
-    final right = _finished && index == q.correctIndex;
+    final right = _finished && _lastPickWasCorrect && index == q.correctIndex;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 7),
       child: InkWell(
         onTap: _finished || _submitting || wrong ? null : () => _pick(index),
         borderRadius: BorderRadius.circular(15),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          constraints: const BoxConstraints(minHeight: 44),
+          constraints: const BoxConstraints(minHeight: 49),
           decoration: BoxDecoration(
             color: right ? const Color(0xFF12311D) : const Color(0xFF191919),
             borderRadius: BorderRadius.circular(15),
@@ -399,10 +402,10 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(children: [
               Expanded(child: Text(q.options[index], textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'Inter', fontSize: 14,
+                style: TextStyle(fontFamily: 'Inter', fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: wrong ? AppColors.grey : AppColors.white))),
               if (wrong) const Icon(Icons.close_rounded, color: Color(0xFFD32F2F))
@@ -495,12 +498,12 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
                                   border: Border.all(color: const Color(0xFF444444)),
                                 ),
                                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                  Expanded(child: Text('PICKS ${_attempts.clamp(0, 3)} / 3',
+                                    style: const TextStyle(fontFamily: 'Oswald', fontSize: 14))),
                                   LivesDisplay(lives: (3 - _attempts).clamp(0, 3), maximumLives: 3),
                                   const SizedBox(width: 10),
-                                  Expanded(child: Text('${_practice ? 0 : _earnedXpForAttempt((_attempts + 1).clamp(1, 3))} XP',
-                                    textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Oswald', fontSize: 14))),
-                                  Text('PICK ${(_attempts + 1).clamp(1, 3)}/3',
-                                    style: const TextStyle(fontFamily: 'Oswald', fontSize: 14)),
+                                  Expanded(child: Text('${_practice ? 0 : _earnedXpForAttempt((_attempts + 1).clamp(1, 3))} XP${!_practice && _attempts == 0 ? '' : ''}',
+                                    textAlign: TextAlign.end, style: const TextStyle(fontFamily: 'Oswald', fontSize: 14))),
                                 ]),
                               ),
                               const SizedBox(height: 8),
@@ -513,7 +516,7 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(q.question, textAlign: TextAlign.center,
-                                  style: const TextStyle(fontFamily: 'Oswald', fontSize: 22,
+                                  style: const TextStyle(fontFamily: 'Oswald', fontSize: 19,
                                     fontWeight: FontWeight.w600, color: AppColors.white)),
                               ),
                               AnimatedSwitcher(

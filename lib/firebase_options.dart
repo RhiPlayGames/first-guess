@@ -62,13 +62,13 @@ class DefaultFirebaseOptions {
   );
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDTqa8h_7RmQXLrlUfzqRprmPer5zcryaU',
-    appId: '1:752908982581:ios:8935ad68ae6e131def547c',
+    appId: '1:752908982581:ios:4effe937e12ab9e9ef547c',
     messagingSenderId: '752908982581',
     projectId: 'first-guess-a18b1',
     storageBucket: 'first-guess-a18b1.firebasestorage.app',
     androidClientId: '752908982581-45d2ptchpq28si13mgjvva29mg0f2fmr.apps.googleusercontent.com',
-    iosClientId: '752908982581-klhove7ulg15i9hvgtt0usb3fj35c1nd.apps.googleusercontent.com',
-    iosBundleId: 'com.example.firstGuess',
+    iosClientId: '752908982581-9dju5676u3bk3igpm0pv27njniaaik85.apps.googleusercontent.com',
+    iosBundleId: 'com.rhiplaygames.firstguess',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
