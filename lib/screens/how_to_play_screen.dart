@@ -41,12 +41,7 @@ class HowToPlayScreen extends StatelessWidget {
                   'Solve the hidden word across 5 clues. You have 3 guesses for the whole challenge, with more letters revealed as you progress.',
             ),
             SizedBox(height: 12),
-            _RuleCard(
-              title: 'FIRST CONNECTION',
-              text:
-                  'Six clues share one hidden connection. Work out what links them together and solve it in as few clues as possible.',
-            ),
-            SizedBox(height: 12),
+
             _RuleCard(
               title: 'FIRST DATE',
               text:
@@ -62,7 +57,7 @@ class HowToPlayScreen extends StatelessWidget {
             _RuleCard(
               title: 'FIRST PICK',
               text:
-                  'Choose a category, then select the correct answer from six choices. You have three attempts per question. Earn 50 XP on your first attempt, 30 XP on your second or 10 XP on your third, plus a 25 XP First Guess bonus for a correct first attempt (75 XP total). After three incorrect answers, the correct answer is revealed.',
+                  'Choose a category and answer a question with six possible answers. You have three picks to find the correct answer. After three incorrect picks, the answer is revealed.',
             ),
             SizedBox(height: 12),
             _RuleCard(
@@ -71,11 +66,24 @@ class HowToPlayScreen extends StatelessWidget {
                   'Put 5 items into the correct order. Arrange them carefully and solve the sequence in as few attempts as possible.',
             ),
             SizedBox(height: 12),
-            _RuleCard(
-              title: 'SCORING',
-              text:
-                  'Classic First Guess and First Date: 100 XP on clue 1, falling by 10 XP per clue. First Word, First Connection and First Order: 100/80/60/40/20 XP. First Match: 100/80/60/40/20 XP per submission. First Pick: 50/30/10 XP by attempt. First Guess bonuses apply separately.',
-            ),
+            _RuleCard(title: 'SCORING — CLASSIC FIRST GUESS',
+              text: 'Clues 1–10 earn 100/90/80/70/60/50/40/30/20/10 XP. Solving on the first guess at clue 1 earns an extra 50 XP.'),
+            SizedBox(height: 12),
+            _RuleCard(title: 'SCORING — FIRST DATE',
+              text: 'Clues 1–10 earn 100/90/80/70/60/50/40/30/20/10 XP. A correct first guess on clue 1 earns a 50 XP bonus.'),
+            SizedBox(height: 12),
+            _RuleCard(title: 'SCORING — FIRST WORD',
+              text: 'Clues 1–5 earn 100/80/60/40/20 XP. Solving on your first guess at clue 1 earns another 50 XP.'),
+            SizedBox(height: 12),
+
+            _RuleCard(title: 'SCORING — FIRST MATCH',
+              text: 'Submissions 1–5 earn 100/80/60/40/20 XP. Getting all six pairs right on the first submission earns a 50 XP bonus.'),
+            SizedBox(height: 12),
+            _RuleCard(title: 'SCORING — FIRST ORDER',
+              text: 'Clues 1–5 earn 100/80/60/40/20 XP. A correct first attempt earns a 50 XP bonus.'),
+            SizedBox(height: 12),
+            _RuleCard(title: 'SCORING — FIRST PICK',
+              text: 'First pick: 50 XP plus a 25 XP First Guess bonus (75 XP total). Second pick: 30 XP. Third pick: 10 XP.'),
             SizedBox(height: 12),
             _HighlightCard(
               title: 'FIRST GUESS BONUS',
@@ -92,7 +100,7 @@ class HowToPlayScreen extends StatelessWidget {
             _HighlightCard(
               title: 'DAILY FLASH 5',
               text:
-                  'Play five new questions per available Daily Flash 5 game each day. Daily Flash 5 doubles earned XP, including the First Guess bonus. First Pick scores 50/30/10 XP by attempt, plus a 25 XP bonus for a correct first attempt. Its Daily Flash 5 scoring is doubled: 150/60/20 XP.',
+                  'Play five new questions per available Daily Flash 5 game each day. Daily Flash 5 doubles earned XP, including the First Guess bonus. First Pick Daily Flash 5 scoring, when available, is 150/60/20 XP for the first, second and third picks respectively.',
             ),
           ],
         ),

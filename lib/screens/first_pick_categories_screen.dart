@@ -90,6 +90,7 @@ class _FirstPickCategoriesScreenState extends State<FirstPickCategoriesScreen> {
 
   static String _title(String key) {
     const titles = <String, String>{
+      'surprise_me': 'Surprise Me',
       'books_authors': 'Books & Authors',
       'creative_world': 'Creative World',
       'food_drink': 'Food & Drink',
@@ -111,6 +112,7 @@ class _FirstPickCategoriesScreenState extends State<FirstPickCategoriesScreen> {
   static String _image(String key) {
     // These are the same category artwork paths used by Classic First Guess.
     const paths = <String, String>{
+      'surprise_me': 'assets/images/categories/surprise_me.webp',
       'animals': 'assets/images/categories/animals.webp',
       'books_authors': 'assets/images/categories/books_and_authors.webp',
       'countries': 'assets/images/categories/countries.webp',
@@ -134,7 +136,7 @@ class _FirstPickCategoriesScreenState extends State<FirstPickCategoriesScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => FirstPickGameScreen(
-          subcategory: category,
+          subcategory: category == 'surprise_me' ? null : category,
           categoryTitle: _title(category),
         ),
       ),
@@ -144,8 +146,11 @@ class _FirstPickCategoriesScreenState extends State<FirstPickCategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.sizeOf(context).width >= 1200;
-    final entries = _counts.entries.toList()
-      ..sort((a, b) => _title(a.key).compareTo(_title(b.key)));
+    final entries = <MapEntry<String, int>>[
+      const MapEntry<String, int>('surprise_me', 0),
+      ...(_counts.entries.toList()
+        ..sort((a, b) => _title(a.key).compareTo(_title(b.key)))),
+    ];
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -193,14 +198,16 @@ class _FirstPickCategoriesScreenState extends State<FirstPickCategoriesScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
                     child: Column(
                       children: [
-                        const Text(
-                          'CHOOSE A CATEGORY',
-                          style: TextStyle(
-                            fontFamily: 'Oswald',
-                            fontSize: 23,
-                            letterSpacing: 1,
-                          ),
-                        ),
+                        Row(children: [
+                          Expanded(child: Container(height: 1.5, color: AppColors.orange)),
+                          const SizedBox(width: 10),
+                          Text('CHOOSE A CATEGORY', style: TextStyle(
+                            fontFamily: 'Oswald', fontSize: isDesktop ? 22 : 18,
+                            fontWeight: FontWeight.w600, letterSpacing: 0.5,
+                          )),
+                          const SizedBox(width: 10),
+                          Expanded(child: Container(height: 1.5, color: AppColors.orange)),
+                        ]),
                         const SizedBox(height: 14),
                         LayoutBuilder(
                           builder: (context, constraints) {
@@ -214,7 +221,7 @@ class _FirstPickCategoriesScreenState extends State<FirstPickCategoriesScreen> {
                                     crossAxisCount: cols,
                                     crossAxisSpacing: 14,
                                     mainAxisSpacing: 12,
-                                    mainAxisExtent: 100,
+                                    mainAxisExtent: isDesktop ? 96 : 88,
                                   ),
                               itemBuilder: (context, index) {
                                 final entry = entries[index];
@@ -225,7 +232,7 @@ class _FirstPickCategoriesScreenState extends State<FirstPickCategoriesScreen> {
                                     borderRadius: BorderRadius.circular(16),
                                     onTap: () => _open(entry.key),
                                     child: Container(
-                                      padding: const EdgeInsets.all(12),
+                                      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 12 : 14, vertical: isDesktop ? 10 : 14),
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
@@ -236,9 +243,15 @@ class _FirstPickCategoriesScreenState extends State<FirstPickCategoriesScreen> {
                                       child: Row(
                                         children: [
                                           SizedBox(
-                                            width: 68,
-                                            height: 68,
-                                            child: Image.asset(
+                                            width: isDesktop ? 58 : 60,
+                                            height: isDesktop ? 58 : 60,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(3),
+                                              decoration: BoxDecoration(
+                                                border: Border.all(color: AppColors.orange, width: 1.4),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: Image.asset(
                                               _image(entry.key),
                                               fit: BoxFit.contain,
                                               errorBuilder:
@@ -249,11 +262,12 @@ class _FirstPickCategoriesScreenState extends State<FirstPickCategoriesScreen> {
                                                   ) => const Icon(
                                                     Icons.quiz,
                                                     color: AppColors.orange,
-                                                    size: 40,
+                                                    size: 34,
                                                   ),
+                                              ),
                                             ),
                                           ),
-                                          SizedBox(width: isDesktop ? 14 : 9),
+                                          SizedBox(width: isDesktop ? 12 : 15),
                                           Expanded(
                                             child: Column(
                                               crossAxisAlignment:
@@ -262,15 +276,12 @@ class _FirstPickCategoriesScreenState extends State<FirstPickCategoriesScreen> {
                                                   MainAxisAlignment.center,
                                               children: [
                                                 Text(
-                                                  _title(
-                                                    entry.key,
-                                                  ).toUpperCase(),
+                                                  _title(entry.key).toUpperCase(),
                                                   maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
+                                                  overflow: TextOverflow.ellipsis,
                                                   style: TextStyle(
                                                     fontFamily: 'Oswald',
-                                                    fontSize: isDesktop ? 19 : 17,
+                                                    fontSize: isDesktop ? 20 : 17,
                                                   ),
                                                 ),
 
@@ -278,11 +289,12 @@ class _FirstPickCategoriesScreenState extends State<FirstPickCategoriesScreen> {
                                             ),
                                           ),
                                           Container(
-                                            width: isDesktop ? 94 : 74,
+                                            width: isDesktop ? 118 : 94,
+                                            height: 44,
                                             alignment: Alignment.center,
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 6,
-                                              vertical: 12,
+                                              vertical: 10,
                                             ),
                                             decoration: BoxDecoration(
                                               color: AppColors.orange,

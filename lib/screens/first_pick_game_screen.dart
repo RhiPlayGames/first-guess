@@ -362,7 +362,7 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
       context: context,
       title: correct ? (attempt == 1 ? 'FIRST GUESS!' : 'CORRECT!') : 'GAME OVER',
       message: correct
-          ? '${question.options[question.correctIndex]}\n\n${_practice ? 'PRACTICE MODE — 0 XP' : '$xp XP'}${question.explanation.isEmpty ? '' : '\n\n${question.explanation}'}'
+          ? '${question.options[question.correctIndex]}\n\n${_practice ? 'PRACTICE MODE — 0 XP' : attempt == 1 ? '50 XP\n25 XP First Guess Bonus\n\n75 XP TOTAL' : '$xp XP'}${question.explanation.isEmpty ? '' : '\n\n${question.explanation}'}'
           : 'The answer was ${question.options[question.correctIndex]}.',
       onPlayAgain: () => unawaited(_afterResult(
         goHome: false,
@@ -468,7 +468,7 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
                         ]),
                       ))
                     : SingleChildScrollView(
-                        padding: EdgeInsets.fromLTRB(isDesktop ? 32 : 12, 4, isDesktop ? 32 : 12, 16),
+                        padding: EdgeInsets.fromLTRB(isDesktop ? 32 : 8, 4, isDesktop ? 32 : 8, 16),
                         child: Center(child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 880),
                           child: Container(
@@ -497,7 +497,9 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
                                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                                   LivesDisplay(lives: (3 - _attempts).clamp(0, 3), maximumLives: 3),
                                   const SizedBox(width: 10),
-                                  Text('${3 - _attempts} ${3 - _attempts == 1 ? 'LIFE' : 'LIVES'} LEFT',
+                                  Expanded(child: Text('${_practice ? 0 : _earnedXpForAttempt((_attempts + 1).clamp(1, 3))} XP',
+                                    textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Oswald', fontSize: 14))),
+                                  Text('PICK ${(_attempts + 1).clamp(1, 3)}/3',
                                     style: const TextStyle(fontFamily: 'Oswald', fontSize: 14)),
                                 ]),
                               ),
@@ -511,7 +513,7 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(q.question, textAlign: TextAlign.center,
-                                  style: const TextStyle(fontFamily: 'Oswald', fontSize: 19,
+                                  style: const TextStyle(fontFamily: 'Oswald', fontSize: 22,
                                     fontWeight: FontWeight.w600, color: AppColors.white)),
                               ),
                               AnimatedSwitcher(

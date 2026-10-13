@@ -395,6 +395,10 @@ class _CategoryFilters extends StatelessWidget {
       categories: <AchievementCategory>{AchievementCategory.firstOrder},
     ),
     _FilterData(
+      label: 'FIRST PICK',
+      categories: <AchievementCategory>{AchievementCategory.firstPick},
+    ),
+    _FilterData(
       label: 'FIRST WORD',
       categories: <AchievementCategory>{AchievementCategory.firstWord},
     ),

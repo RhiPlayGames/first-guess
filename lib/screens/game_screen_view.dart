@@ -876,16 +876,16 @@ extension _GameScreenView on _GameScreenState {
     bool destructive = false,
     bool guess = false,
   }) {
-    final BorderRadius radius = BorderRadius.circular(13);
+    final BorderRadius radius = BorderRadius.circular(12);
     final Widget text = FittedBox(
       fit: BoxFit.scaleDown,
       child: Text(label, maxLines: 1, style: const TextStyle(
-        fontFamily: 'Oswald', fontSize: 19, fontWeight: FontWeight.w700,
+        fontFamily: 'Oswald', fontSize: 18, fontWeight: FontWeight.w700,
       )),
     );
     return SizedBox(
       width: double.infinity,
-      height: 46,
+      height: 43,
       child: guess || destructive
           ? FilledButton(
               onPressed: enabled ? onPressed : null,

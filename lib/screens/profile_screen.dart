@@ -722,6 +722,7 @@ enum _StatsGameMode {
   firstDate,
   firstMatch,
   firstOrder,
+  firstPick,
   firstWord,
 }
 
@@ -731,6 +732,7 @@ const List<_StatsGameMode> _baseVisibleStatsGameModes = <_StatsGameMode>[
   _StatsGameMode.firstDate,
   _StatsGameMode.firstMatch,
   _StatsGameMode.firstOrder,
+  _StatsGameMode.firstPick,
   _StatsGameMode.firstWord,
 ];
 
@@ -877,6 +879,9 @@ class _StatsDetailScreenState extends State<StatsDetailScreen> {
     }
     if (id.startsWith('first_order_')) {
       return _StatsGameMode.firstOrder;
+    }
+    if (id.startsWith('first_pick_')) {
+      return _StatsGameMode.firstPick;
     }
     if (id.startsWith('first_word_')) {
       return _StatsGameMode.firstWord;
@@ -1760,6 +1765,8 @@ class _StatsDetailScreenState extends State<StatsDetailScreen> {
         return 'first_match';
       case _StatsGameMode.firstOrder:
         return 'first_order';
+      case _StatsGameMode.firstPick:
+        return 'first_pick';
       case _StatsGameMode.firstWord:
         return 'first_word';
       case _StatsGameMode.classic:
@@ -1779,6 +1786,8 @@ class _StatsDetailScreenState extends State<StatsDetailScreen> {
         return 'first_match';
       case _StatsGameMode.firstOrder:
         return 'first_order';
+      case _StatsGameMode.firstPick:
+        return 'first_pick';
       case _StatsGameMode.firstWord:
         return 'first_word';
       case _StatsGameMode.all:
@@ -1800,6 +1809,8 @@ class _StatsDetailScreenState extends State<StatsDetailScreen> {
         return 'Matches Solved';
       case _StatsGameMode.firstOrder:
         return 'Orders Solved';
+      case _StatsGameMode.firstPick:
+        return 'Correct Answers';
       case _StatsGameMode.firstWord:
         return 'Words Solved';
     }
@@ -1819,6 +1830,8 @@ class _StatsDetailScreenState extends State<StatsDetailScreen> {
         return 'First Match';
       case _StatsGameMode.firstOrder:
         return 'First Order';
+      case _StatsGameMode.firstPick:
+        return 'First Pick';
       case _StatsGameMode.firstWord:
         return 'First Word';
     }
@@ -1838,6 +1851,8 @@ class _StatsDetailScreenState extends State<StatsDetailScreen> {
         return 'FIRST MATCH';
       case _StatsGameMode.firstOrder:
         return 'FIRST ORDER';
+      case _StatsGameMode.firstPick:
+        return 'FIRST PICK';
       case _StatsGameMode.firstWord:
         return 'FIRST WORD';
     }
