@@ -2275,14 +2275,18 @@ class PlayerStatsService {
           snapshot = await cloudDocument.get();
 
       if (!snapshot.exists) {
+        // Missing cloud stats must NEVER be reconstructed from unscoped device
+        // preferences: those may belong to an account that has been deleted.
+        // Start a new empty profile for this authenticated UID instead.
+        const PlayerStats emptyStats = PlayerStats();
+        await _saveLocalStats(emptyStats);
         await cloudDocument.set(
-          _statsToCloudData(localStats),
+          _statsToCloudData(emptyStats),
           SetOptions(merge: true),
         );
-        await _syncPublicLeaderboardStats(localStats);
-        _storeStatsMemoryCache(localStats);
-
-        return localStats;
+        await _syncPublicLeaderboardStats(emptyStats);
+        _storeStatsMemoryCache(emptyStats);
+        return emptyStats;
       }
 
       final Map<String, dynamic>? cloudData =

@@ -1,6 +1,5 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
@@ -10,7 +9,7 @@ import 'package:flutter/services.dart';
 
 import 'firebase_options.dart';
 import 'services/home_keyboard_route_observer.dart';
-import 'screens/home_screen.dart';
+import 'screens/account_deletion_progress_screen.dart';
 import 'theme/app_colors.dart';
 
 Future<void> main() async {
@@ -63,15 +62,6 @@ Future<void> main() async {
     };
   }
 
-  final FirebaseAuth auth = FirebaseAuth.instance;
-
-  if (auth.currentUser == null) {
-    await auth.signInAnonymously();
-  }
-
-  debugPrint('FIREBASE UID: ${auth.currentUser?.uid}');
-  debugPrint('ANONYMOUS: ${auth.currentUser?.isAnonymous}');
-
   runApp(const FirstGuessApp());
 }
 
@@ -98,7 +88,7 @@ class FirstGuessApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
       ),
-      home: const HomeScreen(),
+      home: const AccountDeletionStartupGate(),
     );
   }
 }

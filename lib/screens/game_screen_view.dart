@@ -744,8 +744,11 @@ extension _GameScreenView on _GameScreenState {
               builder: (context, constraints) {
                 const double gap = 10;
                 final double available = constraints.maxWidth - gap;
+                // Match the visible Daily Flash 5 phone image rather than
+                // shrinking to 45% of this panel when the keyboard opens.
+                // Leave at least 100 px for the buttons on narrow phones.
                 final double imageSide = keyboardOpen
-                    ? (available * 0.45).clamp(106.0, 164.0)
+                    ? (available - 100).clamp(106.0, 164.0)
                     : (available * 0.57).clamp(126.0, 205.0);
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -762,7 +765,7 @@ extension _GameScreenView on _GameScreenState {
                           child: Stack(
                             children: [
                               Positioned.fill(
-                                child: buildVisualPanel(),
+                                child: buildNativePhoneVisualPanel(),
                               ),
                               if (isPracticeModeActive && !widget.launchedFromCaseFile)
                                 const Positioned(
@@ -1012,6 +1015,41 @@ extension _GameScreenView on _GameScreenState {
           ),
         ),
       ],
+    );
+  }
+
+  // On installed phones, a clear Classic image should fill its square in
+  // the same way as Daily Flash 5. Retain the existing reveal widget for
+  // categories that need special reveal/blur/silhouette behaviour.
+  Widget buildNativePhoneVisualPanel() {
+    if (!imageReady ||
+        widget.isFlagGame ||
+        widget.isCountrySilhouettesGame ||
+        widget.isAuthorGame) {
+      return buildVisualPanel();
+    }
+
+    final String path = currentItem.imagePath;
+    final Uri? uri = Uri.tryParse(path);
+    final bool remote = uri != null &&
+        (uri.scheme == 'https' || uri.scheme == 'http');
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.orange, width: 1.3),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox.expand(
+        child: Image(
+          image: remote ? NetworkImage(path) : AssetImage(path),
+          fit: BoxFit.cover,
+          filterQuality: FilterQuality.high,
+          gaplessPlayback: true,
+          errorBuilder: (context, error, stackTrace) =>
+              buildVisualPanel(),
+        ),
+      ),
     );
   }
 

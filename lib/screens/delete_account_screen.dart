@@ -1,11 +1,10 @@
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
 import '../theme/app_colors.dart';
 import '../services/account_auth_service.dart';
+import 'account_deletion_progress_screen.dart';
 import '../widgets/app_home_button.dart';
 
 /// Delete Account information and review screen.
@@ -26,61 +25,6 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
   static const bool _serverDeletionReady = bool.fromEnvironment(
     'FIRST_GUESS_ACCOUNT_DELETION_ENABLED', defaultValue: false);
   bool _busy = false;
-  bool _checkingAppCheck = false;
-
-  // TestFlight diagnostic only. Never log or display the App Check token itself.
-  Future<void> _checkAppCheck() async {
-    if (_checkingAppCheck || _busy || !_serverDeletionReady) return;
-    setState(() => _checkingAppCheck = true);
-    String result;
-    try {
-      final token = await FirebaseAppCheck.instance.getToken(true);
-      if (token == null || token.isEmpty) {
-        result = 'No App Check token was returned.';
-      } else {
-        final parts = token.split('.');
-        final jwtShaped = parts.length == 3 &&
-            parts.every((part) => part.isNotEmpty);
-        result = jwtShaped
-            ? 'A JWT-shaped App Check token was obtained. '
-                'This does not prove the server will accept it.'
-            : 'The App Check token is not JWT-shaped. '
-                'The server cannot validate this token.';
-      }
-    } on FirebaseException catch (error) {
-      result = 'App Check failed.\n'
-          'Code: ${error.code}\n'
-          'Message: ${error.message ?? 'No detailed Firebase message provided.'}';
-    } on PlatformException catch (error) {
-      result = 'App Check platform error.\n'
-          'Code: ${error.code}\n'
-          'Message: ${error.message ?? 'No detailed platform message provided.'}';
-    } catch (error) {
-      result = 'App Check token retrieval failed.\n'
-          'Exception type: ${error.runtimeType}\n'
-          'Details: $error';
-    } finally {
-      if (mounted) setState(() => _checkingAppCheck = false);
-    }
-    if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.panel,
-        title: const Text('APP CHECK DIAGNOSTIC',
-            style: TextStyle(color: AppColors.white)),
-        content: Text(result,
-            style: const TextStyle(color: AppColors.white)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
 
   Future<bool> _verifyIdentity() async {
     final verify = await showDialog<bool>(
@@ -168,14 +112,15 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
         await _submitDeletionRequest();
       }
       if (!mounted) return;
-      await showDialog<void>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('DELETION REQUEST ACCEPTED'),
-          content: const Text('Your account deletion has been requested. '
-            'It may take time to finish. Do not create another account until the process completes.'),
-          actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('OK'))],
+      final deletionUid = FirebaseAuth.instance.currentUser?.uid;
+      if (deletionUid == null) return;
+      await AccountDeletionState.markPending(deletionUid);
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(
+          builder: (_) => const AccountDeletionProgressScreen(),
         ),
+        (_) => false,
       );
     } on FirebaseFunctionsException catch (error) {
       if (!mounted) return;
@@ -313,25 +258,14 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(color: AppColors.grey, height: 1.5),
                   ),
-                if (_serverDeletionReady) ...[
-                  const SizedBox(height: 14),
-                  OutlinedButton.icon(
-                    onPressed: !_busy && !_checkingAppCheck
-                        ? _checkAppCheck
-                        : null,
-                    icon: const Icon(Icons.security_outlined),
-                    label: Text(_checkingAppCheck
-                        ? 'CHECKING APP CHECK...'
-                        : 'CHECK APP CHECK (TEST)'),
-                  ),
-                ],
+                const SizedBox(height: 14),
                 const SizedBox(height: 14),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
                     // Intentionally disabled until the server-side deletion
                     // workflow, including recovery and recent sign-in, is live.
-                    onPressed: !_busy && !_checkingAppCheck && _serverDeletionReady && user != null
+                    onPressed: !_busy && _serverDeletionReady && user != null
                         ? _requestDeletion
                         : null,
                     style: FilledButton.styleFrom(
