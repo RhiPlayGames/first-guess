@@ -59,6 +59,58 @@ class AccountAuthService {
 
   static String? get email => _auth.currentUser?.email;
 
+
+  /// Verify the currently signed-in account without signing it out.
+  /// Never use signInWithCredential here: it can switch Firebase users.
+  static Future<void> reauthenticateCurrentUserForDeletion() async {
+    final User? user = _auth.currentUser;
+    if (user == null) {
+      throw const AccountAuthException(code: 'not-signed-in', message: 'Please sign in before deleting your account.');
+    }
+    final Set<String> providers = user.providerData.map((info) => info.providerId).toSet();
+    try {
+      if (providers.contains('google.com')) {
+        if (kIsWeb) {
+          await user.reauthenticateWithPopup(GoogleAuthProvider());
+        } else {
+          await _initialiseGoogleSignIn();
+          if (!_googleSignIn.supportsAuthenticate()) {
+            throw const AccountAuthException(code: 'unsupported', message: 'Google verification is unavailable on this device.');
+          }
+          final account = await _googleSignIn.authenticate();
+          final token = account.authentication.idToken;
+          if (token == null || token.isEmpty) {
+            throw const AccountAuthException(code: 'missing-google-token', message: 'Google could not verify your identity.');
+          }
+          await user.reauthenticateWithCredential(GoogleAuthProvider.credential(idToken: token));
+        }
+      } else if (providers.contains('apple.com')) {
+        final provider = AppleAuthProvider();
+        if (kIsWeb) {
+          await user.reauthenticateWithPopup(provider);
+        } else {
+          await user.reauthenticateWithProvider(provider);
+        }
+      } else if (user.isAnonymous) {
+        throw const AccountAuthException(
+          code: 'guest-reauthentication-unavailable',
+          message: 'This guest session is too old to verify securely. Guest accounts cannot reauthenticate with Google or Apple unless they are linked first.',
+        );
+      } else {
+        throw const AccountAuthException(code: 'unsupported-provider', message: 'This sign-in method cannot be verified in the app yet.');
+      }
+      if (_auth.currentUser?.uid != user.uid) {
+        throw const AccountAuthException(code: 'account-changed', message: 'Verification returned a different account. Your deletion request has not been submitted.');
+      }
+    } on AccountAuthException {
+      rethrow;
+    } on FirebaseAuthException catch (error) {
+      throw AccountAuthException(code: error.code, message: error.message ?? 'Identity verification failed. Please try again.');
+    } on GoogleSignInException catch (error) {
+      throw AccountAuthException(code: 'google-verification-failed', message: error.description ?? 'Google verification was cancelled or failed.');
+    }
+  }
+
   static Future<User> ensureSignedInUser() async {
     final User? existingUser = _auth.currentUser;
 

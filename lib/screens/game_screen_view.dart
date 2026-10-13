@@ -752,6 +752,7 @@ extension _GameScreenView on _GameScreenState {
                   children: [
                     SizedBox(
                       width: imageSide,
+                      height: imageSide,
                       child: KeyedSubtree(
                         key: ValueKey(
                           'phone-${widget.gameType.name}-${currentItem.imagePath}',

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
 import '../theme/app_colors.dart';
+import '../services/account_auth_service.dart';
 import '../widgets/app_home_button.dart';
 
 /// Delete Account information and review screen.
@@ -81,6 +82,42 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
   }
 
 
+  Future<bool> _verifyIdentity() async {
+    final verify = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.panel,
+        title: const Text('VERIFY YOUR IDENTITY', style: TextStyle(color: AppColors.white, fontFamily: 'Oswald')),
+        content: const Text('For your security, please verify with your existing Google or Apple account. You will stay signed in to First Guess.', style: TextStyle(color: AppColors.white)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('CANCEL')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('VERIFY IDENTITY')),
+        ],
+      ),
+    );
+    if (verify != true || !mounted) return false;
+    try {
+      await AccountAuthService.reauthenticateCurrentUserForDeletion();
+      return mounted;
+    } on AccountAuthException catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
+      return false;
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Identity verification did not complete. No deletion request was submitted.')));
+      return false;
+    }
+  }
+
+  Future<void> _submitDeletionRequest() async {
+    final response = await FirebaseFunctions.instanceFor(region: 'us-central1')
+        .httpsCallable('requestAccountDeletion').call(<String, dynamic>{
+      'confirm': 'DELETE MY ACCOUNT',
+    });
+    if (response.data is! Map || (response.data as Map)['accepted'] != true) {
+      throw StateError('The server did not accept the deletion request.');
+    }
+  }
+
   Future<void> _requestDeletion() async {
     if (_busy || !_serverDeletionReady || FirebaseAuth.instance.currentUser == null) return;
     final controller = TextEditingController();
@@ -120,13 +157,15 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       setState(() => _busy = true);
       // This endpoint queues a durable deletion job. It does NOT signal completion.
       // The user's auth session is retained until the server finishes deletion.
-      final response = await FirebaseFunctions.instanceFor(region: 'us-central1')
-          .httpsCallable('requestAccountDeletion').call(<String, dynamic>{
-        'confirm': 'DELETE MY ACCOUNT',
-      });
-      final data = response.data;
-      if (data is! Map || data['accepted'] != true) {
-        throw StateError('The server did not accept the deletion request.');
+      try {
+        await _submitDeletionRequest();
+      } on FirebaseFunctionsException catch (error) {
+        if (error.code != 'failed-precondition') rethrow;
+        if (!mounted) return;
+        final verified = await _verifyIdentity();
+        if (!verified || !mounted) return;
+        // Retry once only, after verified reauthentication of the same user.
+        await _submitDeletionRequest();
       }
       if (!mounted) return;
       await showDialog<void>(
@@ -141,7 +180,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     } on FirebaseFunctionsException catch (error) {
       if (!mounted) return;
       final message = error.code == 'failed-precondition'
-          ? 'For security, please sign out and sign in again before deleting your account.'
+          ? 'The server could not complete the security check. Please try again or contact support.'
           : (error.message ?? 'Unable to request deletion. Please try again later.');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     } catch (_) {

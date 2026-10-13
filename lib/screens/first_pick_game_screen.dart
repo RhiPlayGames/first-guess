@@ -47,7 +47,7 @@ class _PickQuestion {
 }
 
 class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
-  static const List<int> _baseXpByAttempt = <int>[50, 30, 10];
+  static const List<int> _baseXpByAttempt = <int>[50, 30, 20];
   static const int _firstGuessBonusXp = 25;
 
   static int _earnedXpForAttempt(int attempt) =>
@@ -392,7 +392,7 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
         borderRadius: BorderRadius.circular(15),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          constraints: const BoxConstraints(minHeight: 49),
+          constraints: const BoxConstraints(minHeight: 58),
           decoration: BoxDecoration(
             color: right ? const Color(0xFF12311D) : const Color(0xFF191919),
             borderRadius: BorderRadius.circular(15),
@@ -402,10 +402,10 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             child: Row(children: [
               Expanded(child: Text(q.options[index], textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'Inter', fontSize: 15,
+                style: TextStyle(fontFamily: 'Inter', fontSize: 17,
                   fontWeight: FontWeight.w600,
                   color: wrong ? AppColors.grey : AppColors.white))),
               if (wrong) const Icon(Icons.close_rounded, color: Color(0xFFD32F2F))
@@ -498,25 +498,25 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
                                   border: Border.all(color: const Color(0xFF444444)),
                                 ),
                                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                                  Expanded(child: Text('PICKS ${_attempts.clamp(0, 3)} / 3',
+                                  Expanded(child: Text('PICK ${(_attempts + 1).clamp(1, 3)} / 3',
                                     style: const TextStyle(fontFamily: 'Oswald', fontSize: 14))),
                                   LivesDisplay(lives: (3 - _attempts).clamp(0, 3), maximumLives: 3),
                                   const SizedBox(width: 10),
-                                  Expanded(child: Text('${_practice ? 0 : _earnedXpForAttempt((_attempts + 1).clamp(1, 3))} XP${!_practice && _attempts == 0 ? '' : ''}',
+                                  Expanded(child: Text('${_practice ? 0 : _baseXpByAttempt[(_attempts).clamp(0, 2)]} XP${!_practice && _attempts == 0 ? ' +25' : ''}',
                                     textAlign: TextAlign.end, style: const TextStyle(fontFamily: 'Oswald', fontSize: 14))),
                                 ]),
                               ),
                               const SizedBox(height: 8),
                               Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                                 decoration: BoxDecoration(
                                   color: AppColors.panel,
                                   border: Border.all(color: AppColors.orange, width: 1.3),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(q.question, textAlign: TextAlign.center,
-                                  style: const TextStyle(fontFamily: 'Oswald', fontSize: 19,
+                                  style: const TextStyle(fontFamily: 'Oswald', fontSize: 18,
                                     fontWeight: FontWeight.w600, color: AppColors.white)),
                               ),
                               AnimatedSwitcher(

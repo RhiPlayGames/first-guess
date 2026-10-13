@@ -83,7 +83,7 @@ class HowToPlayScreen extends StatelessWidget {
               text: 'Clues 1–5 earn 100/80/60/40/20 XP. A correct first attempt earns a 50 XP bonus.'),
             SizedBox(height: 12),
             _RuleCard(title: 'SCORING — FIRST PICK',
-              text: 'First pick: 50 XP plus a 25 XP First Guess bonus (75 XP total). Second pick: 30 XP. Third pick: 10 XP.'),
+              text: 'First pick: 50 XP plus a 25 XP First Guess bonus (75 XP total). Second pick: 30 XP. Third pick: 20 XP.'),
             SizedBox(height: 12),
             _HighlightCard(
               title: 'FIRST GUESS BONUS',
