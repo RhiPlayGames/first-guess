@@ -453,6 +453,14 @@ class _ProfileHubState extends State<ProfileScreen> {
                         avatarPath,
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.high,
+                        errorBuilder: (context, error, stackTrace) {
+                          debugPrint('[AVATAR] Failed to load asset: $avatarPath — $error');
+                          return const Center(child: Icon(
+                            Icons.person_rounded,
+                            size: 80,
+                            color: AppColors.orange,
+                          ));
+                        },
                       ),
                     ),
                   ),

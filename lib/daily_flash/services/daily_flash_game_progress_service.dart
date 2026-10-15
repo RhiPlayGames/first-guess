@@ -61,6 +61,7 @@ class DailyFlashGameProgressService {
     'first_date',
     'first_match',
     'first_order',
+    'first_pick',
   };
 
   static String todayKey() {

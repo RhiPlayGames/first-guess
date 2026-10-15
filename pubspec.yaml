@@ -2,7 +2,7 @@ name: first_guess
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+39
+version: 1.0.0+40
 
 environment:
   sdk: ">=3.12.2 <4.0.0"
@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+  url_launcher: ^6.3.2
   shared_preferences: ^2.5.5
   auto_size_text: ^3.0.0
   cloud_firestore: 6.8.0

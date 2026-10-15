@@ -46,7 +46,7 @@ class TermsOfUseScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
           children: [
             const Text(
-              'Last updated: 12 August 2026',
+              'Last updated: 13 October 2026',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Inter',
@@ -79,22 +79,43 @@ class TermsOfUseScreen extends StatelessWidget {
             const _TermsSection(
               title: 'FIRST GUESS',
               paragraphs: [
-                'First Guess is a clue-driven knowledge game. Features, '
-                    'scoring, categories, rewards and availability may change '
-                    'as the game develops. We may add, modify or remove '
-                    'features where reasonably necessary to improve or '
-                    'operate the service.',
+                'First Guess is a quiz and knowledge game available '
+                    'through supported mobile devices and the web. Players '
+                    'can take part in different game modes, earn XP and '
+                    'use available progress, achievement and league features.',
+                'Features, questions, scoring, rewards and availability '
+                    'may change. We may add, modify or remove features '
+                    'where reasonably necessary to operate or improve '
+                    'the service.',
               ],
             ),
             const SizedBox(height: 14),
             const _TermsSection(
               title: 'ACCOUNTS',
               paragraphs: [
-                'If accounts are introduced, you are responsible for keeping '
-                    'your login details secure and for activity carried out '
-                    'through your account. You should provide accurate '
-                    'information and notify us if you believe your account '
-                    'has been compromised.',
+                'First Guess supports guest play and account sign-in. '
+                    'If you use an account, you are responsible for keeping '
+                    'access to your sign-in provider secure and for activity '
+                    'carried out through your account.',
+                'You should provide accurate information and contact '
+                    'RhiPlay Support if you believe your account has been '
+                    'compromised. Guest progress may not have the same '
+                    'recovery options as progress saved to a linked account.',
+              ],
+            ),
+            const SizedBox(height: 14),
+            const _TermsSection(
+              title: 'ACCOUNT DELETION',
+              paragraphs: [
+                'Players may request deletion of their First Guess account '
+                    'using the Delete Account option where available, or '
+                    'by contacting RhiPlay Support. Identity verification '
+                    'may be required to protect the account.',
+                'Account deletion is permanent once completed and may '
+                    'remove saved progress, XP, achievements and personal '
+                    'leaderboard entries. Deletion requests can take time '
+                    'to process, and some information may be retained '
+                    'where required by law.',
               ],
             ),
             const SizedBox(height: 14),

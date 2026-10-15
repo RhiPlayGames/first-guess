@@ -32,75 +32,55 @@ class HowToPlayScreen extends StatelessWidget {
             _RuleCard(
               title: 'CLASSIC FIRST GUESS',
               text:
-                  'Work out the answer from 10 clues, starting difficult and getting easier. You have 3 lives and can make one guess per clue — or skip if you are unsure.',
+                  'Can you crack the answer before the clues give it away? Work your way through ten clues, from tricky to easy. You have three lives, one guess per clue, and the option to skip if you are unsure.\n\n'
+                  'SCORING: Earn 100 XP for solving on Clue One, dropping by 10 XP with each new clue. Get it right on your very first guess at Clue One and bag an extra 50 XP First Guess bonus — that’s 150 XP!',
             ),
             SizedBox(height: 12),
             _RuleCard(
               title: 'FIRST WORD',
               text:
-                  'Solve the hidden word across 5 clues. You have 3 guesses for the whole challenge, with more letters revealed as you progress.',
+                  'Five clues. One mystery word. Can you solve it before the letters give it away? You have just three guesses across the entire challenge, with more letters revealed as you progress.\n\n'
+                  'SCORING: Earn 100, 80, 60, 40 or 20 XP depending on which clue you solve it on. Crack the word with your first guess at Clue One and collect an extra 50 XP First Guess bonus — 150 XP in total!',
             ),
             SizedBox(height: 12),
-
             _RuleCard(
               title: 'FIRST DATE',
               text:
-                  'Ten events point to one year or one month. Use the clues to work out the date they all have in common.',
+                  'Travel through time and connect the dots! Ten events all share one year or month. Study the clues and work out the date that links them together.\n\n'
+                  'SCORING: Start with 100 XP on Clue One, losing 10 XP with each additional clue. Solve it on your first guess at Clue One for an extra 50 XP First Guess bonus — a maximum of 150 XP!',
             ),
             SizedBox(height: 12),
             _RuleCard(
               title: 'FIRST MATCH',
               text:
-                  'Match 6 items with their correct partners. Submit your matches and try to complete the whole board before you run out of lives.',
+                  'Think you can find the perfect pairs? Match six items with their correct partners and submit your answers. Keep trying to complete the board before you run out of lives.\n\n'
+                  'SCORING: Earn 100, 80, 60, 40 or 20 XP depending on which submission completes the board. Match all six pairs correctly on your first submission for an extra 50 XP First Guess bonus — 150 XP in total!',
             ),
             SizedBox(height: 12),
             _RuleCard(
               title: 'FIRST PICK',
               text:
-                  'Choose a category and answer a question with six possible answers. You have three picks to find the correct answer. After three incorrect picks, the answer is revealed.',
+                  'Six possible answers. Only one is right! Choose your answer carefully — you have three picks to find the correct one. Each incorrect pick brings you closer to running out of chances.\n\n'
+                  'SCORING: Earn 50 XP for a correct first pick, 30 XP for your second or 20 XP for your third. Get it right on your very first pick and claim an extra 25 XP First Guess bonus — 75 XP in total!',
             ),
             SizedBox(height: 12),
             _RuleCard(
               title: 'FIRST ORDER',
               text:
-                  'Put 5 items into the correct order. Arrange them carefully and solve the sequence in as few attempts as possible.',
-            ),
-            SizedBox(height: 12),
-            _RuleCard(title: 'SCORING — CLASSIC FIRST GUESS',
-              text: 'Clues 1–10 earn 100/90/80/70/60/50/40/30/20/10 XP. Solving on the first guess at clue 1 earns an extra 50 XP.'),
-            SizedBox(height: 12),
-            _RuleCard(title: 'SCORING — FIRST DATE',
-              text: 'Clues 1–10 earn 100/90/80/70/60/50/40/30/20/10 XP. A correct first guess on clue 1 earns a 50 XP bonus.'),
-            SizedBox(height: 12),
-            _RuleCard(title: 'SCORING — FIRST WORD',
-              text: 'Clues 1–5 earn 100/80/60/40/20 XP. Solving on your first guess at clue 1 earns another 50 XP.'),
-            SizedBox(height: 12),
-
-            _RuleCard(title: 'SCORING — FIRST MATCH',
-              text: 'Submissions 1–5 earn 100/80/60/40/20 XP. Getting all six pairs right on the first submission earns a 50 XP bonus.'),
-            SizedBox(height: 12),
-            _RuleCard(title: 'SCORING — FIRST ORDER',
-              text: 'Clues 1–5 earn 100/80/60/40/20 XP. A correct first attempt earns a 50 XP bonus.'),
-            SizedBox(height: 12),
-            _RuleCard(title: 'SCORING — FIRST PICK',
-              text: 'First pick: 50 XP plus a 25 XP First Guess bonus (75 XP total). Second pick: 30 XP. Third pick: 20 XP.'),
-            SizedBox(height: 12),
-            _HighlightCard(
-              title: 'FIRST GUESS BONUS',
-              text:
-                  'Solve a challenge on your first attempt to earn extra XP. In Classic First Guess, getting Clue 1 correct earns 100 XP plus a 50 XP bonus. First Pick awards a 25 XP bonus for a correct first attempt. The other regular games award a 50 XP first-attempt bonus.',
+                  'Does everything fall into place? Put five items in the correct order, using your knowledge and logic to work out the perfect sequence. Aim to get everything right in as few attempts as possible.\n\n'
+                  'SCORING: Earn 100, 80, 60, 40 or 20 XP depending on which attempt you succeed on. Get the entire sequence correct on your first attempt for an extra 50 XP First Guess bonus — a maximum of 150 XP!',
             ),
             SizedBox(height: 12),
             _RuleCard(
               title: 'NO TIMER',
               text:
-                  'All games, including Daily Flash 5, are not timed, so you can think before you answer.',
+                  'Take your time and think it through! There’s no countdown, so you can focus on finding the right answer.',
             ),
             SizedBox(height: 12),
             _HighlightCard(
               title: 'DAILY FLASH 5',
               text:
-                  'Play five new questions per available Daily Flash 5 game each day. Daily Flash 5 doubles earned XP, including the First Guess bonus. First Pick Daily Flash 5 scoring, when available, is 150/60/20 XP for the first, second and third picks respectively.',
+                  'Five NEW questions each game, every day! Put your knowledge to the test and earn DOUBLE XP, including your First Guess bonuses.',
             ),
           ],
         ),
@@ -140,7 +120,7 @@ class _IntroCard extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'Different games. Each one tests you in a different way. Solve the challenge as early as you can to earn the most points.',
+            'Every game tests your knowledge in a different way. The earlier you solve the challenge, the more XP you’ll earn.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Inter',

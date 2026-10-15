@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -23,7 +25,9 @@ class DeleteAccountScreen extends StatefulWidget {
 class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
   // Only set this when the deployed callable and recovery worker are verified.
   static const bool _serverDeletionReady = bool.fromEnvironment(
-    'FIRST_GUESS_ACCOUNT_DELETION_ENABLED', defaultValue: false);
+    'FIRST_GUESS_ACCOUNT_DELETION_ENABLED',
+    defaultValue: false,
+  );
   bool _busy = false;
 
   Future<bool> _verifyIdentity() async {
@@ -31,11 +35,23 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.panel,
-        title: const Text('VERIFY YOUR IDENTITY', style: TextStyle(color: AppColors.white, fontFamily: 'Oswald')),
-        content: const Text('For your security, please verify with your existing Google or Apple account. You will stay signed in to First Guess.', style: TextStyle(color: AppColors.white)),
+        title: const Text(
+          'VERIFY YOUR IDENTITY',
+          style: TextStyle(color: AppColors.white, fontFamily: 'Oswald'),
+        ),
+        content: const Text(
+          'For your security, please verify with your existing Google or Apple account. You will stay signed in to First Guess.',
+          style: TextStyle(color: AppColors.white),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('CANCEL')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('VERIFY IDENTITY')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('VERIFY IDENTITY'),
+          ),
         ],
       ),
     );
@@ -44,26 +60,53 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       await AccountAuthService.reauthenticateCurrentUserForDeletion();
       return mounted;
     } on AccountAuthException catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
       return false;
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Identity verification did not complete. No deletion request was submitted.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Identity verification did not complete. No deletion request was submitted.',
+            ),
+          ),
+        );
+      }
       return false;
     }
   }
 
-  Future<void> _submitDeletionRequest() async {
+  String _newDeletionReceipt() {
+    final random = Random.secure();
+    return base64UrlEncode(
+      List<int>.generate(32, (_) => random.nextInt(256)),
+    ).replaceAll('=', '');
+  }
+
+  Future<void> _submitDeletionRequest(String receipt) async {
     final response = await FirebaseFunctions.instanceFor(region: 'us-central1')
-        .httpsCallable('requestAccountDeletion').call(<String, dynamic>{
-      'confirm': 'DELETE MY ACCOUNT',
-    });
-    if (response.data is! Map || (response.data as Map)['accepted'] != true) {
-      throw StateError('The server did not accept the deletion request.');
+        .httpsCallable('requestAccountDeletion')
+        .call(<String, dynamic>{
+          'confirm': 'DELETE MY ACCOUNT',
+          'receipt': receipt,
+        });
+    if (response.data is! Map ||
+        (response.data as Map)['accepted'] != true ||
+        (response.data as Map)['receiptBound'] != true) {
+      throw StateError('The server did not confirm receipt-bound deletion.');
     }
   }
 
   Future<void> _requestDeletion() async {
-    if (_busy || !_serverDeletionReady || FirebaseAuth.instance.currentUser == null) return;
+    if (_busy ||
+        !_serverDeletionReady ||
+        FirebaseAuth.instance.currentUser == null) {
+      return;
+    }
     final controller = TextEditingController();
     try {
       final confirmed = await showDialog<bool>(
@@ -71,26 +114,39 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
         builder: (dialogContext) => StatefulBuilder(
           builder: (dialogContext, refresh) => AlertDialog(
             backgroundColor: AppColors.panel,
-            title: const Text('PERMANENTLY DELETE ACCOUNT?',
-              style: TextStyle(fontFamily: 'Oswald', color: AppColors.white)),
-            content: Column(mainAxisSize: MainAxisSize.min, children: [
-              const Text('This cannot be undone. Type DELETE MY ACCOUNT to confirm.',
-                style: TextStyle(color: AppColors.white)),
-              const SizedBox(height: 14),
-              TextField(
-                controller: controller,
-                autocorrect: false,
-                textCapitalization: TextCapitalization.characters,
-                style: const TextStyle(color: AppColors.white),
-                decoration: const InputDecoration(hintText: 'DELETE MY ACCOUNT'),
-                onChanged: (_) => refresh(() {}),
-              ),
-            ]),
+            title: const Text(
+              'PERMANENTLY DELETE ACCOUNT?',
+              style: TextStyle(fontFamily: 'Oswald', color: AppColors.white),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'This cannot be undone. Type DELETE MY ACCOUNT to confirm.',
+                  style: TextStyle(color: AppColors.white),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: controller,
+                  autocorrect: false,
+                  textCapitalization: TextCapitalization.characters,
+                  style: const TextStyle(color: AppColors.white),
+                  decoration: const InputDecoration(
+                    hintText: 'DELETE MY ACCOUNT',
+                  ),
+                  onChanged: (_) => refresh(() {}),
+                ),
+              ],
+            ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('CANCEL')),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('CANCEL'),
+              ),
               FilledButton(
                 onPressed: controller.text.trim() == 'DELETE MY ACCOUNT'
-                    ? () => Navigator.pop(dialogContext, true) : null,
+                    ? () => Navigator.pop(dialogContext, true)
+                    : null,
                 child: const Text('DELETE MY ACCOUNT'),
               ),
             ],
@@ -101,20 +157,21 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       setState(() => _busy = true);
       // This endpoint queues a durable deletion job. It does NOT signal completion.
       // The user's auth session is retained until the server finishes deletion.
+      final deletionUid = FirebaseAuth.instance.currentUser?.uid;
+      if (deletionUid == null) return;
+      final receipt = _newDeletionReceipt();
+      // Persist before sending: network failures may occur after server acceptance.
+      await AccountDeletionState.markPending(deletionUid, receipt: receipt);
       try {
-        await _submitDeletionRequest();
+        await _submitDeletionRequest(receipt);
       } on FirebaseFunctionsException catch (error) {
         if (error.code != 'failed-precondition') rethrow;
         if (!mounted) return;
         final verified = await _verifyIdentity();
         if (!verified || !mounted) return;
         // Retry once only, after verified reauthentication of the same user.
-        await _submitDeletionRequest();
+        await _submitDeletionRequest(receipt);
       }
-      if (!mounted) return;
-      final deletionUid = FirebaseAuth.instance.currentUser?.uid;
-      if (deletionUid == null) return;
-      await AccountDeletionState.markPending(deletionUid);
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(
@@ -126,13 +183,19 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       if (!mounted) return;
       final message = error.code == 'failed-precondition'
           ? 'The server could not complete the security check. Please try again or contact support.'
-          : (error.message ?? 'Unable to request deletion. Please try again later.');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+          : (error.message ??
+                'Unable to request deletion. Please try again later.');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(
-              'Unable to request deletion. Please try again later.')),
+          const SnackBar(
+            content: Text(
+              'Unable to request deletion. Please try again later.',
+            ),
+          ),
         );
       }
     } finally {
@@ -204,7 +267,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                   children: const [
                     _NumberedStep(
                       number: '1',
-                      text: 'Make sure you are signed in to the First Guess account you want to delete.',
+                      text:
+                          'Make sure you are signed in to the First Guess account you want to delete.',
                     ),
                     SizedBox(height: 12),
                     _NumberedStep(
@@ -214,7 +278,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     SizedBox(height: 12),
                     _NumberedStep(
                       number: '3',
-                      text: 'Type DELETE MY ACCOUNT to confirm. For security, you may need to sign in again.',
+                      text:
+                          'Type DELETE MY ACCOUNT to confirm. For security, you may need to sign in again.',
                     ),
                   ],
                 ),
@@ -270,9 +335,12 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                         : null,
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.red.shade700,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: Text(_busy ? 'REQUESTING DELETION...' : 'DELETE MY ACCOUNT'),
+                    child: Text(
+                      _busy ? 'REQUESTING DELETION...' : 'DELETE MY ACCOUNT',
+                    ),
                   ),
                 ),
                 const SizedBox(height: 6),

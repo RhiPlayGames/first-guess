@@ -742,14 +742,16 @@ extension _GameScreenView on _GameScreenState {
             SizedBox(height: keyboardOpen ? 7 : 10),
             LayoutBuilder(
               builder: (context, constraints) {
+                // Daily Flash 5 Classic-style image / CTA composition.
+                // Size the image explicitly rather than as a fraction of the
+                // available width: percentage sizing produced the ~130 px
+                // image on iPhone when the keyboard was visible.
                 const double gap = 10;
-                final double available = constraints.maxWidth - gap;
-                // Match the visible Daily Flash 5 phone image rather than
-                // shrinking to 45% of this panel when the keyboard opens.
-                // Leave at least 100 px for the buttons on narrow phones.
-                final double imageSide = keyboardOpen
-                    ? (available - 100).clamp(106.0, 164.0)
-                    : (available * 0.57).clamp(126.0, 205.0);
+                const double targetImageSide = 164;
+                const double minimumButtonWidth = 100;
+                final double imageSide =
+                    (constraints.maxWidth - gap - minimumButtonWidth)
+                        .clamp(0.0, targetImageSide);
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -760,9 +762,7 @@ extension _GameScreenView on _GameScreenState {
                         key: ValueKey(
                           'phone-${widget.gameType.name}-${currentItem.imagePath}',
                         ),
-                        child: AspectRatio(
-                          aspectRatio: 1,
-                          child: Stack(
+                        child: Stack(
                             children: [
                               Positioned.fill(
                                 child: buildNativePhoneVisualPanel(),
@@ -774,7 +774,6 @@ extension _GameScreenView on _GameScreenState {
                                   child: _PracticeModeRibbon(),
                                 ),
                             ],
-                          ),
                         ),
                       ),
                     ),
@@ -826,12 +825,12 @@ extension _GameScreenView on _GameScreenState {
                       textCapitalization: TextCapitalization.words,
                       textInputAction: TextInputAction.done,
                       scrollPadding: const EdgeInsets.only(bottom: 120),
-                      style: const TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 17),
+                      style: const TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 16),
                       decoration: const InputDecoration(
                         hintText: 'Type your guess...',
-                        hintStyle: TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 17),
+                        hintStyle: TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 16),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 15),
                       ),
                     ),
                   ),

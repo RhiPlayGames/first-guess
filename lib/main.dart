@@ -28,36 +28,55 @@ Future<void> main() async {
     );
   }
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  if (!kIsWeb) {
-    await FirebaseAppCheck.instance.activate(
-      providerAndroid: kDebugMode
-          ? const AndroidDebugProvider()
-          : const AndroidPlayIntegrityProvider(),
-      providerApple: kDebugMode
-          ? const AppleDebugProvider()
-          : const AppleAppAttestWithDeviceCheckFallbackProvider(),
-    );
+  // App Check is required by the account deletion callable. A provider
+  // initialisation error must not leave the entire website on a blank screen:
+  // the callable itself still rejects requests without a valid App Check token.
+  try {
+    if (kIsWeb) {
+      await FirebaseAppCheck.instance.activate(
+        providerWeb: kDebugMode
+            ? WebDebugProvider()
+            : ReCaptchaEnterpriseProvider(
+                '6Ldcju0tAAAAAJiW0WcKHgQ_TbLjKYX66QnxUpLb',
+              ),
+      );
+    } else {
+      await FirebaseAppCheck.instance.activate(
+        providerAndroid: kDebugMode
+            ? const AndroidDebugProvider()
+            : const AndroidPlayIntegrityProvider(),
+        providerApple: kDebugMode
+            ? const AppleDebugProvider()
+            : const AppleAppAttestWithDeviceCheckFallbackProvider(),
+      );
+    }
+  } catch (error, stackTrace) {
+    debugPrint('Firebase App Check activation failed: $error');
+    debugPrintStack(stackTrace: stackTrace);
   }
 
-  await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
-  await FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
+  // Analytics and Performance should not prevent the app from rendering
+  // if a web plugin fails during startup.
+  try {
+    await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
+  } catch (error) {
+    debugPrint('Firebase Analytics initialisation failed: $error');
+  }
+  try {
+    await FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
+  } catch (error) {
+    debugPrint('Firebase Performance initialisation failed: $error');
+  }
 
   if (!kIsWeb) {
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
 
-    FlutterError.onError =
-        FirebaseCrashlytics.instance.recordFlutterFatalError;
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
     PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
-      FirebaseCrashlytics.instance.recordError(
-        error,
-        stack,
-        fatal: true,
-      );
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
   }
@@ -75,9 +94,7 @@ class FirstGuessApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       navigatorObservers: <NavigatorObserver>[
         homeKeyboardRouteObserver,
-        FirebaseAnalyticsObserver(
-          analytics: FirebaseAnalytics.instance,
-        ),
+        FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
       ],
       theme: ThemeData(
         useMaterial3: true,

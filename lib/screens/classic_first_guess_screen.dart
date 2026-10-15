@@ -123,7 +123,9 @@ class _ClassicFirstGuessScreenState extends State<ClassicFirstGuessScreen> {
         ),
       );
 
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('[SURPRISE ME] Failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
       if (!mounted) {
         return;
       }

@@ -15,6 +15,7 @@ import 'daily_flash_first_connection_screen.dart';
 import 'daily_flash_first_date_screen.dart';
 import 'daily_flash_first_match_screen.dart';
 import 'daily_flash_first_order_screen.dart';
+import '../../screens/first_pick_game_screen.dart';
 import 'daily_flash_loading_screen.dart';
 
 class DailyFlashHomeScreen extends StatefulWidget {
@@ -35,6 +36,7 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
   int _firstDateProgress = 0;
   int _firstMatchProgress = 0;
   int _firstOrderProgress = 0;
+  int _firstPickProgress = 0;
   int _firstConnectionProgress = 0;
   bool _firstConnectionEnabled = false;
 
@@ -66,6 +68,7 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
         DailyFlashGameProgressService.loadToday(gameKey: 'first_date'),
         DailyFlashGameProgressService.loadToday(gameKey: 'first_match'),
         DailyFlashGameProgressService.loadToday(gameKey: 'first_order'),
+        DailyFlashGameProgressService.loadToday(gameKey: 'first_pick'),
         if (firstConnectionEnabled)
           DailyFlashGameProgressService.loadToday(gameKey: 'first_connection'),
       ];
@@ -85,8 +88,10 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
           results[3] as DailyFlashGameProgress;
       final DailyFlashGameProgress firstOrder =
           results[4] as DailyFlashGameProgress;
+      final DailyFlashGameProgress firstPick =
+          results[5] as DailyFlashGameProgress;
       final DailyFlashGameProgress? firstConnection = firstConnectionEnabled
-          ? results[5] as DailyFlashGameProgress
+          ? results[6] as DailyFlashGameProgress
           : null;
 
       setState(() {
@@ -95,6 +100,7 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
         _firstDateProgress = firstDate.nextQuestionIndex.clamp(0, 5);
         _firstMatchProgress = firstMatch.nextQuestionIndex.clamp(0, 5);
         _firstOrderProgress = firstOrder.nextQuestionIndex.clamp(0, 5);
+        _firstPickProgress = firstPick.nextQuestionIndex.clamp(0, 5);
         _firstConnectionProgress =
             firstConnection?.nextQuestionIndex.clamp(0, 5) ?? 0;
         _firstConnectionEnabled = firstConnectionEnabled;
@@ -111,6 +117,7 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
         _firstDateProgress = 0;
         _firstMatchProgress = 0;
         _firstOrderProgress = 0;
+        _firstPickProgress = 0;
         _firstConnectionProgress = 0;
         _firstConnectionEnabled = false;
         _loading = false;
@@ -184,6 +191,21 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
     if (mounted) {
       await _loadProgress();
     }
+  }
+
+  Future<void> _openFirstPickDailyFlash() async {
+    if (_firstPickProgress >= 5) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => FirstPickGameScreen(
+          subcategory: null,
+          categoryTitle: 'Daily Flash 5',
+          dailyFlash: true,
+          onChallengeFinished: _loadProgress,
+        ),
+      ),
+    );
+    if (mounted) await _loadProgress();
   }
 
   Future<void> _openFirstOrderDailyFlash() async {
@@ -372,6 +394,14 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
         progress: _firstMatchProgress,
         enabled: !_loading,
         onPressed: _openFirstMatchDailyFlash,
+      ),
+      _DailyFlashGameData(
+        title: 'First Pick',
+        subtitle: 'Six options. Three picks. Can you choose correctly?',
+        imagePath: 'assets/images/categories/first_pick/firstpick_icon.webp',
+        progress: _firstPickProgress,
+        enabled: !_loading,
+        onPressed: _openFirstPickDailyFlash,
       ),
       _DailyFlashGameData(
         title: 'First Order',

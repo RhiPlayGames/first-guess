@@ -238,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       _CategoryData(
         title: 'Classic First Guess',
         subtitle: isPhone
-            ? '10 clues. Can you solve it?'
+            ? 'Ten clues. Can you find the answer?'
             : 'Ten clues. One trivia test. Can you find the answer?',
         imagePath:
             'assets/images/categories/classic_firstguess/First Guessicon128.webp',
@@ -249,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       _CategoryData(
         title: 'First Date',
         subtitle: isPhone
-            ? '5 events. Know the year?'
+            ? 'Ten events. Can you piece it together?'
             : 'Ten events. One date. Can you piece it together?',
         imagePath: 'assets/images/categories/first_date/firstdateicon128.webp',
         isAvailable: true,
@@ -259,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       _CategoryData(
         title: 'First Match',
         subtitle: isPhone
-            ? '6 pairs. Can you link them?'
+            ? 'Six pairs. Can you match them all?'
             : 'Six pairs. One perfect board. Can you match them all?',
         imagePath:
             'assets/images/categories/first_match/firstmatch_icon128.webp',
@@ -270,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       _CategoryData(
         title: 'First Order',
         subtitle: isPhone
-            ? '5 choices. Can you rank them?'
+            ? 'Five choices. Can you rank them all?'
             : 'Five choices. One correct order. Can you rank them all?',
         imagePath:
             'assets/images/categories/first_order/firstorder_icon128.webp',
@@ -281,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       _CategoryData(
           title: 'First Pick',
           subtitle: isPhone
-              ? '6 options. Can you pick right?'
+              ? 'Six choices. Can you pick the correct answer?'
               : 'Six choices. Three tries. Can you pick the correct answer?',
           imagePath: 'assets/images/categories/first_pick/firstpick_icon.webp',
           isAvailable: true,
@@ -291,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       _CategoryData(
         title: 'First Word',
         subtitle: isPhone
-            ? '5 clues. Can you uncover it?'
+            ? 'Five clues. How soon can you uncover it?'
             : 'Five clues. One hidden word. How soon can you uncover it?',
         imagePath: 'assets/images/categories/first_word/firstword_128.webp',
         isAvailable: true,

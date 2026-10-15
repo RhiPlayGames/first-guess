@@ -94,101 +94,71 @@ class FirebaseChallengeService {
     String? previousSubcategory,
     String? excludedQuestionId,
   }) async {
-    final QuerySnapshot<Map<String, dynamic>> snapshot =
-        await FirebaseFirestore.instance
-            .collection('challenges')
-            .where('status', isEqualTo: 'live')
-            .get();
-
-    if (snapshot.docs.isEmpty) {
-      return null;
-    }
-
+    // Query one category at a time to avoid downloading the entire live
+    // collection onto a phone. Rotate categories randomly to avoid favouring
+    // the same game and try every eligible category before returning exhausted.
+    const List<String> categories = <String>[
+      'animals', 'books_authors', 'countries', 'creative_world',
+      'famous_words', 'food_drink', 'music', 'past_present',
+      'science_nature', 'sports', 'watch_play', 'famous_people',
+    ];
+    final Random random = Random();
+    final List<String> shuffledCategories = List<String>.from(categories)
+      ..shuffle(random);
     final String? previousGroupKey =
         previousCategory != null && previousSubcategory != null
-            ? '$previousCategory::$previousSubcategory'
-            : null;
+            ? '$previousCategory::$previousSubcategory' : null;
+    Object? firstFailure;
+    int successfulQueries = 0;
 
-    final List<QueryDocumentSnapshot<Map<String, dynamic>>> eligible =
-        snapshot.docs.where((document) {
-      final Map<String, dynamic> data = document.data();
-      final String? category = _readString(data['category']);
-      final String? subcategory = _readString(data['subcategory']);
-      final String questionId =
-          _readString(data['questionId']) ?? document.id;
-
-      if (category == null || subcategory == null) {
-        return false;
-      }
-
-      if (_surpriseExcludedCategories.contains(category)) {
-        return false;
-      }
-
-      if (excludedQuestionId != null &&
-          excludedQuestionId.isNotEmpty &&
-          questionId == excludedQuestionId) {
-        return false;
-      }
-
-      return questionId.isNotEmpty;
-    }).toList(growable: false);
-
-    if (eligible.isEmpty) {
-      return null;
-    }
-
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> candidates =
-        eligible.where((document) {
-      final Map<String, dynamic> data = document.data();
-      final String questionId =
-          _readString(data['questionId']) ?? document.id;
-
-      return !playedQuestionIds.contains(questionId);
-    }).toList();
-
-    if (candidates.isEmpty) {
-      return null;
-    }
-
-    if (previousGroupKey != null && candidates.length > 1) {
-      final List<QueryDocumentSnapshot<Map<String, dynamic>>>
-          differentSubcategoryCandidates = candidates.where((document) {
-        final Map<String, dynamic> data = document.data();
-        final String? category = _readString(data['category']);
-        final String? subcategory = _readString(data['subcategory']);
-
-        if (category == null || subcategory == null) {
-          return false;
+    for (final String category in shuffledCategories) {
+      try {
+        // The existing category + live composite query is already used by
+        // loadLiveCategoryDocuments elsewhere in the app.
+        final QuerySnapshot<Map<String, dynamic>> snapshot =
+            await FirebaseFirestore.instance.collection('challenges')
+                .where('category', isEqualTo: category)
+                .where('status', isEqualTo: 'live')
+                .get().timeout(const Duration(seconds: 12));
+        successfulQueries++;
+        final List<QueryDocumentSnapshot<Map<String, dynamic>>> eligible =
+            snapshot.docs.where((document) {
+          final Map<String, dynamic> data = document.data();
+          final String? subcategory = _readString(data['subcategory']);
+          final String id = _readString(data['questionId']) ?? document.id;
+          return subcategory != null && id.isNotEmpty &&
+              id != excludedQuestionId && !playedQuestionIds.contains(id) &&
+              !_surpriseExcludedCategories.contains(category);
+        }).toList();
+        if (eligible.isEmpty) continue;
+        final List<QueryDocumentSnapshot<Map<String, dynamic>>> alternatives =
+            eligible.where((document) =>
+                '$category::${_readString(document.data()['subcategory'])}' !=
+                previousGroupKey).toList();
+        final candidates = alternatives.isNotEmpty ? alternatives : eligible;
+        candidates.shuffle(random);
+        // Corrupt records should not prevent another valid question loading.
+        for (final document in candidates) {
+          try {
+            final QuizItem item = await _quizItemFromDocument(document);
+            return FirebaseSurpriseSelection(
+              category: category,
+              subcategory: _readString(document.data()['subcategory'])!,
+              item: item,
+            );
+          } catch (error) {
+            debugPrint('[SURPRISE ME] Invalid challenge ${document.id}: $error');
+          }
         }
-
-        return '$category::$subcategory' != previousGroupKey;
-      }).toList();
-
-      if (differentSubcategoryCandidates.isNotEmpty) {
-        candidates = differentSubcategoryCandidates;
+      } catch (error) {
+        firstFailure ??= error;
+        debugPrint('[SURPRISE ME] $category query failed: $error');
       }
     }
-
-    final Random random = Random();
-    final QueryDocumentSnapshot<Map<String, dynamic>> selectedDocument =
-        candidates[random.nextInt(candidates.length)];
-
-    final Map<String, dynamic> selectedData = selectedDocument.data();
-    final String? category = _readString(selectedData['category']);
-    final String? subcategory = _readString(selectedData['subcategory']);
-
-    if (category == null || subcategory == null) {
-      return null;
+    if (successfulQueries == 0 && firstFailure != null) {
+      throw StateError('All Surprise Me queries failed: $firstFailure');
     }
-
-    final QuizItem item = await _quizItemFromDocument(selectedDocument);
-
-    return FirebaseSurpriseSelection(
-      category: category,
-      subcategory: subcategory,
-      item: item,
-    );
+    return null;
   }
 
   static Future<FirebaseSurpriseSelection?>
