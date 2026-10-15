@@ -1,3 +1,4 @@
+import '../services/sound_effects_service.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -592,12 +593,14 @@ class _FirstMatchGameScreenState extends State<FirstMatchGameScreen> {
     });
 
     if (_lockedLeftIndexes.length == _pairCount) {
+      SoundEffectsService.correct();
       await _finishCorrect(
         submissionNumber: submissionNumber,
       );
       return;
     }
 
+    SoundEffectsService.incorrect();
     final int nextLives = _lives - 1;
     final int nextSubmitted = _submittedBoards + 1;
 

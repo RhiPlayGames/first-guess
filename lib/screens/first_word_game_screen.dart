@@ -1,3 +1,4 @@
+import '../services/sound_effects_service.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -405,10 +406,12 @@ class _FirstWordGameScreenState extends State<FirstWordGameScreen> {
     _submittedGuessCount++;
 
     if (isCorrect) {
+      SoundEffectsService.correct();
       await _finishCorrect(wasFirstGuess: wasFirstGuess);
       return;
     }
 
+    SoundEffectsService.incorrect();
     final int newLives = _lives - 1;
     final bool outOfLives = newLives <= 0;
     final bool noMoreClues = _isLastClue;

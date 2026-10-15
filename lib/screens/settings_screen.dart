@@ -1,3 +1,4 @@
+import '../services/sound_effects_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -36,6 +37,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    SoundEffectsService.initialise();
     _loadAvatar();
     _loadAccountStatus();
     _loadPlayGamesStatus();
@@ -609,6 +611,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 12),
             ],
+            ValueListenableBuilder<bool>(
+              valueListenable: SoundEffectsService.enabled,
+              builder: (context, soundsEnabled, child) => Container(
+                decoration: BoxDecoration(
+                  color: AppColors.panel,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: SwitchListTile(
+                  secondary: const Icon(Icons.volume_up_outlined,
+                      color: AppColors.orange),
+                  title: const Text('SOUND EFFECTS',
+                      style: TextStyle(fontFamily: 'Oswald',
+                          color: AppColors.white)),
+                  subtitle: Text(soundsEnabled ? 'On' : 'Off',
+                      style: const TextStyle(fontFamily: 'Inter',
+                          color: AppColors.white)),
+                  value: soundsEnabled,
+                  activeThumbColor: AppColors.orange,
+                  onChanged: (value) => SoundEffectsService.setEnabled(value),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             _SettingsTile(
               icon: Icons.info_outline_rounded,
               title: 'ABOUT FIRST GUESS',

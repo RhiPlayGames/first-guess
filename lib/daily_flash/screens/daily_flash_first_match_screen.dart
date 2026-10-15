@@ -1,3 +1,4 @@
+import '../../services/sound_effects_service.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -501,12 +502,14 @@ class _DailyFlashFirstMatchScreenState
             _pairCount;
 
     if (boardComplete) {
+      SoundEffectsService.correct();
       await _finishCorrect(
         attemptNumber: attemptNumber,
       );
       return;
     }
 
+    SoundEffectsService.incorrect();
     final int remainingLives = _lives - 1;
 
     setState(() {

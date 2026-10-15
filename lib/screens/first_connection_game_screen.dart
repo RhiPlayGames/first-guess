@@ -1,3 +1,4 @@
+import '../services/sound_effects_service.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -441,6 +442,7 @@ class _FirstConnectionGameScreenState
     _submittedGuessCount++;
 
     if (isCorrect) {
+      SoundEffectsService.correct();
       await _finishCorrect(wasFirstGuess: wasFirstGuess);
       return;
     }
@@ -469,6 +471,7 @@ class _FirstConnectionGameScreenState
       return;
     }
 
+    SoundEffectsService.incorrect();
     final int newLives = _lives - 1;
 
     if (newLives <= 0) {

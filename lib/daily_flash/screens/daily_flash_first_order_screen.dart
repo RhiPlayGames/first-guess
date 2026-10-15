@@ -1,3 +1,4 @@
+import '../../services/sound_effects_service.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -414,12 +415,14 @@ class _DailyFlashFirstOrderScreenState
     final bool solved = newlyCorrect.length == question.orderedItems.length;
 
     if (solved) {
+      SoundEffectsService.correct();
       await _finishCorrect(
         attemptNumber: attemptNumber,
       );
       return;
     }
 
+    SoundEffectsService.incorrect();
     if (attemptNumber >= _maximumSubmissions) {
       setState(() {
         _submittedOrderCount = _maximumSubmissions;

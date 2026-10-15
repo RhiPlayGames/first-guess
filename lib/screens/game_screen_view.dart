@@ -747,11 +747,9 @@ extension _GameScreenView on _GameScreenState {
                 // available width: percentage sizing produced the ~130 px
                 // image on iPhone when the keyboard was visible.
                 const double gap = 10;
-                const double targetImageSide = 164;
-                const double minimumButtonWidth = 100;
-                final double imageSide =
-                    (constraints.maxWidth - gap - minimumButtonWidth)
-                        .clamp(0.0, targetImageSide);
+                final double imageSide = keyboardOpen
+                    ? ((constraints.maxWidth - gap) * 0.45).clamp(106.0, 164.0)
+                    : ((constraints.maxWidth - gap) * 0.57).clamp(126.0, 205.0);
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -1045,8 +1043,10 @@ extension _GameScreenView on _GameScreenState {
           fit: BoxFit.cover,
           filterQuality: FilterQuality.high,
           gaplessPlayback: true,
-          errorBuilder: (context, error, stackTrace) =>
-              buildVisualPanel(),
+          errorBuilder: (context, error, stackTrace) {
+            debugPrint('CLASSIC IMAGE FAILED: $path — $error');
+            return buildVisualPanel();
+          },
         ),
       ),
     );
@@ -1143,6 +1143,50 @@ extension _GameScreenView on _GameScreenState {
   }
 
   Widget buildClueHeaderBlock() {
+    // The phone layout mirrors Daily Flash Classic's two-row status panel;
+    // the classic game still uses its own clue count, lives and scoring.
+    final bool phone = _useNativePhoneLayout(context);
+    if (!phone) {
+      return _buildLegacyClueHeaderBlock();
+    }
+    final bool firstGuessBonus = currentClueIndex == 0 && guessesThisRound == 0;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
+      decoration: BoxDecoration(
+        color: AppColors.panel,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border, width: 1.2),
+      ),
+      child: Column(
+        children: [
+          Row(children: [
+            Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
+              child: Text('CLASSIC FIRST GUESS',
+              style: const TextStyle(fontFamily: 'Oswald', fontSize: 19,
+                fontWeight: FontWeight.w700, color: AppColors.white)))),
+            LivesDisplay(lives: lives, maximumLives: _GameScreenState.maximumLives),
+          ]),
+          const SizedBox(height: 8),
+          Row(children: [
+            Expanded(child: Text('CLUE ${currentClueIndex + 1} OF ${currentItem.clues.length}',
+              style: const TextStyle(fontFamily: 'Oswald', fontSize: 16,
+                fontWeight: FontWeight.w600, color: AppColors.white))),
+            Text.rich(TextSpan(children: [
+              TextSpan(text: isPracticeModeActive ? '0 XP' : '$pointsAvailable XP',
+                style: const TextStyle(fontFamily: 'Oswald', fontSize: 16,
+                    fontWeight: FontWeight.w700, color: AppColors.white)),
+              if (firstGuessBonus && !isPracticeModeActive)
+                const TextSpan(text: ' +50', style: TextStyle(fontFamily: 'Oswald',
+                  fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.orange)),
+            ])),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegacyClueHeaderBlock() {
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
       decoration: BoxDecoration(

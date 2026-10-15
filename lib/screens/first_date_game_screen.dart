@@ -1,3 +1,4 @@
+import '../services/sound_effects_service.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -532,6 +533,7 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
     final bool correct = _isAcceptedAnswer(guess, question);
 
     if (correct) {
+      SoundEffectsService.correct();
       await _finishCorrect();
       return;
     }
@@ -539,6 +541,7 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
     final String? partialMessage =
         _partialFeedback(guess, question);
 
+    SoundEffectsService.incorrect();
     final int remainingLives = _lives - 1;
     final bool noLivesLeft = remainingLives <= 0;
     final bool noCluesLeft = _clueIndex >= question.clues.length - 1;

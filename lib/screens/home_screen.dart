@@ -281,8 +281,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       _CategoryData(
           title: 'First Pick',
           subtitle: isPhone
-              ? 'Six choices. Can you pick the correct answer?'
-              : 'Six choices. Three tries. Can you pick the correct answer?',
+              ? 'Six choices. Can you pick the correct one?'
+              : 'Six choices. Three tries. Can you pick the correct one?',
           imagePath: 'assets/images/categories/first_pick/firstpick_icon.webp',
           isAvailable: true,
           onPressed: _openFirstPick,

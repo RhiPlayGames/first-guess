@@ -12,6 +12,7 @@ import '../services/achievement_service.dart';
 import '../services/analytics_service.dart';
 import '../services/content_consumption_service.dart';
 import '../services/player_stats_service.dart';
+import '../services/sound_effects_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/clue_panel.dart';
 import '../widgets/game_dialogs.dart';

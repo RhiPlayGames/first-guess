@@ -1,3 +1,4 @@
+import '../services/sound_effects_service.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -477,6 +478,7 @@ class _FirstOrderGameScreenState extends State<FirstOrderGameScreen> {
     final int attemptNumber = _submittedOrderCount + 1;
 
     if (correct) {
+      SoundEffectsService.correct();
       setState(() {
         _submittedOrderCount = attemptNumber;
       });
@@ -488,6 +490,7 @@ class _FirstOrderGameScreenState extends State<FirstOrderGameScreen> {
       return;
     }
 
+    SoundEffectsService.incorrect();
     if (attemptNumber >= _maximumSubmissions) {
       setState(() {
         _submittedOrderCount = _maximumSubmissions;

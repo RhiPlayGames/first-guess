@@ -1,3 +1,4 @@
+import '../../services/sound_effects_service.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -382,10 +383,12 @@ class _DailyFlashFirstDateScreenState
         question.acceptedAnswers.contains(_normalise(guess));
 
     if (correct) {
+      SoundEffectsService.correct();
       await _finishCorrect();
       return;
     }
 
+    SoundEffectsService.incorrect();
     final int remainingLives = _lives - 1;
     final bool noLivesLeft = remainingLives <= 0;
     final bool noCluesLeft =

@@ -1,3 +1,4 @@
+import '../../services/sound_effects_service.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -88,6 +89,17 @@ class _DailyFlashGameScreenState
   List<DailyFlashQuestion> dailyQuestions = <DailyFlashQuestion>[];
   List<Set<String>> acceptedAnswersByQuestion = <Set<String>>[];
   String dailyTitle = '';
+  bool _showTopicBanner = true;
+  Timer? _topicBannerTimer;
+
+  void _revealTopicBriefly() {
+    _topicBannerTimer?.cancel();
+    if (!mounted) return;
+    setState(() => _showTopicBanner = true);
+    _topicBannerTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _showTopicBanner = false);
+    });
+  }
 
   int questionIndex = 0;
   int clueIndex = 0;
@@ -139,6 +151,9 @@ class _DailyFlashGameScreenState
   void initState() {
     super.initState();
     _loadDailyProgress();
+    _topicBannerTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _showTopicBanner = false);
+    });
   }
 
   String _compactDateKey(String value) =>
@@ -339,6 +354,7 @@ class _DailyFlashGameScreenState
         firstGuesses = progress.firstGuesses;
         loadingProgress = false;
       });
+      _revealTopicBriefly();
 
       // Do not mark a Daily Flash question as attempted just because it
       // has opened. It is only advanced after a correct answer or a genuine
@@ -400,6 +416,7 @@ class _DailyFlashGameScreenState
 
   @override
   void dispose() {
+    _topicBannerTimer?.cancel();
     clueTimer?.cancel();
     messageTimer?.cancel();
     timeUpOverlayTimer?.cancel();
@@ -869,6 +886,7 @@ class _DailyFlashGameScreenState
 
     switch (match) {
       case _DailyFlashGuessMatch.correct:
+        SoundEffectsService.correct();
         await handleCorrectGuess();
         return;
 
@@ -877,6 +895,7 @@ class _DailyFlashGameScreenState
         return;
 
       case _DailyFlashGuessMatch.incorrect:
+        SoundEffectsService.incorrect();
         await handleIncorrectGuess();
         return;
     }
@@ -1307,6 +1326,7 @@ class _DailyFlashGameScreenState
 
       guessController.clear();
     });
+    _revealTopicBriefly();
 
     // Opening the next question does not consume it. It remains the current
     // unattempted question until the player answers, times out, loses all
@@ -1890,10 +1910,17 @@ class _DailyFlashGameScreenState
                           onHome: goBack,
                         ),
                         const SizedBox(height: 8),
-                        _TopicBadge(
-                          isSmall: false,
-                          title: dailyTitle,
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 260),
+                        transitionBuilder: (child, animation) => SizeTransition(
+                          sizeFactor: animation,
+                          alignment: Alignment.topCenter,
+                          child: FadeTransition(opacity: animation, child: child),
                         ),
+                        child: _showTopicBanner
+                            ? _TopicBadge(key: const ValueKey('topic-visible'), isSmall: false, title: dailyTitle)
+                            : const SizedBox(key: ValueKey('topic-hidden')),
+                      ),
                         if (gameMessage != null) ...[
                           const SizedBox(height: 10),
                           GameMessagePanel(
@@ -1994,9 +2021,16 @@ class _DailyFlashGameScreenState
                             isSmall ? 5 : 8,
                       ),
 
-                      _TopicBadge(
-                        isSmall: isSmall,
-                        title: dailyTitle,
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 260),
+                        transitionBuilder: (child, animation) => SizeTransition(
+                          sizeFactor: animation,
+                          alignment: Alignment.topCenter,
+                          child: FadeTransition(opacity: animation, child: child),
+                        ),
+                        child: _showTopicBanner
+                            ? _TopicBadge(key: const ValueKey('topic-visible'), isSmall: isSmall, title: dailyTitle)
+                            : const SizedBox(key: ValueKey('topic-hidden')),
                       ),
 
                       if (gameMessage !=
@@ -2314,6 +2348,7 @@ class _TopicBadge
   final String title;
 
   const _TopicBadge({
+    super.key,
     required this.isSmall,
     required this.title,
   });
@@ -2745,6 +2780,7 @@ class _DailyFlashQuestionImagePanel
           Object error,
           StackTrace? stackTrace,
         ) {
+          debugPrint('DAILY FLASH IMAGE FAILED: $imagePath — $error');
           WidgetsBinding.instance
               .addPostFrameCallback((_) {
             onImageError();

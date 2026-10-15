@@ -450,6 +450,7 @@ extension _GameScreenLogic on _GameScreenState {
 
     switch (match) {
       case GuessMatch.correct:
+        SoundEffectsService.correct();
         clueTimer?.cancel();
 
         final bool isFirstSubmittedGuess =
@@ -616,6 +617,7 @@ extension _GameScreenLogic on _GameScreenState {
         return;
 
       case GuessMatch.incorrect:
+        SoundEffectsService.incorrect();
         clueTimer?.cancel();
 
         guessesThisRound++;

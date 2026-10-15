@@ -1,3 +1,4 @@
+import '../services/sound_effects_service.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -296,6 +297,13 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
     final attempt = index == -1 ? 3 : _attempts + 1;
     final correct = index == question.correctIndex;
     final finished = correct || attempt == 3;
+    if (index >= 0) {
+      if (correct) {
+        SoundEffectsService.correct();
+      } else {
+        SoundEffectsService.incorrect();
+      }
+    }
     setState(() {
       _attempts = attempt;
       if (!correct) _wrongOptions.add(index);

@@ -1,3 +1,4 @@
+import '../../services/sound_effects_service.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -416,6 +417,7 @@ class _DailyFlashFirstConnectionScreenState
     _submittedGuessCount++;
 
     if (isCorrect) {
+      SoundEffectsService.correct();
       await _finishCorrect(
         wasFirstGuess: wasFirstGuess,
       );
@@ -446,6 +448,7 @@ class _DailyFlashFirstConnectionScreenState
       return;
     }
 
+    SoundEffectsService.incorrect();
     final int newLives = _lives - 1;
 
     if (newLives <= 0) {

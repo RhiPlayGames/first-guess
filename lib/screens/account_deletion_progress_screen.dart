@@ -64,6 +64,8 @@ class _AccountDeletionProgressScreenState
   Timer? _timer;
   bool _checking = false;
   bool _completed = false;
+  bool _legacyUnverifiable = false;
+  bool _recovering = false;
   String? _error;
 
   @override
@@ -105,6 +107,7 @@ class _AccountDeletionProgressScreenState
           if (mounted) {
             setState(() {
               _completed = true;
+              _legacyUnverifiable = false;
               _error = null;
             });
           }
@@ -120,16 +123,18 @@ class _AccountDeletionProgressScreenState
         // The previous Firebase session was invalidated or signed out.
         // This is NOT, on its own, proof of successful deletion.
         if (mounted) {
-          setState(
-            () => _error =
-                'This older deletion request cannot be verified automatically. Please contact support to confirm completion.',
-          );
+          setState(() {
+            _legacyUnverifiable = true;
+            _error = 'This older deletion request cannot be verified automatically. '
+                'You can contact support about the previous account, or start '
+                'a separate guest session on this device.';
+          });
         }
         return;
       }
       try {
         await user.reload();
-        if (mounted) setState(() => _error = null);
+        if (mounted) setState(() { _legacyUnverifiable = false; _error = null; });
       } on FirebaseAuthException catch (error) {
         if (error.code == 'user-not-found') {
           await AccountDeletionState.clearDeletedAccount();
@@ -137,6 +142,7 @@ class _AccountDeletionProgressScreenState
           if (mounted) {
             setState(() {
               _completed = true;
+              _legacyUnverifiable = false;
               _error = null;
             });
           }
@@ -164,6 +170,81 @@ class _AccountDeletionProgressScreenState
       }
     } finally {
       _checking = false;
+    }
+  }
+
+  /// Recovery only for a receipt-less, unverifiable legacy request after the
+  /// original Firebase session has gone. Does not cancel or complete the
+  /// server-side deletion request and cannot restore the previous account.
+  Future<void> _startFreshGuest() async {
+    if (_recovering || !_legacyUnverifiable || _completed) return;
+
+    // Recheck all security conditions in case the auth state changed.
+    final pendingUid = await AccountDeletionState.pendingUid();
+    final receipt = await AccountDeletionState.pendingReceipt();
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    if (pendingUid == null ||
+        (receipt != null && receipt.isNotEmpty) ||
+        currentUid == pendingUid) {
+      if (mounted) await _check();
+      return;
+    }
+
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.panel,
+        title: const Text('START A NEW GUEST SESSION?',
+            style: TextStyle(color: AppColors.white, fontFamily: 'Oswald')),
+        content: const Text(
+          'Your previous deletion request has NOT been confirmed as complete. '
+          'Continuing will clear saved app data on this device and create a '
+          'new guest account. It will not cancel the earlier deletion request '
+          'or recover your previous account or progress. Contact support '
+          'if you need confirmation about the old account.',
+          style: TextStyle(color: AppColors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('START AS GUEST'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _recovering = true);
+    try {
+      // Safeguard against a receipt being created during confirmation.
+      final latestUid = await AccountDeletionState.pendingUid();
+      final latestReceipt = await AccountDeletionState.pendingReceipt();
+      if (latestUid != pendingUid ||
+          (latestReceipt != null && latestReceipt.isNotEmpty) ||
+          FirebaseAuth.instance.currentUser?.uid == pendingUid) {
+        throw StateError('The account state changed. Check status again.');
+      }
+      // This clears only device-local state and signs out; it makes no
+      // statement about deletion completion on Firebase.
+      await AccountDeletionState.clearDeletedAccount();
+      await FirebaseAuth.instance.signInAnonymously();
+      _timer?.cancel();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+        (_) => false,
+      );
+    } catch (error) {
+      if (mounted) {
+        setState(() => _error =
+            'Unable to start a new guest session. Please try again. ($error)');
+      }
+    } finally {
+      if (mounted) setState(() => _recovering = false);
     }
   }
 
@@ -231,11 +312,21 @@ class _AccountDeletionProgressScreenState
                   onPressed: _continue,
                   child: const Text('CONTINUE'),
                 )
-              else
+              else ...[
                 OutlinedButton(
-                  onPressed: _check,
+                  onPressed: _checking || _recovering ? null : _check,
                   child: const Text('CHECK STATUS'),
                 ),
+                if (_legacyUnverifiable) ...[
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: _recovering ? null : _startFreshGuest,
+                    child: Text(_recovering
+                        ? 'STARTING GUEST SESSION...'
+                        : 'START AS NEW GUEST'),
+                  ),
+                ],
+              ],
             ],
           ),
         ),
