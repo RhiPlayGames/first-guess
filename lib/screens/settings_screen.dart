@@ -564,7 +564,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: _googleLinked
                   ? Icons.verified_user_outlined
                   : Icons.account_circle_outlined,
-              title: 'ACCOUNT',
+              title: _googleLinked
+                  ? 'CONNECTED WITH GOOGLE'
+                  : 'SIGN IN WITH GOOGLE',
               subtitle: _accountActionInProgress
                   ? 'Connecting with Google...'
                   : _googleLinked
@@ -578,7 +580,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (_showAppleOption) ...[
               _SettingsTile(
                 icon: _appleLinked ? Icons.verified_user_outlined : Icons.apple,
-                title: 'SIGN IN WITH APPLE',
+                title: _appleLinked
+                    ? 'CONNECTED WITH APPLE'
+                    : 'SIGN IN WITH APPLE',
                 subtitle: _accountActionInProgress
                     ? 'Connecting account...'
                     : _appleLinked
@@ -593,7 +597,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: _playGamesConnected
                     ? Icons.sports_esports_rounded
                     : Icons.sports_esports_outlined,
-                title: 'GOOGLE PLAY GAMES',
+                title: _playGamesConnected
+                    ? 'CONNECTED WITH GOOGLE PLAY GAMES'
+                    : 'SIGN IN WITH GOOGLE PLAY GAMES',
                 subtitle: _playGamesActionInProgress
                     ? 'Connecting with Google Play Games...'
                     : _playGamesConnected
