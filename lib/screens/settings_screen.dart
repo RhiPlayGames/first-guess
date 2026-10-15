@@ -27,6 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String _avatarPath = _defaultAvatarPath;
   bool _googleLinked = false;
+  bool _appleLinked = false;
   bool _accountActionInProgress = false;
   bool _playGamesConnected = false;
   bool _playGamesActionInProgress = false;
@@ -53,8 +54,123 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() {
       _googleLinked = AccountAuthService.isGoogleLinked;
+      _appleLinked = AccountAuthService.isAppleLinked;
       _accountEmail = AccountAuthService.email;
     });
+  }
+
+  bool get _showAppleOption =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  Future<void> _handleAppleTap() async {
+    if (_accountActionInProgress || !_showAppleOption) return;
+    if (_appleLinked) {
+      if (await AccountAuthService.hasPendingGuestProgressMerge()) {
+        await _retryPendingGuestMerge();
+        return;
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Apple is already connected to this First Guess account.',
+          ),
+        ),
+      );
+      return;
+    }
+    setState(() => _accountActionInProgress = true);
+    try {
+      await AccountAuthService.linkCurrentAccountToApple();
+      if (!mounted) return;
+      await _loadAccountStatus();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Apple connected. Your First Guess progress is protected.',
+          ),
+        ),
+      );
+    } on AccountAuthException catch (error) {
+      if (!mounted) return;
+      if (error.code == 'existing-apple-account' &&
+          !AccountAuthService.isGuest) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'That Apple ID belongs to a different First Guess account. Your existing connected account has not been changed.',
+            ),
+          ),
+        );
+        return;
+      }
+      if (error.code == 'existing-apple-account') {
+        final restore = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) => AlertDialog(
+            backgroundColor: AppColors.panel,
+            title: const Text(
+              'EXISTING APPLE ACCOUNT FOUND',
+              style: TextStyle(fontFamily: 'Oswald', color: AppColors.white),
+            ),
+            content: const Text(
+              'This Apple ID is linked to another First Guess account. '
+              'Would you like to restore that account and merge the guest progress '
+              'from this device? The existing account avatar will be kept.',
+              style: TextStyle(color: AppColors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('CANCEL'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('RESTORE & MERGE'),
+              ),
+            ],
+          ),
+        );
+        if (restore != true || !mounted) return;
+        try {
+          final restored =
+              await AccountAuthService.signInToExistingAppleAccount();
+          if (!mounted) return;
+          await _loadAccountStatus();
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                restored.email == null
+                    ? 'Apple account restored and guest progress merged.'
+                    : 'Account restored and guest progress merged: ${restored.email}',
+              ),
+            ),
+          );
+        } on AccountAuthException catch (recoveryError) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(recoveryError.message),
+              action: recoveryError.code == 'guest-merge-pending'
+                  ? SnackBarAction(
+                      label: 'RETRY',
+                      onPressed: _retryPendingGuestMerge,
+                    )
+                  : null,
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _accountActionInProgress = false);
+    }
   }
 
   bool get _showPlayGamesOption =>
@@ -85,9 +201,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
-            content: Text('Google Play Games is connected.'),
-          ),
+          const SnackBar(content: Text('Google Play Games is connected.')),
         );
       return;
     }
@@ -145,19 +259,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return;
       }
 
-      final String accountLabel =
-          _accountEmail?.isNotEmpty == true
-              ? _accountEmail!
-              : 'your Google account';
+      final String accountLabel = _accountEmail?.isNotEmpty == true
+          ? _accountEmail!
+          : 'your Google account';
 
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          SnackBar(
-            content: Text(
-              'First Guess is connected to $accountLabel.',
-            ),
-          ),
+          SnackBar(content: Text('First Guess is connected to $accountLabel.')),
         );
       return;
     }
@@ -180,26 +289,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return;
       }
 
-      final String message =
-          result.status == AccountLinkStatus.alreadyLinked
-              ? 'Google is already connected to this First Guess account.'
-              : 'Google connected. Your First Guess progress is now protected.';
+      final String message = result.status == AccountLinkStatus.alreadyLinked
+          ? 'Google is already connected to this First Guess account.'
+          : 'Google connected. Your First Guess progress is now protected.';
 
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(message),
-          ),
-        );
+        ..showSnackBar(SnackBar(content: Text(message)));
     } on AccountAuthException catch (error) {
       if (!mounted) {
         return;
       }
 
       if (error.code == 'existing-first-guess-account') {
-        final bool? recoverExistingAccount =
-            await showDialog<bool>(
+        final bool? recoverExistingAccount = await showDialog<bool>(
           context: context,
           barrierDismissible: false,
           builder: (BuildContext dialogContext) {
@@ -227,13 +330,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () =>
-                      Navigator.of(dialogContext).pop(false),
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
                   child: const Text('CANCEL'),
                 ),
                 FilledButton(
-                  onPressed: () =>
-                      Navigator.of(dialogContext).pop(true),
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.orange,
                     foregroundColor: AppColors.white,
@@ -250,8 +351,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         }
 
         try {
-          final user =
-              await AccountAuthService.signInToExistingGoogleAccount();
+          final user = await AccountAuthService.signInToExistingGoogleAccount();
 
           if (!mounted) {
             return;
@@ -298,11 +398,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(recoveryError.message),
-              ),
-            );
+            ..showSnackBar(SnackBar(content: Text(recoveryError.message)));
         }
 
         return;
@@ -310,11 +406,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(error.message),
-          ),
-        );
+        ..showSnackBar(SnackBar(content: Text(error.message)));
     } finally {
       if (mounted) {
         setState(() {
@@ -349,11 +441,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Guest progress merged successfully.',
-            ),
-          ),
+          const SnackBar(content: Text('Guest progress merged successfully.')),
         );
     } on AccountAuthException catch (error) {
       if (!mounted) {
@@ -362,11 +450,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(error.message),
-          ),
-        );
+        ..showSnackBar(SnackBar(content: Text(error.message)));
     } finally {
       if (mounted) {
         setState(() {
@@ -391,9 +475,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _openProfile(BuildContext context) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const ProfileScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const ProfileScreen()),
     );
 
     if (mounted) {
@@ -403,9 +485,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _openHowToPlay(BuildContext context) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const HowToPlayScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const HowToPlayScreen()),
     );
   }
 
@@ -427,25 +507,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _openTermsOfUse(BuildContext context) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const TermsOfUseScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const TermsOfUseScreen()),
     );
   }
 
   Future<void> _openSupport(BuildContext context) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const SupportScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const SupportScreen()),
     );
   }
 
   Future<void> _openAppVersion(BuildContext context) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const AppVersionScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const AppVersionScreen()),
     );
   }
 
@@ -494,13 +568,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: _accountActionInProgress
                   ? 'Connecting with Google...'
                   : _googleLinked
-                      ? (_accountEmail?.isNotEmpty == true
-                          ? 'Connected with Google • $_accountEmail'
-                          : 'Connected with Google')
-                      : 'Connect with Google to protect progress',
+                  ? (_accountEmail?.isNotEmpty == true
+                        ? 'Connected with Google • $_accountEmail'
+                        : 'Connected with Google')
+                  : 'Connect with Google to protect progress',
               onTap: _handleAccountTap,
             ),
             const SizedBox(height: 12),
+            if (_showAppleOption) ...[
+              _SettingsTile(
+                icon: _appleLinked ? Icons.verified_user_outlined : Icons.apple,
+                title: 'SIGN IN WITH APPLE',
+                subtitle: _accountActionInProgress
+                    ? 'Connecting account...'
+                    : _appleLinked
+                    ? 'Connected with Apple'
+                    : 'Connect with Apple to protect progress',
+                onTap: _handleAppleTap,
+              ),
+              const SizedBox(height: 12),
+            ],
             if (_showPlayGamesOption) ...[
               _SettingsTile(
                 icon: _playGamesConnected
@@ -510,8 +597,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: _playGamesActionInProgress
                     ? 'Connecting with Google Play Games...'
                     : _playGamesConnected
-                        ? 'Google Play Games connected'
-                        : 'Connect with Google Play Games',
+                    ? 'Google Play Games connected'
+                    : 'Connect with Google Play Games',
                 onTap: _handlePlayGamesTap,
               ),
               const SizedBox(height: 12),
@@ -595,16 +682,10 @@ class _SettingsTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 15,
-            vertical: 14,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: AppColors.border,
-              width: 1,
-            ),
+            border: Border.all(color: AppColors.border, width: 1),
           ),
           child: Row(
             children: [
@@ -617,9 +698,7 @@ class _SettingsTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.background,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: AppColors.orange,
-                  ),
+                  border: Border.all(color: AppColors.orange),
                 ),
                 alignment: Alignment.center,
                 child: imagePath != null
@@ -629,24 +708,21 @@ class _SettingsTile extends StatelessWidget {
                           imagePath!,
                           fit: BoxFit.contain,
                           filterQuality: FilterQuality.high,
-                          errorBuilder: (
-                            BuildContext context,
-                            Object error,
-                            StackTrace? stackTrace,
-                          ) {
-                            return const Icon(
-                              Icons.image_not_supported_outlined,
-                              color: AppColors.orange,
-                              size: 24,
-                            );
-                          },
+                          errorBuilder:
+                              (
+                                BuildContext context,
+                                Object error,
+                                StackTrace? stackTrace,
+                              ) {
+                                return const Icon(
+                                  Icons.image_not_supported_outlined,
+                                  color: AppColors.orange,
+                                  size: 24,
+                                );
+                              },
                         ),
                       )
-                    : Icon(
-                        icon,
-                        color: AppColors.orange,
-                        size: 25,
-                      ),
+                    : Icon(icon, color: AppColors.orange, size: 25),
               ),
               const SizedBox(width: 13),
               Expanded(

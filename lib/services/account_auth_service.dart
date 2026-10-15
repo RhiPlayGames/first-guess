@@ -4,29 +4,20 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 import 'guest_progress_merge_service.dart';
 
-enum AccountLinkStatus {
-  linked,
-  alreadyLinked,
-}
+enum AccountLinkStatus { linked, alreadyLinked }
 
 class AccountLinkResult {
   final AccountLinkStatus status;
   final User user;
 
-  const AccountLinkResult({
-    required this.status,
-    required this.user,
-  });
+  const AccountLinkResult({required this.status, required this.user});
 }
 
 class AccountAuthException implements Exception {
   final String code;
   final String message;
 
-  const AccountAuthException({
-    required this.code,
-    required this.message,
-  });
+  const AccountAuthException({required this.code, required this.message});
 
   @override
   String toString() => message;
@@ -57,17 +48,27 @@ class AccountAuthService {
     );
   }
 
-  static String? get email => _auth.currentUser?.email;
+  static bool get isAppleLinked =>
+      _auth.currentUser?.providerData.any(
+        (provider) => provider.providerId == 'apple.com',
+      ) ??
+      false;
 
+  static String? get email => _auth.currentUser?.email;
 
   /// Verify the currently signed-in account without signing it out.
   /// Never use signInWithCredential here: it can switch Firebase users.
   static Future<void> reauthenticateCurrentUserForDeletion() async {
     final User? user = _auth.currentUser;
     if (user == null) {
-      throw const AccountAuthException(code: 'not-signed-in', message: 'Please sign in before deleting your account.');
+      throw const AccountAuthException(
+        code: 'not-signed-in',
+        message: 'Please sign in before deleting your account.',
+      );
     }
-    final Set<String> providers = user.providerData.map((info) => info.providerId).toSet();
+    final Set<String> providers = user.providerData
+        .map((info) => info.providerId)
+        .toSet();
     try {
       if (providers.contains('google.com')) {
         if (kIsWeb) {
@@ -75,14 +76,22 @@ class AccountAuthService {
         } else {
           await _initialiseGoogleSignIn();
           if (!_googleSignIn.supportsAuthenticate()) {
-            throw const AccountAuthException(code: 'unsupported', message: 'Google verification is unavailable on this device.');
+            throw const AccountAuthException(
+              code: 'unsupported',
+              message: 'Google verification is unavailable on this device.',
+            );
           }
           final account = await _googleSignIn.authenticate();
           final token = account.authentication.idToken;
           if (token == null || token.isEmpty) {
-            throw const AccountAuthException(code: 'missing-google-token', message: 'Google could not verify your identity.');
+            throw const AccountAuthException(
+              code: 'missing-google-token',
+              message: 'Google could not verify your identity.',
+            );
           }
-          await user.reauthenticateWithCredential(GoogleAuthProvider.credential(idToken: token));
+          await user.reauthenticateWithCredential(
+            GoogleAuthProvider.credential(idToken: token),
+          );
         }
       } else if (providers.contains('apple.com')) {
         final provider = AppleAuthProvider();
@@ -94,20 +103,36 @@ class AccountAuthService {
       } else if (user.isAnonymous) {
         throw const AccountAuthException(
           code: 'guest-reauthentication-unavailable',
-          message: 'This guest session is too old to verify securely. Guest accounts cannot reauthenticate with Google or Apple unless they are linked first.',
+          message:
+              'This guest session is too old to verify securely. Guest accounts cannot reauthenticate with Google or Apple unless they are linked first.',
         );
       } else {
-        throw const AccountAuthException(code: 'unsupported-provider', message: 'This sign-in method cannot be verified in the app yet.');
+        throw const AccountAuthException(
+          code: 'unsupported-provider',
+          message: 'This sign-in method cannot be verified in the app yet.',
+        );
       }
       if (_auth.currentUser?.uid != user.uid) {
-        throw const AccountAuthException(code: 'account-changed', message: 'Verification returned a different account. Your deletion request has not been submitted.');
+        throw const AccountAuthException(
+          code: 'account-changed',
+          message:
+              'Verification returned a different account. Your deletion request has not been submitted.',
+        );
       }
     } on AccountAuthException {
       rethrow;
     } on FirebaseAuthException catch (error) {
-      throw AccountAuthException(code: error.code, message: error.message ?? 'Identity verification failed. Please try again.');
+      throw AccountAuthException(
+        code: error.code,
+        message:
+            error.message ?? 'Identity verification failed. Please try again.',
+      );
     } on GoogleSignInException catch (error) {
-      throw AccountAuthException(code: 'google-verification-failed', message: error.description ?? 'Google verification was cancelled or failed.');
+      throw AccountAuthException(
+        code: 'google-verification-failed',
+        message:
+            error.description ?? 'Google verification was cancelled or failed.',
+      );
     }
   }
 
@@ -158,8 +183,8 @@ class AccountAuthService {
           );
         }
 
-        final GoogleSignInAccount googleAccount =
-            await _googleSignIn.authenticate();
+        final GoogleSignInAccount googleAccount = await _googleSignIn
+            .authenticate();
 
         final GoogleSignInAuthentication googleAuthentication =
             googleAccount.authentication;
@@ -173,8 +198,7 @@ class AccountAuthService {
           );
         }
 
-        final OAuthCredential googleCredential =
-            GoogleAuthProvider.credential(
+        final OAuthCredential googleCredential = GoogleAuthProvider.credential(
           idToken: idToken,
         );
 
@@ -184,8 +208,7 @@ class AccountAuthService {
         // instead of showing the Android account chooser a second time.
         _pendingExistingGoogleCredential = googleCredential;
 
-        linkedCredential =
-            await user.linkWithCredential(googleCredential);
+        linkedCredential = await user.linkWithCredential(googleCredential);
       }
 
       final User? linkedUser = linkedCredential.user;
@@ -240,8 +263,7 @@ class AccountAuthService {
         case 'popup-blocked':
           throw const AccountAuthException(
             code: 'popup-blocked',
-            message:
-                'The Google sign-in window was blocked by the browser.',
+            message: 'The Google sign-in window was blocked by the browser.',
           );
 
         case 'network-request-failed':
@@ -254,8 +276,7 @@ class AccountAuthService {
         default:
           throw AccountAuthException(
             code: error.code,
-            message:
-                error.message ?? 'Google sign-in could not be completed.',
+            message: error.message ?? 'Google sign-in could not be completed.',
           );
       }
     } on GoogleSignInException catch (error) {
@@ -277,8 +298,8 @@ class AccountAuthService {
     GuestProgressSnapshot guestSnapshot;
 
     try {
-      guestSnapshot = await GuestProgressMergeService
-          .captureAndPersistCurrentGuestProgress();
+      guestSnapshot =
+          await GuestProgressMergeService.captureAndPersistCurrentGuestProgress();
     } on GuestProgressMergeException catch (error) {
       throw AccountAuthException(
         code: 'guest-progress-capture-failed',
@@ -293,8 +314,7 @@ class AccountAuthService {
         final GoogleAuthProvider provider = GoogleAuthProvider();
         signedInCredential = await _auth.signInWithPopup(provider);
       } else {
-        OAuthCredential? googleCredential =
-            _pendingExistingGoogleCredential;
+        OAuthCredential? googleCredential = _pendingExistingGoogleCredential;
 
         if (googleCredential == null) {
           await _initialiseGoogleSignIn();
@@ -306,8 +326,8 @@ class AccountAuthService {
             );
           }
 
-          final GoogleSignInAccount googleAccount =
-              await _googleSignIn.authenticate();
+          final GoogleSignInAccount googleAccount = await _googleSignIn
+              .authenticate();
 
           final GoogleSignInAuthentication googleAuthentication =
               googleAccount.authentication;
@@ -321,13 +341,10 @@ class AccountAuthService {
             );
           }
 
-          googleCredential = GoogleAuthProvider.credential(
-            idToken: idToken,
-          );
+          googleCredential = GoogleAuthProvider.credential(idToken: idToken);
         }
 
-        signedInCredential =
-            await _auth.signInWithCredential(googleCredential);
+        signedInCredential = await _auth.signInWithCredential(googleCredential);
 
         _pendingExistingGoogleCredential = null;
       }
@@ -337,14 +354,12 @@ class AccountAuthService {
       if (signedInUser == null) {
         throw const AccountAuthException(
           code: 'google-recovery-failed',
-          message:
-              'First Guess could not recover the existing Google account.',
+          message: 'First Guess could not recover the existing Google account.',
         );
       }
 
       try {
-        await GuestProgressMergeService
-            .mergeIntoCurrentAccount(guestSnapshot);
+        await GuestProgressMergeService.mergeIntoCurrentAccount(guestSnapshot);
       } on GuestProgressMergeException catch (error) {
         throw AccountAuthException(
           code: 'guest-merge-pending',
@@ -368,8 +383,7 @@ class AccountAuthService {
         case 'popup-blocked':
           throw const AccountAuthException(
             code: 'popup-blocked',
-            message:
-                'The Google sign-in window was blocked by the browser.',
+            message: 'The Google sign-in window was blocked by the browser.',
           );
 
         case 'network-request-failed':
@@ -404,10 +418,111 @@ class AccountAuthService {
     }
   }
 
+  /// Link an Apple ID to the current Firebase account without changing its UID.
+  /// Never sign in as a replacement user here: that could strand guest data.
+  static Future<AccountLinkResult> linkCurrentAccountToApple() async {
+    final User user = await ensureSignedInUser();
+    if (isAppleLinked) {
+      return AccountLinkResult(
+        status: AccountLinkStatus.alreadyLinked,
+        user: user,
+      );
+    }
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      throw const AccountAuthException(
+        code: 'apple-platform-unsupported',
+        message: 'Apple account connection is available in the iPhone app.',
+      );
+    }
+    try {
+      final UserCredential result = await user.linkWithProvider(
+        AppleAuthProvider(),
+      );
+      if (result.user == null || result.user!.uid != user.uid) {
+        throw const AccountAuthException(
+          code: 'apple-account-changed',
+          message:
+              'Apple sign-in did not preserve your First Guess account. Please contact support.',
+        );
+      }
+      return AccountLinkResult(
+        status: AccountLinkStatus.linked,
+        user: result.user!,
+      );
+    } on FirebaseAuthException catch (error) {
+      if (error.code == 'provider-already-linked') {
+        return AccountLinkResult(
+          status: AccountLinkStatus.alreadyLinked,
+          user: user,
+        );
+      }
+      if (error.code == 'credential-already-in-use' ||
+          error.code == 'account-exists-with-different-credential') {
+        throw const AccountAuthException(
+          code: 'existing-apple-account',
+          message:
+              'This Apple ID already belongs to an existing First Guess account. Your current progress is unchanged.',
+        );
+      }
+      throw AccountAuthException(
+        code: error.code,
+        message:
+            error.message ??
+            'Apple account connection failed or was cancelled.',
+      );
+    }
+  }
+
+  /// Restore an Apple-backed First Guess account only after user confirmation.
+  /// Capture local guest progress first, then use the existing protected merge.
+  static Future<User> signInToExistingAppleAccount() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      throw const AccountAuthException(
+        code: 'apple-platform-unsupported',
+        message: 'Apple account recovery is available in the iPhone app.',
+      );
+    }
+    final GuestProgressSnapshot snapshot;
+    try {
+      snapshot =
+          await GuestProgressMergeService.captureAndPersistCurrentGuestProgress();
+    } on GuestProgressMergeException catch (error) {
+      throw AccountAuthException(
+        code: 'guest-progress-capture-failed',
+        message: error.message,
+      );
+    }
+    try {
+      final result = await _auth.signInWithProvider(AppleAuthProvider());
+      final user = result.user;
+      if (user == null) {
+        throw const AccountAuthException(
+          code: 'apple-recovery-failed',
+          message: 'Could not restore your Apple account.',
+        );
+      }
+      try {
+        await GuestProgressMergeService.mergeIntoCurrentAccount(snapshot);
+      } on GuestProgressMergeException catch (error) {
+        throw AccountAuthException(
+          code: 'guest-merge-pending',
+          message:
+              'Your Apple account was restored, but merging local progress still needs to finish. ${error.message}',
+        );
+      }
+      return user;
+    } on FirebaseAuthException catch (error) {
+      throw AccountAuthException(
+        code: error.code,
+        message:
+            error.message ?? 'Apple account recovery failed or was cancelled.',
+      );
+    }
+  }
+
   static Future<void> retryPendingGuestProgressMerge() async {
     try {
-      await GuestProgressMergeService
-          .mergePendingIntoCurrentAccount();
+      await GuestProgressMergeService.mergePendingIntoCurrentAccount();
     } on GuestProgressMergeException catch (error) {
       throw AccountAuthException(
         code: 'guest-merge-pending',
@@ -421,8 +536,7 @@ class AccountAuthService {
   }
 
   static Future<void> _initialiseGoogleSignIn() {
-    return _googleInitialisation ??=
-        _googleSignIn.initialize();
+    return _googleInitialisation ??= _googleSignIn.initialize();
   }
 
   static bool _hasGoogleProvider(User user) {
