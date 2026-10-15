@@ -1030,24 +1030,32 @@ extension _GameScreenView on _GameScreenState {
     final Uri? uri = Uri.tryParse(path);
     final bool remote = uri != null &&
         (uri.scheme == 'https' || uri.scheme == 'http');
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.orange, width: 1.3),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: SizedBox.expand(
-        child: Image(
-          image: remote ? NetworkImage(path) : AssetImage(path),
-          fit: BoxFit.cover,
-          filterQuality: FilterQuality.high,
-          gaplessPlayback: true,
-          errorBuilder: (context, error, stackTrace) {
-            debugPrint('CLASSIC IMAGE FAILED: $path — $error');
-            return buildVisualPanel();
-          },
-        ),
+    // Paint the outline *over* the image, not behind its clipped pixels.
+    // The outer dimensions remain controlled by the existing parent SizedBox.
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image(
+            image: remote ? NetworkImage(path) : AssetImage(path),
+            fit: BoxFit.cover,
+            filterQuality: FilterQuality.high,
+            gaplessPlayback: true,
+            errorBuilder: (context, error, stackTrace) {
+              debugPrint('CLASSIC IMAGE FAILED: $path — $error');
+              return buildVisualPanel();
+            },
+          ),
+          IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.orange, width: 1.8),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
