@@ -1,3 +1,4 @@
+import '../models/quiz_item.dart';
 import '../services/sound_effects_service.dart';
 import 'dart:async';
 import 'dart:math';
@@ -406,9 +407,8 @@ class _FirstDateGameScreenState extends State<FirstDateGameScreen> {
     final String normalisedGuess = _normalise(guess);
 
     return question.acceptedAnswers.any(
-      (String accepted) =>
-          _normalise(accepted) == normalisedGuess,
-    );
+      (String accepted) => _normalise(accepted) == normalisedGuess,
+    ) || QuizItem.acceptsAny(guess, question.acceptedAnswers);
   }
 
   _MonthYearParts _monthYearParts(String value) {

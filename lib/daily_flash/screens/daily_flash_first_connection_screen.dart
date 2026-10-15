@@ -1,3 +1,4 @@
+import '../../models/quiz_item.dart';
 import '../../services/sound_effects_service.dart';
 import 'dart:async';
 
@@ -276,6 +277,7 @@ class _DailyFlashFirstConnectionScreenState
             _normalise(value.toString());
         if (normalised.isNotEmpty) {
           accepted.add(normalised);
+          accepted.add(value.toString().trim());
         }
       }
     } else if (rawAccepted != null) {
@@ -284,6 +286,7 @@ class _DailyFlashFirstConnectionScreenState
         final String normalised = _normalise(value);
         if (normalised.isNotEmpty) {
           accepted.add(normalised);
+          accepted.add(value.toString().trim());
         }
       }
     }
@@ -405,9 +408,7 @@ class _DailyFlashFirstConnectionScreenState
     final String normalisedGuess =
         _normalise(rawGuess);
     final bool isCorrect =
-        question.acceptedAnswers.contains(
-      normalisedGuess,
-    );
+        QuizItem.acceptsAny(rawGuess, question.acceptedAnswers);
 
     final bool wasFirstGuess =
         isCorrect &&

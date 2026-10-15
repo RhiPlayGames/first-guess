@@ -29,6 +29,21 @@ class QuizItem {
     this.answerPolicy = AnswerPolicy.standard,
   });
 
+  /// Shared, conservative answer checker for every typed-answer game.
+  /// Each supplied variant comes from the canonical answer or an approved
+  /// acceptedAnswers entry; this never invents nicknames or shortened names.
+  static bool acceptsAny(String guess, Iterable<String> answers) {
+    final options = answers.where((a) => a.trim().isNotEmpty).toList();
+    if (options.isEmpty || guess.trim().isEmpty) return false;
+    return QuizItem(
+      answer: options.first,
+      imagePath: '',
+      clues: const [],
+      acceptedAnswers: options.skip(1).toList(),
+      answerPolicy: AnswerPolicy.aliasesOnly,
+    ).checkGuess(guess) == GuessMatch.correct;
+  }
+
   GuessMatch checkGuess(String guess) {
     final String normalisedGuess = _normalise(guess);
 
@@ -44,6 +59,8 @@ class QuizItem {
           _normalise(possibleAnswer);
 
       if (normalisedGuess == normalisedAnswer ||
+          _rawCompact(guess) == _rawCompact(possibleAnswer) ||
+          _optionalOfMatch(normalisedGuess, normalisedAnswer) ||
           _withoutSpaces(normalisedGuess) ==
               _withoutSpaces(normalisedAnswer) ||
           _isSingularPluralMatch(
@@ -70,6 +87,9 @@ class QuizItem {
       final String normalisedAnswer =
           _normalise(possibleAnswer);
 
+      if (_isSafeOneLetterTypo(normalisedGuess, normalisedAnswer)) {
+        return GuessMatch.correct;
+      }
       if (_isCloseSpelling(
         normalisedGuess,
         normalisedAnswer,
@@ -124,6 +144,22 @@ class QuizItem {
     return checkGuess(guess) == GuessMatch.correct;
   }
 
+  static String _rawCompact(String value) =>
+      _foldAccents(value).toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+  // Only allow 'of' to be omitted when all remaining words are identical.
+  // This never grants a generic subset or shortened-name match.
+  static bool _optionalOfMatch(String guess, String answer) {
+    if (guess == answer) return true;
+    final g = guess.split(' ');
+    final a = answer.split(' ');
+    if (g.length < 2 || a.length < 2) return false;
+    if (!g.contains('of') && !a.contains('of')) return false;
+    final gg = g.where((word) => word != 'of').join(' ');
+    final aa = a.where((word) => word != 'of').join(' ');
+    return gg == aa && gg.split(' ').length >= 2;
+  }
+
   static String _normalise(String value) {
     String normalised = _foldAccents(value)
         .trim()
@@ -149,6 +185,11 @@ class QuizItem {
     }
 
     List<String> words = normalised.split(' ');
+
+    // Preserve the band name A-ha (also written Aha or A Ha).
+    if (words.length == 2 && words[0] == 'a' && words[1] == 'ha') {
+      return 'aha';
+    }
 
     // Treat Roman numerals, Arabic numerals, Arabic ordinals and written
     // cardinal/ordinal numbers as equivalent. Examples:
@@ -179,6 +220,12 @@ class QuizItem {
     return words.join(' ').trim();
   }
 
+  static const Set<String> _regnalPrefixes = <String>{
+    'henry', 'louis', 'george', 'edward', 'elizabeth', 'charles',
+    'richard', 'william', 'john', 'james', 'pope', 'chapter',
+    'part', 'act', 'volume', 'king', 'queen', 'emperor',
+  };
+
   static List<String> _normaliseNumericForms(
     List<String> words,
   ) {
@@ -201,7 +248,9 @@ class QuizItem {
       // (for example "I Robot"), so only treat single-letter Roman I as
       // numeric when it appears after another word, as in "Henry I".
       if (romanValue != null &&
-          (word.length > 1 || index > 0)) {
+          (word.length > 1 ||
+              (index > 0 &&
+                  _regnalPrefixes.contains(words[index - 1])))) {
         result.add(romanValue.toString());
         continue;
       }
@@ -764,6 +813,34 @@ class QuizItem {
     }
 
     return true;
+  }
+
+  static bool _isSafeOneLetterTypo(String guess, String answer) {
+    if (guess.length < 9 || answer.length < 9 ||
+        RegExp(r'\d').hasMatch(guess) || RegExp(r'\d').hasMatch(answer)) {
+      return false;
+    }
+    final g = guess.split(' ');
+    final a = answer.split(' ');
+    if (g.length != a.length || g.length > 3) return false;
+    int totalDifferences = 0;
+    for (int i = 0; i < g.length; i++) {
+      if (g[i] == a[i]) continue;
+      if (g[i].length < 7 || a[i].length < 7 ||
+          !g[i].startsWith(a[i].substring(0, 3))) {
+        return false;
+      }
+      final bool sameEnding =
+          g[i].endsWith(a[i].substring(a[i].length - 2));
+      final bool missingFinalLetter = a[i].length >= 9 &&
+          g[i].length == a[i].length - 1 &&
+          a[i].startsWith(g[i]);
+      if (!sameEnding && !missingFinalLetter) return false;
+      final distance = _levenshteinDistance(g[i], a[i]);
+      if (distance != 1) return false;
+      totalDifferences += distance;
+    }
+    return totalDifferences == 1;
   }
 
   static bool _isCloseSpelling(

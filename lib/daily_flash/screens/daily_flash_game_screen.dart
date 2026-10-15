@@ -1,3 +1,4 @@
+import '../../models/quiz_item.dart';
 import '../../services/sound_effects_service.dart';
 import 'dart:async';
 
@@ -257,6 +258,7 @@ class _DailyFlashGameScreenState
 
       final Set<String> accepted = <String>{
         _normaliseAcceptedAnswer(answer),
+        answer,
       };
 
       final dynamic rawAccepted = data['acceptedAnswers'];
@@ -267,6 +269,7 @@ class _DailyFlashGameScreenState
               _normaliseAcceptedAnswer(value.toString());
           if (normalised.isNotEmpty) {
             accepted.add(normalised);
+            accepted.add(value.toString().trim());
           }
         }
       } else if (rawAccepted != null) {
@@ -276,6 +279,7 @@ class _DailyFlashGameScreenState
               _normaliseAcceptedAnswer(value);
           if (normalised.isNotEmpty) {
             accepted.add(normalised);
+            accepted.add(value.toString().trim());
           }
         }
       }
@@ -589,7 +593,10 @@ class _DailyFlashGameScreenState
             ? acceptedAnswersByQuestion[questionIndex]
             : <String>{answer};
 
-    if (accepted.contains(typed)) {
+    if (QuizItem.acceptsAny(guess, <String>{
+      currentQuestion.answer,
+      ...accepted,
+    })) {
       return _DailyFlashGuessMatch.correct;
     }
 

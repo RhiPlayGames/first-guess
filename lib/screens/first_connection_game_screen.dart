@@ -1,3 +1,4 @@
+import '../models/quiz_item.dart';
 import '../services/sound_effects_service.dart';
 import 'dart:async';
 import 'dart:math';
@@ -335,7 +336,7 @@ class _FirstConnectionGameScreenState
       return null;
     }
 
-    final Set<String> accepted = <String>{_normalise(answer)};
+    final Set<String> accepted = <String>{answer, _normalise(answer)};
     final dynamic rawAccepted = data['acceptedAnswers'];
 
     if (rawAccepted is List) {
@@ -343,6 +344,7 @@ class _FirstConnectionGameScreenState
         final String normalised = _normalise(value.toString());
         if (normalised.isNotEmpty) {
           accepted.add(normalised);
+          accepted.add(value.toString().trim());
         }
       }
     } else if (rawAccepted != null) {
@@ -350,6 +352,7 @@ class _FirstConnectionGameScreenState
         final String normalised = _normalise(value);
         if (normalised.isNotEmpty) {
           accepted.add(normalised);
+          accepted.add(value.toString().trim());
         }
       }
     }
@@ -434,7 +437,7 @@ class _FirstConnectionGameScreenState
 
     final String normalisedGuess = _normalise(rawGuess);
     final bool isCorrect =
-        question.acceptedAnswers.contains(normalisedGuess);
+        QuizItem.acceptsAny(rawGuess, question.acceptedAnswers);
 
     final bool wasFirstGuess =
         isCorrect && _stageIndex == 0 && _submittedGuessCount == 0;

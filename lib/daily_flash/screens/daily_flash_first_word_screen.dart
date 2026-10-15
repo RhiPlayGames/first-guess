@@ -1,3 +1,4 @@
+import '../../models/quiz_item.dart';
 import '../../services/sound_effects_service.dart';
 import 'dart:async';
 import 'dart:math';
@@ -273,13 +274,14 @@ class _DailyFlashFirstWordScreenState extends State<DailyFlashFirstWordScreen> {
       return null;
     }
 
-    final Set<String> accepted = <String>{_normalise(answer)};
+    final Set<String> accepted = <String>{answer, _normalise(answer)};
     final dynamic rawAccepted = data['acceptedAnswers'];
     if (rawAccepted is List) {
       for (final dynamic value in rawAccepted) {
         final String normalised = _normalise(value.toString());
         if (normalised.isNotEmpty) {
           accepted.add(normalised);
+          accepted.add(value.toString().trim());
         }
       }
     } else if (rawAccepted != null) {
@@ -287,6 +289,7 @@ class _DailyFlashFirstWordScreenState extends State<DailyFlashFirstWordScreen> {
         final String normalised = _normalise(value);
         if (normalised.isNotEmpty) {
           accepted.add(normalised);
+          accepted.add(value.toString().trim());
         }
       }
     }
@@ -320,8 +323,7 @@ class _DailyFlashFirstWordScreenState extends State<DailyFlashFirstWordScreen> {
       return;
     }
 
-    final String normalisedGuess = _normalise(rawGuess);
-    final bool isCorrect = question.acceptedAnswers.contains(normalisedGuess);
+    final bool isCorrect = QuizItem.acceptsAny(rawGuess, question.acceptedAnswers);
     final bool wasFirstGuess =
         isCorrect && _clueIndex == 0 && _submittedGuessCount == 0;
 

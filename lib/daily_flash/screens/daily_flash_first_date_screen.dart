@@ -1,3 +1,4 @@
+import '../../models/quiz_item.dart';
 import '../../services/sound_effects_service.dart';
 import 'dart:async';
 
@@ -380,7 +381,7 @@ class _DailyFlashFirstDateScreenState
     });
 
     final bool correct =
-        question.acceptedAnswers.contains(_normalise(guess));
+        QuizItem.acceptsAny(guess, question.acceptedAnswers);
 
     if (correct) {
       SoundEffectsService.correct();
