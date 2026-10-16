@@ -250,7 +250,7 @@ class _MapBackground extends StatelessWidget {
       decoration: BoxDecoration(
         image: DecorationImage(
           image: AssetImage(
-            'assets/images/case_paths/finalmaps/animalkingdom.webp',
+            'assets/images/case_paths/finalmaps/animalkingdomV2.webp',
           ),
           fit: BoxFit.fitWidth,
           alignment: Alignment.topCenter,
