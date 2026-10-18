@@ -250,7 +250,7 @@ class _MapBackground extends StatelessWidget {
       decoration: BoxDecoration(
         image: DecorationImage(
           image: AssetImage(
-            'assets/images/case_paths/finalmaps/animalkingdomV2.webp',
+            'assets/images/case_paths/finalmaps/animalkingdomfinal.webp',
           ),
           fit: BoxFit.fitWidth,
           alignment: Alignment.topCenter,
@@ -586,19 +586,6 @@ class _CaseNode extends StatelessWidget {
                     offset: Offset(0, 1),
                   ),
                 ],
-              ),
-            ),
-          ],
-          if (isFinal) ...[
-            const SizedBox(height: 3),
-            Text(
-              'FINAL CASE',
-              maxLines: 1,
-              style: AppTextStyles.label.copyWith(
-                color: const Color(0xFF342719),
-                fontSize: 8.5,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.2,
               ),
             ),
           ],

@@ -177,15 +177,6 @@ class _RoundTheWorldCasePathScreenState
                             child: _MapBackground(),
                           ),
 
-                          Positioned(
-                            top: isDesktop ? 108 : 104,
-                            left: isDesktop ? 65 : 90,
-                            width: isDesktop ? 300 : 250,
-                            height: isDesktop ? 64 : 100,
-                            child: _CaseInstructionHeader(
-                              isDesktop: isDesktop,
-                            ),
-                          ),
 
                           Positioned(
                             left: 12,
@@ -281,7 +272,7 @@ class _MapBackground extends StatelessWidget {
         color: Color(0xFFCBE3FC),
         image: DecorationImage(
           image: AssetImage(
-            'assets/images/case_paths/finalmaps/aroundtheworld.webp',
+            'assets/images/case_paths/finalmaps/aroundtheworldfinal.webp',
           ),
           fit: BoxFit.fitWidth,
           alignment: Alignment.topCenter,
@@ -358,86 +349,6 @@ class _MapTitle extends StatelessWidget {
   }
 }
 
-
-class _CaseInstructionHeader extends StatelessWidget {
-  final bool isDesktop;
-
-  const _CaseInstructionHeader({
-    required this.isDesktop,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (isDesktop) {
-      return Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 8,
-        ),
-        decoration: BoxDecoration(
-          color: const Color(0xEE111111),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: const Color(0xFFFE5E02),
-            width: 2,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x55000000),
-              blurRadius: 8,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          'FOLLOW THE TRAIL · COMPLETE THE MISSIONS\n'
-          'SOLVE THE CASE · EARN YOUR BADGE',
-          maxLines: 2,
-          textAlign: TextAlign.center,
-          style: AppTextStyles.category.copyWith(
-            color: Colors.white,
-            fontSize: 13.5,
-            fontWeight: FontWeight.w700,
-            height: 1.15,
-            letterSpacing: 0.2,
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 6,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFFFE5E02),
-          width: 4,
-        ),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        'FOLLOW THE TRAIL\n'
-        'COMPLETE THE MISSIONS\n'
-        'SOLVE THE CASE\n'
-        'EARN YOUR BADGE',
-        maxLines: 4,
-        textAlign: TextAlign.center,
-        style: AppTextStyles.category.copyWith(
-          color: Colors.black,
-          fontSize: 15.5,
-          fontWeight: FontWeight.w500,
-          height: 1.12,
-          letterSpacing: 0.15,
-        ),
-      ),
-    );
-  }
-}
 
 class _CasePathPainter extends CustomPainter {
   const _CasePathPainter();
@@ -667,19 +578,6 @@ class _CaseNode extends StatelessWidget {
                     offset: Offset(0, 1),
                   ),
                 ],
-              ),
-            ),
-          ],
-          if (isFinal) ...[
-            const SizedBox(height: 3),
-            Text(
-              'FINAL CASE',
-              maxLines: 1,
-              style: AppTextStyles.label.copyWith(
-                color: const Color(0xFF342719),
-                fontSize: 8.5,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.2,
               ),
             ),
           ],
