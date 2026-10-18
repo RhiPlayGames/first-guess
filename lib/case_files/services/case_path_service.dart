@@ -24,7 +24,7 @@ class CasePathService {
           stage: mission.stage,
           difficulty: mission.difficulty,
           title: mission.title,
-          missionText: 'GET 2 ${mission.subcategory == null ? mission.category.toUpperCase().replaceAll('_', ' ') : mission.subcategory!.toUpperCase().replaceAll('_', ' ')} QUESTIONS CORRECT (QA: ANY ANSWER)',
+          missionText: mission.missionText,
           category: mission.category,
           subcategory: mission.subcategory,
           correctRequired: 2,
