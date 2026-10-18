@@ -184,6 +184,7 @@ class _AnimalKingdomMissionScreenState
               return GameScreen.birds(
                 items: items,
                 launchedFromCaseFile: true,
+                subcategoryTitle: mission.subcategory,
                 caseFileReplay:
                     (_progress?.isCompleted ?? false) &&
                     widget.replayStage != null,
@@ -194,6 +195,7 @@ class _AnimalKingdomMissionScreenState
               return GameScreen.dinosaurs(
                 items: items,
                 launchedFromCaseFile: true,
+                subcategoryTitle: mission.subcategory,
                 caseFileReplay:
                     (_progress?.isCompleted ?? false) &&
                     widget.replayStage != null,
@@ -205,6 +207,7 @@ class _AnimalKingdomMissionScreenState
               launchedFromSurpriseMe: false,
               showSurpriseToast: false,
               launchedFromCaseFile: true,
+              subcategoryTitle: mission.subcategory ?? '${mission.category} (mixed)',
                 caseFileReplay:
                     (_progress?.isCompleted ?? false) &&
                     widget.replayStage != null,

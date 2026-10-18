@@ -110,8 +110,8 @@ class GameScreen extends StatefulWidget {
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
+    this.subcategoryTitle,
   }) : gameType = QuizGameType.birds,
-       subcategoryTitle = null,
        surpriseCategory = null;
 
   const GameScreen.dinosaurs({
@@ -122,8 +122,8 @@ class GameScreen extends StatefulWidget {
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
+    this.subcategoryTitle,
   }) : gameType = QuizGameType.dinosaurs,
-       subcategoryTitle = null,
        surpriseCategory = null;
 
   const GameScreen.breakfastFoods({

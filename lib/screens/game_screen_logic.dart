@@ -2031,7 +2031,7 @@ extension _GameScreenLogic on _GameScreenState {
           onPlayAgainOverride: () async {
             await showPostResultRewardsThen(
               () {
-              returnToCaseFilesHome(
+              returnToCaseMap(
                 closeDialog: false,
               );
               },
@@ -2041,7 +2041,7 @@ extension _GameScreenLogic on _GameScreenState {
           onHomeOverride: () async {
             await showPostResultRewardsThen(
               () {
-              returnToCase(
+              returnToCaseMap(
                 closeDialog: false,
               );
               },
@@ -2077,14 +2077,14 @@ extension _GameScreenLogic on _GameScreenState {
         suppressDefaultSecondaryButton: true,
         onPlayAgainOverride: () async {
           await showPostResultRewardsThen(() {
-            returnToCaseFilesHome(
+            returnToCaseMap(
               closeDialog: false,
             );
           });
         },
         onHomeOverride: () async {
           await showPostResultRewardsThen(() {
-            returnHome(
+            returnToCaseMap(
               closeDialog: false,
             );
           });
@@ -2143,7 +2143,7 @@ extension _GameScreenLogic on _GameScreenState {
       onHomeOverride: () async {
         await showPostResultRewardsThen(() {
           if (widget.launchedFromCaseFile) {
-            returnToCaseFilesHome(
+            returnToCaseMap(
               closeDialog: false,
             );
           } else {
@@ -2414,7 +2414,7 @@ extension _GameScreenLogic on _GameScreenState {
               : continueToNextRoundFromResult),
       onHome: onHomeOverride ??
           (widget.launchedFromCaseFile
-              ? returnToCaseFilesHome
+              ? returnToCaseMap
               : returnHome),
       primaryButtonLabel: primaryButtonLabel,
       secondaryButtonLabel: suppressDefaultSecondaryButton
@@ -2447,6 +2447,7 @@ extension _GameScreenLogic on _GameScreenState {
     }
   }
 
+  // ignore: unused_element
   void returnToCase({
     bool closeDialog = true,
   }) {
@@ -2472,6 +2473,24 @@ extension _GameScreenLogic on _GameScreenState {
     }
   }
 
+  void returnToCaseMap({
+    bool closeDialog = true,
+  }) {
+    _practiceCyclePlayedIds.remove(this);
+    clueTimer?.cancel();
+    messageTimer?.cancel();
+    timeUpOverlayTimer?.cancel();
+    surpriseToastTimer?.cancel();
+
+    final NavigatorState navigator = Navigator.of(context);
+    if (closeDialog && navigator.canPop()) navigator.pop();
+    // Game screen -> mission screen -> existing Case File map.
+    for (int i = 0; i < 2 && navigator.canPop(); i++) {
+      navigator.pop();
+    }
+  }
+
+  // ignore: unused_element
   void returnToCaseFilesHome({
     bool closeDialog = true,
   }) {

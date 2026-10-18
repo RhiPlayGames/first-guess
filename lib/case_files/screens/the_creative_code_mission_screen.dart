@@ -180,6 +180,7 @@ class _TheCreativeCodeMissionScreenState
               launchedFromSurpriseMe: false,
               showSurpriseToast: false,
               launchedFromCaseFile: true,
+              subcategoryTitle: mission.subcategory ?? '${mission.category} (mixed)',
                 caseFileReplay:
                     (_progress?.isCompleted ?? false) &&
                     widget.replayStage != null,

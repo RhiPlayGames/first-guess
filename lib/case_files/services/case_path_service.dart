@@ -30,6 +30,36 @@ class CasePathService {
           correctRequired: 2,
         );
 
+  // Display the original mission requirements even in temporary QA builds.
+  // QA scoring and completion continue to use _forQa independently.
+  static CaseMission? originalMissionForDisplay({
+    required String casePathId,
+    required int stage,
+  }) {
+    if (stage < 1 || stage > 20) return null;
+    final int index = stage - 1;
+    switch (casePathId) {
+      case 'animal_kingdom':
+        return animalKingdomCaseMissions[index];
+      case 'round_the_world':
+        return roundTheWorldCaseMissions[index];
+      case 'secrets_of_the_past':
+        return secretsOfThePastCaseMissions[index];
+      case 'taste_and_treats':
+        return tasteAndTreatsCaseMissions[index];
+      case 'nature_of_discovery':
+        return natureOfDiscoveryCaseMissions[index];
+      case 'the_written_word':
+        return theWrittenWordCaseMissions[index];
+      case 'the_creative_code':
+        return theCreativeCodeCaseMissions[index];
+      case 'final_whistle':
+        return finalWhistleCaseMissions[index];
+      default:
+        return null;
+    }
+  }
+
   static CaseProgress _applyCaseFileTestUnlock(CaseProgress progress) => progress;
 
   static const String animalKingdomCasePathId =

@@ -371,39 +371,27 @@ extension _GameScreenView on _GameScreenState {
         _creativeWorldSubcategoryFromQuestionId(representativeCaseQuestionId) !=
         null;
 
-    final mission = activeCaseStage == null
+    final String currentCasePathId = isRoundTheWorldCase
+        ? 'round_the_world'
+        : isSecretsOfThePastCase
+        ? 'secrets_of_the_past'
+        : isTasteAndTreatsCase
+        ? 'taste_and_treats'
+        : isNatureOfDiscoveryCase
+        ? 'nature_of_discovery'
+        : isTheWrittenWordCase
+        ? 'the_written_word'
+        : isTheCreativeCodeCase
+        ? 'the_creative_code'
+        : isFinalWhistleCase
+        ? 'final_whistle'
+        : 'animal_kingdom';
+    final displayMission = activeCaseStage == null
         ? null
-        : isRoundTheWorldCase
-        ? CasePathService.roundTheWorldMissionForStage(activeCaseStage!)
-        : isSecretsOfThePastCase
-        ? CasePathService.secretsOfThePastMissionForStage(activeCaseStage!)
-        : isTasteAndTreatsCase
-        ? CasePathService.tasteAndTreatsMissionForStage(activeCaseStage!)
-        : isNatureOfDiscoveryCase
-        ? CasePathService.natureOfDiscoveryMissionForStage(activeCaseStage!)
-        : isTheWrittenWordCase
-        ? CasePathService.theWrittenWordMissionForStage(activeCaseStage!)
-        : isTheCreativeCodeCase
-        ? CasePathService.theCreativeCodeMissionForStage(activeCaseStage!)
-        : isFinalWhistleCase
-        ? CasePathService.finalWhistleMissionForStage(activeCaseStage!)
-        : CasePathService.animalKingdomMissionForStage(activeCaseStage!);
-
-    final String activeCaseName = isRoundTheWorldCase
-        ? 'AROUND THE WORLD'
-        : isSecretsOfThePastCase
-        ? 'SECRETS OF THE PAST'
-        : isTasteAndTreatsCase
-        ? 'A TASTE OF MYSTERY'
-        : isNatureOfDiscoveryCase
-        ? 'NATURE OF DISCOVERY'
-        : isTheWrittenWordCase
-        ? 'THE WRITTEN WORD'
-        : isTheCreativeCodeCase
-        ? 'THE CREATIVE CODE'
-        : isFinalWhistleCase
-        ? 'THE FINAL WHISTLE'
-        : 'ANIMAL KINGDOM';
+        : CasePathService.originalMissionForDisplay(
+            casePathId: currentCasePathId,
+            stage: activeCaseStage!,
+          );
 
     final double caseToolbarHeight = 56;
     final bool useDesktopWebsiteLayout = _useDesktopWebsiteLayout(context);
@@ -439,8 +427,8 @@ extension _GameScreenView on _GameScreenState {
         title: Text(
           widget.launchedFromCaseFile
               ? activeCaseStage != null
-                    ? '$activeCaseName - CASE $activeCaseStage'
-                    : '$activeCaseName - CASE'
+                    ? 'CASE $activeCaseStage'
+                    : 'CASE FILE'
               : widget.categoryName,
           maxLines: 1,
           style: TextStyle(
@@ -463,14 +451,14 @@ extension _GameScreenView on _GameScreenState {
           ),
         ],
         bottom:
-            widget.launchedFromCaseFile && caseProgressLoaded && mission != null
+            widget.launchedFromCaseFile && caseProgressLoaded && displayMission != null
             ? PreferredSize(
                 preferredSize: const Size.fromHeight(34),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(8, 0, 8, 7),
                   child: SizedBox(
                     width: double.infinity,
-                    child: _buildCaseObjectiveRows(mission),
+                    child: _buildCaseObjectiveRows(displayMission),
                   ),
                 ),
               )
@@ -1175,7 +1163,7 @@ extension _GameScreenView on _GameScreenState {
         children: [
           Row(children: [
             Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
-              child: Text(_mainStatsCategoryKeyForQuestionId(currentItem.id ?? '')?.replaceAll('_', ' ').toUpperCase() ?? widget.statsCategory.name.replaceAll(RegExp(r'(?<=[a-z])(?=[A-Z])'), ' ').toUpperCase(),
+              child: Text(widget.launchedFromCaseFile && widget.subcategoryTitle != null ? _caseFileQuestionPoolLabel(widget.subcategoryTitle!) : (_mainStatsCategoryKeyForQuestionId(currentItem.id ?? '')?.replaceAll('_', ' ').toUpperCase() ?? widget.statsCategory.name.replaceAll(RegExp(r'(?<=[a-z])(?=[A-Z])'), ' ').toUpperCase()),
               style: const TextStyle(fontFamily: 'Oswald', fontSize: 19,
                 fontWeight: FontWeight.w700, color: AppColors.white)))),
             LivesDisplay(lives: lives, maximumLives: _GameScreenState.maximumLives),
@@ -1348,6 +1336,19 @@ extension _GameScreenView on _GameScreenState {
             ),
     );
   }
+  String _caseFileQuestionPoolLabel(String key) {
+    const labels = <String, String>{
+      'animals (mixed)': 'ANIMALS (MIXED)',
+      'jungle_safari_animals': 'JUNGLE & SAFARI ANIMALS',
+      'habitats_animal_groups': 'HABITATS & ANIMAL GROUPS',
+      'insects_spiders': 'INSECTS & SPIDERS',
+      'mammals': 'MAMMALS',
+      'birds': 'BIRDS',
+      'reptiles_amphibians': 'REPTILES & AMPHIBIANS',
+      'sea_creatures': 'SEA CREATURES',
+    };
+    return labels[key] ?? key.replaceAll('_', ' ').toUpperCase();
+  }
 }
 
 class _PracticeModeRibbon extends StatelessWidget {
@@ -1377,6 +1378,7 @@ class _PracticeModeRibbon extends StatelessWidget {
       ),
     );
   }
+
 }
 
 class _SurpriseChallengeBanner extends StatelessWidget {
