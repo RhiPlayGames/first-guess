@@ -714,6 +714,11 @@ class _DailyFlashFirstWordScreenState extends State<DailyFlashFirstWordScreen> {
         unawaited(_advanceAfterResult());
       },
       onHome: () {
+        if (_dailyProgress?.allQuestionsAttempted ?? false) {
+          unawaited(_advanceAfterResult());
+          return;
+        }
+
         final NavigatorState navigator = Navigator.of(context);
         if (navigator.canPop()) navigator.pop();
         widget.onChallengeFinished?.call();

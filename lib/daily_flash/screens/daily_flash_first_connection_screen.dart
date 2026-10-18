@@ -885,6 +885,11 @@ class _DailyFlashFirstConnectionScreenState
         unawaited(_advanceAfterResult());
       },
       onHome: () {
+        if (_dailyProgress?.allQuestionsAttempted ?? false) {
+          unawaited(_advanceAfterResult());
+          return;
+        }
+
         final NavigatorState navigator =
             Navigator.of(context);
         if (navigator.canPop()) {

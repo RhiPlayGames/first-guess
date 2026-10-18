@@ -670,12 +670,19 @@ class _DailyFlashFirstOrderScreenState
         unawaited(_advanceAfterResult());
       },
       onHome: () {
+        if (_dailyProgress?.allQuestionsAttempted ?? false) {
+          unawaited(_advanceAfterResult());
+          return;
+        }
+
         Navigator.of(context, rootNavigator: true).pop();
         if (mounted) {
           Navigator.of(context).maybePop();
         }
       },
-      primaryButtonLabel: 'NEXT QUESTION',
+      primaryButtonLabel: (_dailyProgress?.allQuestionsAttempted ?? false)
+          ? 'VIEW RESULTS'
+          : 'NEXT QUESTION',
       secondaryButtonLabel: 'BACK TO DAILY FLASH',
     );
   }

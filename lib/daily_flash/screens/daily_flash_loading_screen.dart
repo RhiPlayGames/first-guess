@@ -148,24 +148,20 @@ class _DailyFlashLoadingScreenState
     try {
       await _loadTodayClassicMetadata();
 
-      final bool hasSeenLoadingToday =
-          await DailyFlashProgressService
-              .hasSeenLoadingToday();
+      // Show the splash whenever today's five Classic questions are
+      // still outstanding, including when returning mid-session.
+      final DailyFlashProgress progress =
+          await DailyFlashProgressService.loadToday();
 
       if (!mounted || _hasOpenedGame) {
         return;
       }
 
-      // The splash/loading screen only appears once per day.
-      // This remains true even while testingMode allows the
-      // Daily Flash itself to be replayed repeatedly.
-      if (hasSeenLoadingToday) {
+      // Completed games do not replay the introductory splash.
+      if (progress.allQuestionsAttempted) {
         _openGame();
         return;
       }
-
-      await DailyFlashProgressService
-          .markLoadingSeenToday();
 
       await Future<void>.delayed(
         const Duration(milliseconds: 3000),

@@ -801,6 +801,11 @@ class _DailyFlashFirstMatchScreenState
         unawaited(_advanceAfterResult());
       },
       onHome: () {
+        if (_dailyProgress?.allQuestionsAttempted ?? false) {
+          unawaited(_advanceAfterResult());
+          return;
+        }
+
         Navigator.of(
           context,
           rootNavigator: true,
@@ -810,7 +815,9 @@ class _DailyFlashFirstMatchScreenState
           Navigator.of(context).maybePop();
         }
       },
-      primaryButtonLabel: 'NEXT QUESTION',
+      primaryButtonLabel: (_dailyProgress?.allQuestionsAttempted ?? false)
+          ? 'VIEW RESULTS'
+          : 'NEXT QUESTION',
       secondaryButtonLabel: 'BACK TO DAILY FLASH',
     );
   }

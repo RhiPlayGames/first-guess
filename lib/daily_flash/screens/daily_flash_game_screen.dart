@@ -972,46 +972,49 @@ class _DailyFlashGameScreenState
       }
     });
 
-    if (wasFirstGuess) {
-      showGameMessage(
-        'FIRST GUESS! +$xpEarned XP',
-        type: GameMessageType.success,
-        duration:
-            const Duration(
-          milliseconds: 1000,
-        ),
-      );
-    } else {
-      showGameMessage(
-        'Correct! +$xpEarned XP',
-        type: GameMessageType.success,
-        duration:
-            const Duration(
-          milliseconds: 800,
-        ),
-      );
-    }
+    // Keep the existing XP award (including 2x Daily Flash XP) unchanged.
+    // Unlike the old disappearing banner, show the detailed breakdown
+    // and wait for the player's choice before advancing.
+    bool continuePressed = false;
+    bool leavePressed = false;
 
-    await Future<void>.delayed(
-      Duration(
-        milliseconds:
-            wasFirstGuess
-                ? 1000
-                : 800,
-      ),
+    await showGameResultDialog(
+      context: context,
+      title: wasFirstGuess ? 'FIRST GUESS!' : 'CORRECT!',
+      message: 'You identified ${currentQuestion.answer.toUpperCase()}\n\n'
+          '$baseXp XP\n'
+          '${wasFirstGuess ? firstGuessBonus : 0} XP First Guess Bonus\n'
+          '$normalScore XP Daily Flash Double XP Bonus\n\n'
+          '$xpEarned XP TOTAL',
+      primaryButtonLabel: isLastQuestion ? 'SEE RESULTS' : 'NEXT QUESTION',
+      secondaryButtonLabel: 'BACK TO DAILY FLASH',
+      onPlayAgain: () {
+        continuePressed = true;
+        Navigator.of(context).pop();
+      },
+      onHome: () {
+        // The fifth result must lead to the Flash Complete summary,
+        // even when the player chooses to leave the question popup.
+        if (isLastQuestion) {
+          continuePressed = true;
+        } else {
+          leavePressed = true;
+        }
+        Navigator.of(context).pop();
+      },
     );
 
-    if (!mounted ||
-        challengeFinished) {
+    if (!mounted) return;
+    if (leavePressed) {
+      leaveFlash5();
       return;
     }
-
+    if (!continuePressed) return;
     if (isLastQuestion) {
       await finishDailyFlash();
-      return;
+    } else {
+      await moveToNextQuestion();
     }
-
-    await moveToNextQuestion();
   }
 
   // =========================================================
@@ -1267,8 +1270,11 @@ class _DailyFlashGameScreenState
         Navigator.of(context).pop();
       },
       onHome: () {
-        leavePressed = true;
-
+        if (isLastQuestion) {
+          continuePressed = true;
+        } else {
+          leavePressed = true;
+        }
         Navigator.of(context).pop();
       },
     );

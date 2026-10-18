@@ -281,7 +281,7 @@ class _MapBackground extends StatelessWidget {
         color: Color(0xFFCBE3FC),
         image: DecorationImage(
           image: AssetImage(
-            'assets/images/case_paths/new/roundtheworldmap.webp',
+            'assets/images/case_paths/finalmaps/aroundtheworld.webp',
           ),
           fit: BoxFit.fitWidth,
           alignment: Alignment.topCenter,
