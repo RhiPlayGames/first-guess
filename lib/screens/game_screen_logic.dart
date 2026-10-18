@@ -232,6 +232,7 @@ extension _GameScreenLogic on _GameScreenState {
   }
 
   bool get isPracticeModeActive {
+    if (widget.launchedFromCaseFile && CaseFilesQa.enabled) return true;
     if (widget.launchedFromSurpriseMe ||
         !questionHistoryLoaded ||
         widget.items.isEmpty) {
@@ -392,7 +393,8 @@ extension _GameScreenLogic on _GameScreenState {
   Future<void> recordCurrentQuestionAsPlayed() async {
     final String? questionId = currentItem.id;
 
-    if (questionId == null ||
+    if ((widget.launchedFromCaseFile && CaseFilesQa.enabled) ||
+        questionId == null ||
         questionId.isEmpty ||
         playedQuestionIds.contains(questionId)) {
       return;
@@ -446,7 +448,9 @@ extension _GameScreenLogic on _GameScreenState {
     }
 
     final GuessMatch match =
-        currentItem.checkGuess(guess);
+        widget.launchedFromCaseFile && CaseFilesQa.enabled
+            ? GuessMatch.correct
+            : currentItem.checkGuess(guess);
 
     switch (match) {
       case GuessMatch.correct:
@@ -772,7 +776,11 @@ extension _GameScreenLogic on _GameScreenState {
               ) !=
               null;
 
-      final progress = isRoundTheWorld
+      final bool isFinalWhistle = _sportsSubcategoryFromQuestionId(representativeId) != null;
+
+      final progress = isFinalWhistle
+          ? await CasePathService.loadFinalWhistleProgress()
+          : isRoundTheWorld
           ? await CasePathService.loadRoundTheWorldProgress()
           : isSecretsOfThePast
               ? await CasePathService.loadSecretsOfThePastProgress()
@@ -1032,12 +1040,20 @@ extension _GameScreenLogic on _GameScreenState {
   }
 
 
+  String? _sportsSubcategoryFromQuestionId(String id) {
+    if (!id.startsWith('sports_')) return null;
+    final String rest = id.substring('sports_'.length);
+    final int last = rest.lastIndexOf('_');
+    if (last <= 0) return null;
+    return rest.substring(0, last);
+  }
+
   Future<int?> recordAnimalKingdomCaseResult({
     required int clueNumber,
     required bool wasFirstGuess,
     required bool practiceMode,
   }) async {
-    if (widget.caseFileReplay) {
+    if (widget.caseFileReplay || !widget.launchedFromCaseFile) {
       return null;
     }
 
@@ -1047,6 +1063,7 @@ extension _GameScreenLogic on _GameScreenState {
       return null;
     }
 
+    bool isFinalWhistle = false;
     bool isRoundTheWorld = false;
     bool isSecretsOfThePast = false;
     bool isTasteAndTreats = false;
@@ -1054,13 +1071,18 @@ extension _GameScreenLogic on _GameScreenState {
     bool isTheWrittenWord = false;
     bool isTheCreativeCode = false;
     String? category;
-    String? subcategory =
-        _countrySubcategoryFromQuestionId(questionId);
-
+    String? subcategory = _sportsSubcategoryFromQuestionId(questionId);
     if (subcategory != null) {
+      isFinalWhistle = true;
+      category = 'sports';
+    } else {
+      subcategory = _countrySubcategoryFromQuestionId(questionId);
+    }
+
+    if (subcategory != null && !isFinalWhistle) {
       isRoundTheWorld = true;
       category = 'countries';
-    } else {
+    } else if (!isFinalWhistle) {
       subcategory =
           _pastPresentSubcategoryFromQuestionId(questionId);
 
@@ -1145,7 +1167,7 @@ extension _GameScreenLogic on _GameScreenState {
           !isTasteAndTreats &&
           !isNatureOfDiscovery &&
           !isTheWrittenWord &&
-          !isTheCreativeCode) {
+          !isTheCreativeCode && !isFinalWhistle) {
         category = 'animals';
       }
     }
@@ -1237,7 +1259,9 @@ extension _GameScreenLogic on _GameScreenState {
       'important_dates',
     };
 
-    if (isRoundTheWorld) {
+    if (isFinalWhistle) {
+      // Sports uses the existing live category and subcategory questions.
+    } else if (isRoundTheWorld) {
       if (!countrySubcategories.contains(subcategory)) {
         return null;
       }
@@ -1269,7 +1293,9 @@ extension _GameScreenLogic on _GameScreenState {
     try {
       if (widget.launchedFromCaseFile &&
           stageBefore == null) {
-        final progressBefore = isRoundTheWorld
+        final progressBefore = isFinalWhistle
+            ? await CasePathService.loadFinalWhistleProgress()
+            : isRoundTheWorld
             ? await CasePathService.loadRoundTheWorldProgress()
             : isSecretsOfThePast
                 ? await CasePathService.loadSecretsOfThePastProgress()
@@ -1302,7 +1328,9 @@ extension _GameScreenLogic on _GameScreenState {
         completedAt: DateTime.now(),
       );
 
-      final updatedProgress = isRoundTheWorld
+      final updatedProgress = isFinalWhistle
+          ? await CasePathService.recordFinalWhistleResult(event: event)
+          : isRoundTheWorld
           ? await CasePathService.recordRoundTheWorldResult(
               event: event,
             )
@@ -1334,7 +1362,9 @@ extension _GameScreenLogic on _GameScreenState {
 
       if (widget.launchedFromCaseFile &&
           stageBefore != null) {
-        final bool stageCompleted = isRoundTheWorld
+        final bool stageCompleted = isFinalWhistle
+            ? CasePathService.isFinalWhistleStageCompleted(progress: updatedProgress, stage: stageBefore)
+            : isRoundTheWorld
             ? CasePathService.isRoundTheWorldStageCompleted(
                 progress: updatedProgress,
                 stage: stageBefore,
@@ -1377,7 +1407,9 @@ extension _GameScreenLogic on _GameScreenState {
       if (widget.launchedFromCaseFile && mounted) {
         setState(() {
           if (completedStage != null) {
-            final completedMission = isRoundTheWorld
+            final completedMission = isFinalWhistle
+                ? CasePathService.finalWhistleMissionForStage(completedStage)
+                : isRoundTheWorld
                 ? CasePathService.roundTheWorldMissionForStage(
                     completedStage
                   )
@@ -1675,7 +1707,8 @@ extension _GameScreenLogic on _GameScreenState {
 
     const int firstGuessBonus = 50;
 
-    final bool isReplay = currentQuestionIsReplay;
+    final bool isReplay = currentQuestionIsReplay ||
+        (widget.launchedFromCaseFile && CaseFilesQa.enabled);
 
     final int pointsWon = isReplay
         ? 0
@@ -1760,7 +1793,7 @@ extension _GameScreenLogic on _GameScreenState {
 
     await _recordClassicContentConsumption();
 
-    if (wasFirstGuess) {
+    if (wasFirstGuess && !CaseFilesQa.enabled) {
       await AnalyticsService.logFirstGuessEarned(
         gameType: 'classic_first_guess',
         category: _analyticsCategoryKey,
@@ -1802,6 +1835,7 @@ extension _GameScreenLogic on _GameScreenState {
 
     if (widget.launchedFromCaseFile &&
         completedCaseStage != null) {
+      final bool isFinalWhistleCase = _sportsSubcategoryFromQuestionId(currentItem.id ?? '') != null;
       final bool isRoundTheWorldCase =
           _countrySubcategoryFromQuestionId(
                 currentItem.id ?? '',
@@ -1838,7 +1872,9 @@ extension _GameScreenLogic on _GameScreenState {
               ) !=
               null;
 
-      final int totalStages = isRoundTheWorldCase
+      final int totalStages = isFinalWhistleCase
+          ? CasePathService.finalWhistleTotalStages
+          : isRoundTheWorldCase
           ? CasePathService.roundTheWorldTotalStages
           : isSecretsOfThePastCase
               ? CasePathService.secretsOfThePastTotalStages
@@ -1855,7 +1891,9 @@ extension _GameScreenLogic on _GameScreenState {
       final bool completedEntireCasePath =
           completedCaseStage >= totalStages;
 
-      final String caseName = isRoundTheWorldCase
+      final String caseName = isFinalWhistleCase
+            ? 'THE FINAL WHISTLE'
+            : isRoundTheWorldCase
           ? 'AROUND THE WORLD'
           : isSecretsOfThePastCase
               ? 'SECRETS OF THE PAST'
@@ -1869,7 +1907,9 @@ extension _GameScreenLogic on _GameScreenState {
                               ? 'THE CREATIVE CODE'
                               : 'ANIMAL KINGDOM';
 
-      final String badgeName = isRoundTheWorldCase
+      final String badgeName = isFinalWhistleCase
+            ? 'THE FINAL WHISTLE CASE BADGE'
+            : isRoundTheWorldCase
           ? 'AROUND THE WORLD CASE BADGE'
           : isSecretsOfThePastCase
               ? 'SECRETS OF THE PAST CASE BADGE'
@@ -1883,7 +1923,9 @@ extension _GameScreenLogic on _GameScreenState {
                               ? 'THE CREATIVE CODE CASE BADGE'
                               : 'ANIMAL KINGDOM CASE BADGE';
 
-      final String caseKey = isRoundTheWorldCase
+      final String caseKey = isFinalWhistleCase
+            ? 'final_whistle'
+            : isRoundTheWorldCase
           ? 'around_the_world'
           : isSecretsOfThePastCase
               ? 'secrets_of_the_past'
@@ -1897,7 +1939,7 @@ extension _GameScreenLogic on _GameScreenState {
                               ? 'the_creative_code'
                               : 'animal_kingdom';
 
-      if (completedEntireCasePath) {
+      if (completedEntireCasePath && !CaseFilesQa.enabled) {
         await AnalyticsService.logCaseFileCompleted(
           caseKey: caseKey,
           caseName: caseName,
@@ -1925,7 +1967,9 @@ extension _GameScreenLogic on _GameScreenState {
                   'Case ${completedCaseStage + 1} is now unlocked.';
 
       if (completedEntireCasePath) {
-        final String finalCaseTitle = isRoundTheWorldCase
+        final String finalCaseTitle = isFinalWhistleCase
+            ? 'THE FINAL WHISTLE COMPLETE!'
+            : isRoundTheWorldCase
             ? 'AROUND THE WORLD COMPLETE!'
             : isSecretsOfThePastCase
                 ? 'SECRETS OF THE PAST COMPLETE!'
@@ -1939,7 +1983,9 @@ extension _GameScreenLogic on _GameScreenState {
                                 ? 'THE CREATIVE CODE COMPLETE!'
                                 : 'ANIMAL KINGDOM COMPLETE!';
 
-        final String finalBadgeAsset = isRoundTheWorldCase
+        final String finalBadgeAsset = isFinalWhistleCase
+            ? 'assets/images/case_files/New folder/finalwhistlecompleted.webp'
+            : isRoundTheWorldCase
             ? 'assets/images/badges/amazing_world_case_file_badge.webp'
             : isSecretsOfThePastCase
                 ? 'assets/images/badges/mysteries_legends_case_file_badge.webp'
@@ -1990,7 +2036,9 @@ extension _GameScreenLogic on _GameScreenState {
         title: completionTitle,
         message: completionMessage,
         imageAsset: completedEntireCasePath
-            ? isRoundTheWorldCase
+            ? isFinalWhistleCase
+                ? 'assets/images/case_files/New folder/finalwhistlecompleted.webp'
+                : isRoundTheWorldCase
                 ? 'assets/images/badges/amazing_world_case_file_badge.webp'
                 : isSecretsOfThePastCase
                     ? 'assets/images/badges/mysteries_legends_case_file_badge.webp'
@@ -2098,7 +2146,8 @@ extension _GameScreenLogic on _GameScreenState {
 
     clueTimer?.cancel();
 
-    final bool isReplay = currentQuestionIsReplay;
+    final bool isReplay = currentQuestionIsReplay ||
+        (widget.launchedFromCaseFile && CaseFilesQa.enabled);
 
     setState(() {
       roundFinished = true;

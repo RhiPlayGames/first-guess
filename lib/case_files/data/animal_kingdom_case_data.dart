@@ -24,8 +24,7 @@ const List<CaseMission> animalKingdomCaseMissions = [
     stage: 3,
     difficulty: CaseDifficulty.easy,
     title: 'CASE 3',
-    missionText:
-        'GET 10 HABITATS & ANIMAL GROUPS QUESTIONS CORRECT',
+    missionText: 'GET 10 HABITATS & ANIMAL GROUPS QUESTIONS CORRECT',
     category: 'animals',
     subcategory: 'habitats_animal_groups',
     correctRequired: 10,
@@ -35,8 +34,7 @@ const List<CaseMission> animalKingdomCaseMissions = [
     stage: 4,
     difficulty: CaseDifficulty.easy,
     title: 'CASE 4',
-    missionText:
-        'GET 10 INSECTS & SPIDERS QUESTIONS CORRECT, INCLUDING 4 BY CLUE 5',
+    missionText: 'GET 10 INSECTS & SPIDERS QUESTIONS CORRECT, INCLUDING 4 BY CLUE 5',
     category: 'animals',
     subcategory: 'insects_spiders',
     correctRequired: 10,
@@ -48,8 +46,7 @@ const List<CaseMission> animalKingdomCaseMissions = [
     stage: 5,
     difficulty: CaseDifficulty.easy,
     title: 'CASE 5',
-    missionText:
-        'GET 10 MAMMALS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 5',
+    missionText: 'GET 10 MAMMALS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 5',
     category: 'animals',
     subcategory: 'mammals',
     correctRequired: 10,
@@ -61,8 +58,7 @@ const List<CaseMission> animalKingdomCaseMissions = [
     stage: 6,
     difficulty: CaseDifficulty.moderate,
     title: 'CASE 6',
-    missionText:
-        'GET 10 BIRDS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 5',
+    missionText: 'GET 10 BIRDS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 5',
     category: 'animals',
     subcategory: 'birds',
     correctRequired: 10,
@@ -74,8 +70,7 @@ const List<CaseMission> animalKingdomCaseMissions = [
     stage: 7,
     difficulty: CaseDifficulty.moderate,
     title: 'CASE 7',
-    missionText:
-        'GET 10 REPTILES & AMPHIBIANS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 4',
+    missionText: 'GET 10 REPTILES & AMPHIBIANS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 4',
     category: 'animals',
     subcategory: 'reptiles_amphibians',
     correctRequired: 10,
@@ -87,8 +82,7 @@ const List<CaseMission> animalKingdomCaseMissions = [
     stage: 8,
     difficulty: CaseDifficulty.moderate,
     title: 'CASE 8',
-    missionText:
-        'GET 10 SEA CREATURES QUESTIONS CORRECT, INCLUDING 5 BY CLUE 4',
+    missionText: 'GET 10 SEA CREATURES QUESTIONS CORRECT, INCLUDING 5 BY CLUE 4',
     category: 'animals',
     subcategory: 'sea_creatures',
     correctRequired: 10,
@@ -100,8 +94,7 @@ const List<CaseMission> animalKingdomCaseMissions = [
     stage: 9,
     difficulty: CaseDifficulty.moderate,
     title: 'CASE 9',
-    missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 4',
+    missionText: 'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 4',
     category: 'animals',
     correctRequired: 10,
     clueThreshold: 4,
@@ -112,8 +105,7 @@ const List<CaseMission> animalKingdomCaseMissions = [
     stage: 10,
     difficulty: CaseDifficulty.moderate,
     title: 'CASE 10',
-    missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 6 BY CLUE 4',
+    missionText: 'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 6 BY CLUE 4',
     category: 'animals',
     correctRequired: 10,
     clueThreshold: 4,
@@ -124,12 +116,11 @@ const List<CaseMission> animalKingdomCaseMissions = [
     stage: 11,
     difficulty: CaseDifficulty.hard,
     title: 'CASE 11',
-    missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 6 BY CLUE 4 AND 1 FIRST GUESS',
+    missionText: 'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 4 BY CLUE 5 AND 1 FIRST GUESS',
     category: 'animals',
     correctRequired: 10,
-    clueThreshold: 4,
-    clueThresholdRequired: 6,
+    clueThreshold: 5,
+    clueThresholdRequired: 4,
     firstGuessesRequired: 1,
   ),
 
@@ -137,46 +128,91 @@ const List<CaseMission> animalKingdomCaseMissions = [
     stage: 12,
     difficulty: CaseDifficulty.hard,
     title: 'CASE 12',
-    missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 3 AND 2 FIRST GUESSES',
+    missionText: 'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 4 BY CLUE 5 AND 1 FIRST GUESS',
     category: 'animals',
     correctRequired: 10,
-    clueThreshold: 3,
-    clueThresholdRequired: 5,
-    firstGuessesRequired: 2,
+    clueThreshold: 5,
+    clueThresholdRequired: 4,
+    firstGuessesRequired: 1,
   ),
 
   CaseMission(
     stage: 13,
     difficulty: CaseDifficulty.hard,
     title: 'CASE 13',
-    missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 7 BY CLUE 4 AND 3 FIRST GUESSES',
+    missionText: 'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 5 AND 1 FIRST GUESS',
     category: 'animals',
     correctRequired: 10,
-    clueThreshold: 4,
-    clueThresholdRequired: 7,
-    firstGuessesRequired: 3,
+    clueThreshold: 5,
+    clueThresholdRequired: 5,
+    firstGuessesRequired: 1,
   ),
 
   CaseMission(
     stage: 14,
     difficulty: CaseDifficulty.hard,
     title: 'CASE 14',
-    missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 6 BY CLUE 3',
+    missionText: 'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 4 AND 1 FIRST GUESS',
     category: 'animals',
     correctRequired: 10,
-    clueThreshold: 3,
-    clueThresholdRequired: 6,
+    clueThreshold: 4,
+    clueThresholdRequired: 5,
+    firstGuessesRequired: 1,
   ),
 
   CaseMission(
     stage: 15,
     difficulty: CaseDifficulty.hard,
     title: 'CASE 15',
-    missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 7 BY CLUE 3 AND 3 FIRST GUESSES',
+    missionText: 'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 5 BY CLUE 4 AND 2 FIRST GUESSES',
+    category: 'animals',
+    correctRequired: 10,
+    clueThreshold: 4,
+    clueThresholdRequired: 5,
+    firstGuessesRequired: 2,
+  ),
+
+  CaseMission(
+    stage: 16,
+    difficulty: CaseDifficulty.expert,
+    title: 'CASE 16',
+    missionText: 'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 6 BY CLUE 4 AND 2 FIRST GUESSES',
+    category: 'animals',
+    correctRequired: 10,
+    clueThreshold: 4,
+    clueThresholdRequired: 6,
+    firstGuessesRequired: 2,
+  ),
+
+  CaseMission(
+    stage: 17,
+    difficulty: CaseDifficulty.expert,
+    title: 'CASE 17',
+    missionText: 'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 6 BY CLUE 4 AND 2 FIRST GUESSES',
+    category: 'animals',
+    correctRequired: 10,
+    clueThreshold: 4,
+    clueThresholdRequired: 6,
+    firstGuessesRequired: 2,
+  ),
+
+  CaseMission(
+    stage: 18,
+    difficulty: CaseDifficulty.expert,
+    title: 'CASE 18',
+    missionText: 'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 6 BY CLUE 3 AND 2 FIRST GUESSES',
+    category: 'animals',
+    correctRequired: 10,
+    clueThreshold: 3,
+    clueThresholdRequired: 6,
+    firstGuessesRequired: 2,
+  ),
+
+  CaseMission(
+    stage: 19,
+    difficulty: CaseDifficulty.expert,
+    title: 'CASE 19',
+    missionText: 'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 7 BY CLUE 3 AND 3 FIRST GUESSES',
     category: 'animals',
     correctRequired: 10,
     clueThreshold: 3,
@@ -185,67 +221,14 @@ const List<CaseMission> animalKingdomCaseMissions = [
   ),
 
   CaseMission(
-    stage: 16,
-    difficulty: CaseDifficulty.expert,
-    title: 'CASE 16',
-    missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 7 BY CLUE 3 AND 4 FIRST GUESSES',
-    category: 'animals',
-    correctRequired: 10,
-    clueThreshold: 3,
-    clueThresholdRequired: 7,
-    firstGuessesRequired: 4,
-  ),
-
-  CaseMission(
-    stage: 17,
-    difficulty: CaseDifficulty.expert,
-    title: 'CASE 17',
-    missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 8 BY CLUE 3 AND 4 FIRST GUESSES',
-    category: 'animals',
-    correctRequired: 10,
-    clueThreshold: 3,
-    clueThresholdRequired: 8,
-    firstGuessesRequired: 4,
-  ),
-
-  CaseMission(
-    stage: 18,
-    difficulty: CaseDifficulty.expert,
-    title: 'CASE 18',
-    missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 8 BY CLUE 3 AND 5 FIRST GUESSES',
-    category: 'animals',
-    correctRequired: 10,
-    clueThreshold: 3,
-    clueThresholdRequired: 8,
-    firstGuessesRequired: 5,
-  ),
-
-  CaseMission(
-    stage: 19,
-    difficulty: CaseDifficulty.expert,
-    title: 'CASE 19',
-    missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 7 BY CLUE 2 AND 5 FIRST GUESSES',
-    category: 'animals',
-    correctRequired: 10,
-    clueThreshold: 2,
-    clueThresholdRequired: 7,
-    firstGuessesRequired: 5,
-  ),
-
-  CaseMission(
     stage: 20,
     difficulty: CaseDifficulty.finalChallenge,
     title: 'FINAL CASE',
-    missionText:
-        'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 8 BY CLUE 2 AND 6 FIRST GUESSES',
+    missionText: 'GET 10 ANIMALS QUESTIONS CORRECT, INCLUDING 7 BY CLUE 3 AND 3 FIRST GUESSES',
     category: 'animals',
     correctRequired: 10,
-    clueThreshold: 2,
-    clueThresholdRequired: 8,
-    firstGuessesRequired: 6,
+    clueThreshold: 3,
+    clueThresholdRequired: 7,
+    firstGuessesRequired: 3,
   ),
 ];

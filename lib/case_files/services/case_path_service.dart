@@ -1,4 +1,5 @@
 import '../data/animal_kingdom_case_data.dart';
+import '../data/final_whistle_missions.dart';
 import '../data/round_the_world_missions.dart';
 import '../data/secrets_of_the_past_missions.dart';
 import '../data/taste_and_treats_missions.dart';
@@ -11,39 +12,25 @@ import '../models/gameplay_result_event.dart';
 import 'case_progress_service.dart';
 import 'case_progress_storage_service.dart';
 import 'case_tracking_service.dart';
+import 'case_files_qa.dart';
 
 class CasePathService {
   CasePathService._();
 
-  // TEMPORARY TEST MODE.
-  // Set to false after Case Files testing is complete.
-  // When true, progress is only PRESENTED as completed in memory so every
-  // stage can be opened for testing. Saved local/cloud progress is not changed
-  // by this unlock override.
-  static const bool caseFileTestMode = true;
+  // Temporary QA mission definitions are confined to opt-in QA builds.
+  static CaseMission _forQa(CaseMission mission) => !CaseFilesQa.enabled
+      ? mission
+      : CaseMission(
+          stage: mission.stage,
+          difficulty: mission.difficulty,
+          title: mission.title,
+          missionText: 'GET 2 ${mission.subcategory == null ? mission.category.toUpperCase().replaceAll('_', ' ') : mission.subcategory!.toUpperCase().replaceAll('_', ' ')} QUESTIONS CORRECT (QA: ANY ANSWER)',
+          category: mission.category,
+          subcategory: mission.subcategory,
+          correctRequired: 2,
+        );
 
-  static CaseProgress _applyCaseFileTestUnlock(
-    CaseProgress progress,
-  ) {
-    if (!caseFileTestMode) {
-      return progress;
-    }
-
-    return CaseProgress(
-      casePathId: progress.casePathId,
-      currentStage: progress.currentStage,
-      totalStages: progress.totalStages,
-      completedStages: List<int>.generate(
-        progress.totalStages,
-        (int index) => index + 1,
-      ),
-      isCompleted: true,
-      currentStageProgress: progress.currentStageProgress,
-      startedAt: progress.startedAt,
-      updatedAt: progress.updatedAt,
-      completedAt: progress.completedAt ?? DateTime.now(),
-    );
-  }
+  static CaseProgress _applyCaseFileTestUnlock(CaseProgress progress) => progress;
 
   static const String animalKingdomCasePathId =
       'animal_kingdom';
@@ -80,6 +67,9 @@ class CasePathService {
       'the_creative_code';
 
   static const int theCreativeCodeTotalStages = 20;
+
+  static const String finalWhistleCasePathId = 'final_whistle';
+  static const int finalWhistleTotalStages = 20;
 
   static const CaseTrackingService _trackingService =
       CaseTrackingService();
@@ -122,7 +112,7 @@ class CasePathService {
       return null;
     }
 
-    return animalKingdomCaseMissions[stage - 1];
+    return _forQa(animalKingdomCaseMissions[stage - 1]);
   }
 
   static CaseMission?
@@ -226,6 +216,141 @@ class CasePathService {
   }
 
   static Future<CaseProgress>
+      loadFinalWhistleProgress() async {
+    final CaseProgress? savedProgress =
+        await CaseProgressStorageService.loadProgress(
+      casePathId: finalWhistleCasePathId,
+    );
+
+    if (savedProgress != null) {
+      return _applyCaseFileTestUnlock(savedProgress);
+    }
+
+    final CaseProgress initialProgress =
+        _progressService.createInitialProgress(
+      casePathId: finalWhistleCasePathId,
+      totalStages: finalWhistleTotalStages,
+    );
+
+    await CaseProgressStorageService.saveProgress(
+      initialProgress,
+    );
+
+    return _applyCaseFileTestUnlock(initialProgress);
+  }
+
+  static CaseMission? finalWhistleMissionForStage(
+    int stage,
+  ) {
+    if (stage < 1 ||
+        stage > finalWhistleCaseMissions.length) {
+      return null;
+    }
+
+    return _forQa(finalWhistleCaseMissions[stage - 1]);
+  }
+
+  static CaseMission?
+      currentFinalWhistleMission(
+    CaseProgress progress,
+  ) {
+    if (progress.isCompleted) {
+      return null;
+    }
+
+    return finalWhistleMissionForStage(
+      progress.currentStage,
+    );
+  }
+
+  static Future<CaseProgress>
+      recordFinalWhistleResult({
+    required GameplayResultEvent event,
+  }) async {
+    final CaseProgress fallbackProgress =
+        await loadFinalWhistleProgress();
+
+    return CaseProgressStorageService
+        .updateProgressTransactionally(
+      casePathId: finalWhistleCasePathId,
+      attemptId: event.attemptId,
+      fallbackProgress: fallbackProgress,
+      update: (CaseProgress currentProgress) {
+        if (currentProgress.isCompleted) {
+          return currentProgress;
+        }
+
+        final CaseMission? mission =
+            finalWhistleMissionForStage(
+          currentProgress.currentStage,
+        );
+
+        if (mission == null) {
+          return currentProgress;
+        }
+
+        final CaseStageProgress updatedStageProgress =
+            _trackingService.applyResult(
+          mission: mission,
+          progress: currentProgress.currentStageProgress,
+          event: event,
+        );
+
+        if (_sameStageProgress(
+          currentProgress.currentStageProgress,
+          updatedStageProgress,
+        )) {
+          return currentProgress;
+        }
+
+        return _progressService.applyStageProgress(
+          caseProgress: currentProgress,
+          mission: mission,
+          updatedStageProgress: updatedStageProgress,
+          updatedAt: event.completedAt,
+        );
+      },
+    );
+  }
+
+  static bool isFinalWhistleStageCompleted({
+    required CaseProgress progress,
+    required int stage,
+  }) {
+    return _progressService.isStageCompleted(
+      caseProgress: progress,
+      stage: stage,
+    );
+  }
+
+  static bool isFinalWhistleStageCurrent({
+    required CaseProgress progress,
+    required int stage,
+  }) {
+    return _progressService.isStageCurrent(
+      caseProgress: progress,
+      stage: stage,
+    );
+  }
+
+  static bool isFinalWhistleStageLocked({
+    required CaseProgress progress,
+    required int stage,
+  }) {
+    return _progressService.isStageLocked(
+      caseProgress: progress,
+      stage: stage,
+    );
+  }
+
+  static Future<void>
+      resetFinalWhistleProgress() async {
+    await CaseProgressStorageService.clearProgress(
+      casePathId: finalWhistleCasePathId,
+    );
+  }
+
+  static Future<CaseProgress>
       loadRoundTheWorldProgress() async {
     final CaseProgress? savedProgress =
         await CaseProgressStorageService.loadProgress(
@@ -257,7 +382,7 @@ class CasePathService {
       return null;
     }
 
-    return roundTheWorldCaseMissions[stage - 1];
+    return _forQa(roundTheWorldCaseMissions[stage - 1]);
   }
 
   static CaseMission? currentRoundTheWorldMission(
@@ -391,7 +516,7 @@ class CasePathService {
       return null;
     }
 
-    return secretsOfThePastCaseMissions[stage - 1];
+    return _forQa(secretsOfThePastCaseMissions[stage - 1]);
   }
 
   static CaseMission? currentSecretsOfThePastMission(
@@ -525,7 +650,7 @@ class CasePathService {
       return null;
     }
 
-    return tasteAndTreatsCaseMissions[stage - 1];
+    return _forQa(tasteAndTreatsCaseMissions[stage - 1]);
   }
 
   static CaseMission? currentTasteAndTreatsMission(
@@ -659,7 +784,7 @@ class CasePathService {
       return null;
     }
 
-    return natureOfDiscoveryCaseMissions[stage - 1];
+    return _forQa(natureOfDiscoveryCaseMissions[stage - 1]);
   }
 
   static CaseMission? currentNatureOfDiscoveryMission(
@@ -793,7 +918,7 @@ class CasePathService {
       return null;
     }
 
-    return theWrittenWordCaseMissions[stage - 1];
+    return _forQa(theWrittenWordCaseMissions[stage - 1]);
   }
 
   static CaseMission? currentTheWrittenWordMission(
@@ -928,7 +1053,7 @@ class CasePathService {
       return null;
     }
 
-    return theCreativeCodeCaseMissions[stage - 1];
+    return _forQa(theCreativeCodeCaseMissions[stage - 1]);
   }
 
   static CaseMission? currentTheCreativeCodeMission(

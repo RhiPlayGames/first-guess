@@ -352,6 +352,7 @@ extension _GameScreenView on _GameScreenState {
   Widget buildGameScreen() {
     final String representativeCaseQuestionId =
         currentItem.id ?? widget.initialItem?.id ?? widget.items.first.id ?? '';
+    final bool isFinalWhistleCase = _sportsSubcategoryFromQuestionId(representativeCaseQuestionId) != null;
     final bool isRoundTheWorldCase =
         _countrySubcategoryFromQuestionId(representativeCaseQuestionId) != null;
     final bool isSecretsOfThePastCase =
@@ -384,6 +385,8 @@ extension _GameScreenView on _GameScreenState {
         ? CasePathService.theWrittenWordMissionForStage(activeCaseStage!)
         : isTheCreativeCodeCase
         ? CasePathService.theCreativeCodeMissionForStage(activeCaseStage!)
+        : isFinalWhistleCase
+        ? CasePathService.finalWhistleMissionForStage(activeCaseStage!)
         : CasePathService.animalKingdomMissionForStage(activeCaseStage!);
 
     final String activeCaseName = isRoundTheWorldCase
@@ -398,6 +401,8 @@ extension _GameScreenView on _GameScreenState {
         ? 'THE WRITTEN WORD'
         : isTheCreativeCodeCase
         ? 'THE CREATIVE CODE'
+        : isFinalWhistleCase
+        ? 'THE FINAL WHISTLE'
         : 'ANIMAL KINGDOM';
 
     final double caseToolbarHeight = 56;
@@ -1170,7 +1175,7 @@ extension _GameScreenView on _GameScreenState {
         children: [
           Row(children: [
             Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
-              child: Text('CLASSIC FIRST GUESS',
+              child: Text(_mainStatsCategoryKeyForQuestionId(currentItem.id ?? '')?.replaceAll('_', ' ').toUpperCase() ?? widget.statsCategory.name.replaceAll(RegExp(r'(?<=[a-z])(?=[A-Z])'), ' ').toUpperCase(),
               style: const TextStyle(fontFamily: 'Oswald', fontSize: 19,
                 fontWeight: FontWeight.w700, color: AppColors.white)))),
             LivesDisplay(lives: lives, maximumLives: _GameScreenState.maximumLives),

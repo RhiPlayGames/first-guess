@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../case_files/models/gameplay_result_event.dart';
 import '../case_files/services/case_path_service.dart';
+import '../case_files/services/case_files_qa.dart';
 import '../models/quiz_item.dart';
 import '../services/firebase_challenge_service.dart';
 import '../services/achievement_service.dart';

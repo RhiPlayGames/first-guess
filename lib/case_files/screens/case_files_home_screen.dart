@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../services/analytics_service.dart';
 import '../../theme/app_colors.dart';
@@ -12,6 +12,7 @@ import 'taste_and_treats_case_path_screen.dart';
 import 'nature_of_discovery_case_path_screen.dart';
 import 'the_written_word_case_path_screen.dart';
 import 'the_creative_code_case_path_screen.dart';
+import 'final_whistle_case_path_screen.dart';
 
 class CaseFilesHomeScreen extends StatefulWidget {
   const CaseFilesHomeScreen({super.key});
@@ -30,6 +31,7 @@ class _CaseFilesHomeScreenState
   CaseProgress? _natureOfDiscoveryProgress;
   CaseProgress? _theWrittenWordProgress;
   CaseProgress? _theCreativeCodeProgress;
+  CaseProgress? _finalWhistleProgress;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _CaseFilesHomeScreenState
     _loadNatureOfDiscoveryProgress();
     _loadTheWrittenWordProgress();
     _loadTheCreativeCodeProgress();
+    _loadFinalWhistleProgress();
   }
 
   Future<void> _loadAnimalKingdomProgress() async {
@@ -624,6 +627,89 @@ class _CaseFilesHomeScreenState
     await _loadTheCreativeCodeProgress();
   }
 
+  Future<void> _loadFinalWhistleProgress() async {
+    try {
+      final CaseProgress progress =
+          await CasePathService.loadFinalWhistleProgress();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _finalWhistleProgress = progress;
+      });
+    } catch (_) {
+      // Keep the card usable if progress cannot be loaded.
+    }
+  }
+
+  bool get _finalWhistleStarted {
+    final CaseProgress? progress = _finalWhistleProgress;
+
+    if (progress == null) {
+      return false;
+    }
+
+    final stage = progress.currentStageProgress;
+
+    return progress.completedStageCount > 0 ||
+        stage.correctCount > 0 ||
+        stage.clueThresholdCount > 0 ||
+        stage.firstGuessCount > 0;
+  }
+
+  String get _finalWhistleStatus {
+    final CaseProgress? progress = _finalWhistleProgress;
+
+    if (progress == null) {
+      return 'CASE 1';
+    }
+
+    if (progress.isCompleted) {
+      return '';
+    }
+
+    return 'CASE ${progress.currentStage}';
+  }
+
+  String get _finalWhistleButtonLabel {
+    final CaseProgress? progress = _finalWhistleProgress;
+
+    if (progress?.isCompleted ?? false) {
+      return 'COMPLETED';
+    }
+
+    return _finalWhistleStarted
+        ? 'IN PROGRESS'
+        : 'VIEW CASE';
+  }
+
+  Future<void> _openFinalWhistleCase() async {
+    await AnalyticsService.logCaseFileStarted(
+      caseKey: 'final_whistle',
+      caseName: 'The Final Whistle',
+      resume: _finalWhistleStarted,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            const FinalWhistleCasePathScreen(),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadFinalWhistleProgress();
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isDesktop =
@@ -714,6 +800,17 @@ class _CaseFilesHomeScreenState
       onTap: _openTheCreativeCodeCase,
     );
 
+    final Widget finalWhistleCard = _CaseFileCard(
+      imagePath: (_finalWhistleProgress?.isCompleted ?? false)
+          ? 'assets/images/case_files/New folder/finalwhistlecompleted.webp'
+          : _finalWhistleStarted
+              ? 'assets/images/case_files/New folder/finalwhistleprogress.webp'
+              : 'assets/images/case_files/New folder/finalwhistlestart.webp',
+      status: _finalWhistleStatus,
+      buttonLabel: _finalWhistleButtonLabel,
+      onTap: _openFinalWhistleCase,
+    );
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -770,6 +867,8 @@ class _CaseFilesHomeScreenState
                               width: (1400 - (18 * 3)) / 4,
                               child: theCreativeCodeCard,
                             ),
+                            const SizedBox(width: 18),
+                            SizedBox(width: (1400 - (18 * 3)) / 4, child: finalWhistleCard),
                           ],
                         ),
                       ],
@@ -806,7 +905,7 @@ class _CaseFilesHomeScreenState
                   children: [
                     Expanded(child: theCreativeCodeCard),
                     const SizedBox(width: 6),
-                    const Expanded(child: SizedBox.shrink()),
+                    Expanded(child: finalWhistleCard),
                   ],
                 ),
               ],
