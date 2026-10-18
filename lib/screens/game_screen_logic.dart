@@ -64,7 +64,9 @@ extension _GameScreenLogic on _GameScreenState {
       subcategory: _analyticsSubcategoryKey,
       questionId: _analyticsQuestionId,
       source: _analyticsSource,
-      practiceMode: currentQuestionIsReplay,
+      practiceMode: widget.launchedFromCaseFile
+          ? (CaseFilesQa.enabled || widget.caseFileReplay)
+          : currentQuestionIsReplay,
     );
   }
 
@@ -82,7 +84,9 @@ extension _GameScreenLogic on _GameScreenState {
       result: result,
       xpEarned: xpEarned,
       firstGuess: firstGuess,
-      practiceMode: currentQuestionIsReplay,
+      practiceMode: widget.launchedFromCaseFile
+          ? (CaseFilesQa.enabled || widget.caseFileReplay)
+          : currentQuestionIsReplay,
       clueNumber: currentClueIndex + 1,
       guesses: guessesThisRound,
       livesRemaining: lives,
@@ -97,7 +101,9 @@ extension _GameScreenLogic on _GameScreenState {
       subcategory: _analyticsSubcategoryKey,
       questionId: _analyticsQuestionId,
       source: _analyticsSource,
-      practiceMode: currentQuestionIsReplay,
+      practiceMode: widget.launchedFromCaseFile
+          ? (CaseFilesQa.enabled || widget.caseFileReplay)
+          : currentQuestionIsReplay,
     );
   }
 
@@ -119,7 +125,9 @@ extension _GameScreenLogic on _GameScreenState {
       guesses: guessesThisRound,
       livesRemaining: lives,
       playTimeSeconds: roundPlayTimeSeconds,
-      practiceMode: currentQuestionIsReplay,
+      practiceMode: widget.launchedFromCaseFile
+          ? (CaseFilesQa.enabled || widget.caseFileReplay)
+          : currentQuestionIsReplay,
     );
   }
 
@@ -232,7 +240,11 @@ extension _GameScreenLogic on _GameScreenState {
   }
 
   bool get isPracticeModeActive {
-    if (widget.launchedFromCaseFile && CaseFilesQa.enabled) return true;
+    // Reused questions in active Case File missions remain rewarding gameplay.
+    // QA builds and deliberately replayed completed missions remain non-rewarding.
+    if (widget.launchedFromCaseFile) {
+      return CaseFilesQa.enabled || widget.caseFileReplay;
+    }
     if (widget.launchedFromSurpriseMe ||
         !questionHistoryLoaded ||
         widget.items.isEmpty) {
@@ -342,7 +354,9 @@ extension _GameScreenLogic on _GameScreenState {
           _hasPlayedItem(selectedItem);
     });
 
-    if (allCurrentChallengesPlayed) {
+    // Active Case File missions may reuse previously answered challenges.
+    // Do not interrupt their progress with the category Practice Mode prompt.
+    if (allCurrentChallengesPlayed && !widget.launchedFromCaseFile) {
       if (!mounted) {
         return;
       }
@@ -671,7 +685,10 @@ extension _GameScreenLogic on _GameScreenState {
   }
 
   Future<bool> showCompletionNoticeIfNeeded() async {
-    if (practiceModeNoticeShown ||
+    // Case File missions reuse completed questions automatically when their
+    // pool is exhausted. Only ordinary category play offers Practice Mode.
+    if (widget.launchedFromCaseFile ||
+        practiceModeNoticeShown ||
         !_allCurrentQuestionsHaveNowBeenPlayed) {
       return true;
     }
@@ -1707,8 +1724,12 @@ extension _GameScreenLogic on _GameScreenState {
 
     const int firstGuessBonus = 50;
 
-    final bool isReplay = currentQuestionIsReplay ||
-        (widget.launchedFromCaseFile && CaseFilesQa.enabled);
+    // Repeat questions still earn XP while advancing an active Case File
+    // mission. Keep zero XP for QA, completed-mission replays, and ordinary
+    // First Guess Practice Mode.
+    final bool isReplay = widget.launchedFromCaseFile
+        ? (CaseFilesQa.enabled || widget.caseFileReplay)
+        : currentQuestionIsReplay;
 
     final int pointsWon = isReplay
         ? 0
