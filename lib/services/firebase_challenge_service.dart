@@ -328,8 +328,9 @@ class FirebaseChallengeService {
     required String category,
     required String subcategory,
     bool forceRefresh = false,
+    int? maxDocuments,
   }) {
-    final String cacheKey = '$category::$subcategory';
+    final String cacheKey = '$category::$subcategory::${maxDocuments ?? "all"}';
 
     if (forceRefresh) {
       _liveSubcategoryItemsCache.remove(cacheKey);
@@ -352,7 +353,7 @@ class FirebaseChallengeService {
               final String? documentSubcategory =
                   _readString(document.data()['subcategory']);
               return documentSubcategory == subcategory;
-            }).toList(growable: false);
+            }).take(maxDocuments ?? categoryDocs.length).toList(growable: false);
           } else {
             final QuerySnapshot<Map<String, dynamic>> snapshot =
                 await FirebaseFirestore.instance
@@ -360,6 +361,7 @@ class FirebaseChallengeService {
                     .where('category', isEqualTo: category)
                     .where('subcategory', isEqualTo: subcategory)
                     .where('status', isEqualTo: 'live')
+                    .limit(maxDocuments ?? 100000)
                     .get();
 
             docs = snapshot.docs;
