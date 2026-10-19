@@ -1944,7 +1944,7 @@ extension _GameScreenLogic on _GameScreenState {
             : 'ANIMAL KINGDOM COMPLETE!';
 
         final String finalBadgeAsset = isFinalWhistleCase
-            ? 'assets/images/case_files/New folder/finalwhistlecompleted.webp'
+            ? 'assets/images/badges/final_whistle_case_file_badge.webp'
             : isRoundTheWorldCase
             ? 'assets/images/badges/amazing_world_case_file_badge.webp'
             : isSecretsOfThePastCase
@@ -1966,13 +1966,13 @@ extension _GameScreenLogic on _GameScreenState {
               'YOU SOLVED THE CASE\n'
               'BADGE EARNED',
           imageAsset: finalBadgeAsset,
-          primaryButtonLabel: 'BACK TO CASE MAP',
+          primaryButtonLabel: 'BACK TO CASE FILES',
           secondaryButtonLabel: 'PLAY AGAIN',
           // The dialog's PRIMARY button invokes onPlayAgain, so BACK TO
           // CASE FILES must use this callback, regardless of its name.
           onPlayAgainOverride: () async {
             await showPostResultRewardsThen(
-              () => returnToCaseMap(closeDialog: false),
+              () => returnToCaseFilesHome(closeDialog: false),
               caseBadgeEarned: true,
             );
           },
@@ -1993,7 +1993,7 @@ extension _GameScreenLogic on _GameScreenState {
         message: completionMessage,
         imageAsset: completedEntireCasePath
             ? isFinalWhistleCase
-                  ? 'assets/images/case_files/New folder/finalwhistlecompleted.webp'
+                  ? 'assets/images/badges/final_whistle_case_file_badge.webp'
                   : isRoundTheWorldCase
                   ? 'assets/images/badges/amazing_world_case_file_badge.webp'
                   : isSecretsOfThePastCase
@@ -2380,7 +2380,6 @@ extension _GameScreenLogic on _GameScreenState {
     }
   }
 
-  // ignore: unused_element
   void returnToCaseFilesHome({bool closeDialog = true}) {
     _practiceCyclePlayedIds.remove(this);
 
