@@ -259,6 +259,7 @@ class _RoundTheWorldMissionScreenState
             FirebaseChallengeService.loadLiveSubcategory(
           category: 'countries',
           subcategory: subcategory,
+        maxDocuments: 20,
         ),
       ),
     );

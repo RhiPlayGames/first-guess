@@ -255,6 +255,7 @@ class _SecretsOfThePastMissionScreenState
             FirebaseChallengeService.loadLiveSubcategory(
           category: 'past_present',
           subcategory: subcategory,
+        maxDocuments: 20,
         ),
       ),
     );

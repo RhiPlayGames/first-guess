@@ -257,6 +257,7 @@ class _NatureOfDiscoveryMissionScreenState
             FirebaseChallengeService.loadLiveSubcategory(
           category: 'science_nature',
           subcategory: subcategory,
+        maxDocuments: 20,
         ),
       ),
     );

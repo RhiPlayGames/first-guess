@@ -424,8 +424,18 @@ extension _GameScreenLogic on _GameScreenState {
     }
 
     roundStartedAt = DateTime.now();
-    await _logClassicGameStarted();
-    await _logClassicQuestionStarted();
+    // Do not delay the first Case File question on remote analytics calls.
+    if (widget.launchedFromCaseFile) {
+      unawaited(_logClassicGameStarted().catchError((Object error, StackTrace trace) {
+        debugPrint('CASE FILE GAME START ANALYTICS ERROR: $error');
+      }));
+      unawaited(_logClassicQuestionStarted().catchError((Object error, StackTrace trace) {
+        debugPrint('CASE FILE QUESTION START ANALYTICS ERROR: $error');
+      }));
+    } else {
+      await _logClassicGameStarted();
+      await _logClassicQuestionStarted();
+    }
 
     if (showSurpriseToast) {
       _showSurpriseToastThenStartTimer();
@@ -1885,7 +1895,7 @@ extension _GameScreenLogic on _GameScreenState {
     await _recordClassicContentConsumption();
 
     if (wasFirstGuess && !CaseFilesQa.enabled) {
-      await AnalyticsService.logFirstGuessEarned(
+      final Future<void> firstGuessTelemetry = AnalyticsService.logFirstGuessEarned(
         gameType: 'classic_first_guess',
         category: _analyticsCategoryKey,
         subcategory: _analyticsSubcategoryKey,
@@ -1894,6 +1904,13 @@ extension _GameScreenLogic on _GameScreenState {
         xpEarned: pointsWon,
         practiceMode: isReplay,
       );
+      if (widget.launchedFromCaseFile) {
+        unawaited(firstGuessTelemetry.catchError((Object error, StackTrace stack) {
+          debugPrint('CASE FILE FIRST GUESS ANALYTICS ERROR: $error');
+        }));
+      } else {
+        await firstGuessTelemetry;
+      }
     }
 
     Future<void> showPostResultRewardsThen(
@@ -2102,23 +2119,18 @@ extension _GameScreenLogic on _GameScreenState {
           imageAsset: finalBadgeAsset,
           primaryButtonLabel: 'BACK TO CASE FILES',
           secondaryButtonLabel: 'PLAY AGAIN',
+          // The dialog's PRIMARY button invokes onPlayAgain, so BACK TO
+          // CASE FILES must use this callback, regardless of its name.
           onPlayAgainOverride: () async {
             await showPostResultRewardsThen(
-              () {
-              returnToCaseMap(
-                closeDialog: false,
-              );
-              },
+              () => returnToCaseFilesHome(closeDialog: false),
               caseBadgeEarned: true,
             );
           },
+          // The dialog's SECONDARY button invokes onHome: PLAY AGAIN.
           onHomeOverride: () async {
             await showPostResultRewardsThen(
-              () {
-              returnToCaseFilesHome(
-                closeDialog: false,
-              );
-              },
+              () => returnToCaseMap(closeDialog: false),
               caseBadgeEarned: true,
             );
           },
@@ -2150,18 +2162,14 @@ extension _GameScreenLogic on _GameScreenState {
         primaryButtonLabel: 'BACK TO CASE FILES',
         suppressDefaultSecondaryButton: true,
         onPlayAgainOverride: () async {
-          await showPostResultRewardsThen(() {
-            returnToCaseMap(
-              closeDialog: false,
-            );
-          });
+          await showPostResultRewardsThen(
+            () => returnToCaseFilesHome(closeDialog: false),
+          );
         },
         onHomeOverride: () async {
-          await showPostResultRewardsThen(() {
-            returnToCaseMap(
-              closeDialog: false,
-            );
-          });
+          await showPostResultRewardsThen(
+            () => returnToCaseFilesHome(closeDialog: false),
+          );
         },
       );
 
@@ -2455,7 +2463,7 @@ extension _GameScreenLogic on _GameScreenState {
       });
     }
 
-    if (!widget.launchedFromSurpriseMe) {
+    if (!widget.launchedFromSurpriseMe && !widget.launchedFromCaseFile) {
       preloadedNextItem = chooseNextItem(
         excluding: currentItem,
       );

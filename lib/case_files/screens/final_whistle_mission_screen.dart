@@ -248,6 +248,7 @@ class _FinalWhistleMissionScreenState
             FirebaseChallengeService.loadLiveSubcategory(
           category: 'sports',
           subcategory: subcategory,
+        maxDocuments: 20,
         ),
       ),
     );
@@ -852,28 +853,46 @@ class _MissionCard extends StatelessWidget {
                 ),
               ),
 
+              // Keep icon and title in a single vertical layout to prevent overlap.
               Positioned(
-                left: width * 0.33,
-                right: width * 0.33,
-                top: originalHeight * 0.195,
-                child: Image.asset(
-                  FinalWhistleMissionScreen._iconAsset,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                ),
-              ),
-
-              Positioned(
-                left: width * 0.18,
-                right: width * 0.18,
-                top: originalHeight * 0.40,
-                child: const FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text('THE FINAL WHISTLE',
-                    style: TextStyle(fontFamily: 'Oswald',
-                      fontSize: 29, fontWeight: FontWeight.w900,
-                      color: Colors.white),
-                  ),
+                left: width * 0.08,
+                right: width * 0.08,
+                top: originalHeight * 0.145,
+                height: originalHeight * 0.385,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: width * 0.34,
+                      height: width * 0.34,
+                      child: Image.asset(
+                        FinalWhistleMissionScreen._iconAsset,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
+                      ),
+                    ),
+                    SizedBox(height: originalHeight * 0.025),
+                    SizedBox(
+                      width: width * 0.64,
+                      height: originalHeight * 0.060,
+                      child: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
+                        child: Text(
+                          'THE FINAL WHISTLE',
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Oswald',
+                            fontSize: 40,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 

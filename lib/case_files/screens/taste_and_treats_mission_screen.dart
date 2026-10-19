@@ -255,6 +255,7 @@ class _TasteAndTreatsMissionScreenState
             FirebaseChallengeService.loadLiveSubcategory(
           category: 'food_drink',
           subcategory: subcategory,
+        maxDocuments: 20,
         ),
       ),
     );

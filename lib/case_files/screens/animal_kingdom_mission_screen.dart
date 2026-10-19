@@ -281,6 +281,7 @@ class _AnimalKingdomMissionScreenState
             FirebaseChallengeService.loadLiveSubcategory(
           category: 'animals',
           subcategory: subcategory,
+        maxDocuments: 20,
         ),
       ),
     );

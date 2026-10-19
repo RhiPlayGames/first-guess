@@ -252,6 +252,7 @@ class _TheCreativeCodeMissionScreenState
             FirebaseChallengeService.loadLiveSubcategory(
           category: 'creative_world',
           subcategory: subcategory,
+        maxDocuments: 20,
         ),
       ),
     );

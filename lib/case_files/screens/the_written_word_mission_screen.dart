@@ -256,6 +256,7 @@ class _TheWrittenWordMissionScreenState
             FirebaseChallengeService.loadLiveSubcategory(
           category: 'books_authors',
           subcategory: subcategory,
+        maxDocuments: 20,
         ),
       ),
     );

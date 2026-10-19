@@ -808,6 +808,7 @@ class _CaseFilesHomeScreenState
               : 'assets/images/case_files/New folder/finalwhistlestart.webp',
       status: _finalWhistleStatus,
       buttonLabel: _finalWhistleButtonLabel,
+      imageScale: 0.94,
       onTap: _openFinalWhistleCase,
     );
 
