@@ -18,12 +18,10 @@ class CaseFilesHomeScreen extends StatefulWidget {
   const CaseFilesHomeScreen({super.key});
 
   @override
-  State<CaseFilesHomeScreen> createState() =>
-      _CaseFilesHomeScreenState();
+  State<CaseFilesHomeScreen> createState() => _CaseFilesHomeScreenState();
 }
 
-class _CaseFilesHomeScreenState
-    extends State<CaseFilesHomeScreen> {
+class _CaseFilesHomeScreenState extends State<CaseFilesHomeScreen> {
   CaseProgress? _animalKingdomProgress;
   CaseProgress? _roundTheWorldProgress;
   CaseProgress? _secretsOfThePastProgress;
@@ -99,9 +97,7 @@ class _CaseFilesHomeScreenState
       return 'COMPLETED';
     }
 
-    return _animalKingdomStarted
-        ? 'IN PROGRESS'
-        : 'VIEW CASE';
+    return _animalKingdomStarted ? 'IN PROGRESS' : 'VIEW CASE';
   }
 
   Future<void> _loadRoundTheWorldProgress() async {
@@ -157,9 +153,7 @@ class _CaseFilesHomeScreenState
       return 'COMPLETED';
     }
 
-    return _roundTheWorldStarted
-        ? 'IN PROGRESS'
-        : 'VIEW CASE';
+    return _roundTheWorldStarted ? 'IN PROGRESS' : 'VIEW CASE';
   }
 
   Future<void> _openRoundTheWorldCase() async {
@@ -175,8 +169,7 @@ class _CaseFilesHomeScreenState
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) =>
-            const RoundTheWorldCasePathScreen(),
+        builder: (context) => const RoundTheWorldCasePathScreen(),
       ),
     );
 
@@ -200,8 +193,7 @@ class _CaseFilesHomeScreenState
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) =>
-            const AnimalKingdomCasePathScreen(),
+        builder: (context) => const AnimalKingdomCasePathScreen(),
       ),
     );
 
@@ -265,9 +257,7 @@ class _CaseFilesHomeScreenState
       return 'COMPLETED';
     }
 
-    return _secretsOfThePastStarted
-        ? 'IN PROGRESS'
-        : 'VIEW CASE';
+    return _secretsOfThePastStarted ? 'IN PROGRESS' : 'VIEW CASE';
   }
 
   Future<void> _openSecretsOfThePastCase() async {
@@ -283,8 +273,7 @@ class _CaseFilesHomeScreenState
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) =>
-            const SecretsOfThePastCasePathScreen(),
+        builder: (context) => const SecretsOfThePastCasePathScreen(),
       ),
     );
 
@@ -348,9 +337,7 @@ class _CaseFilesHomeScreenState
       return 'COMPLETED';
     }
 
-    return _tasteAndTreatsStarted
-        ? 'IN PROGRESS'
-        : 'VIEW CASE';
+    return _tasteAndTreatsStarted ? 'IN PROGRESS' : 'VIEW CASE';
   }
 
   Future<void> _openTasteAndTreatsCase() async {
@@ -366,8 +353,7 @@ class _CaseFilesHomeScreenState
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) =>
-            const TasteAndTreatsCasePathScreen(),
+        builder: (context) => const TasteAndTreatsCasePathScreen(),
       ),
     );
 
@@ -431,9 +417,7 @@ class _CaseFilesHomeScreenState
       return 'COMPLETED';
     }
 
-    return _natureOfDiscoveryStarted
-        ? 'IN PROGRESS'
-        : 'VIEW CASE';
+    return _natureOfDiscoveryStarted ? 'IN PROGRESS' : 'VIEW CASE';
   }
 
   Future<void> _openNatureOfDiscoveryCase() async {
@@ -449,8 +433,7 @@ class _CaseFilesHomeScreenState
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) =>
-            const NatureOfDiscoveryCasePathScreen(),
+        builder: (context) => const NatureOfDiscoveryCasePathScreen(),
       ),
     );
 
@@ -514,9 +497,7 @@ class _CaseFilesHomeScreenState
       return 'COMPLETED';
     }
 
-    return _theWrittenWordStarted
-        ? 'IN PROGRESS'
-        : 'VIEW CASE';
+    return _theWrittenWordStarted ? 'IN PROGRESS' : 'VIEW CASE';
   }
 
   Future<void> _openTheWrittenWordCase() async {
@@ -532,8 +513,7 @@ class _CaseFilesHomeScreenState
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) =>
-            const TheWrittenWordCasePathScreen(),
+        builder: (context) => const TheWrittenWordCasePathScreen(),
       ),
     );
 
@@ -597,9 +577,7 @@ class _CaseFilesHomeScreenState
       return 'COMPLETED';
     }
 
-    return _theCreativeCodeStarted
-        ? 'IN PROGRESS'
-        : 'VIEW CASE';
+    return _theCreativeCodeStarted ? 'IN PROGRESS' : 'VIEW CASE';
   }
 
   Future<void> _openTheCreativeCodeCase() async {
@@ -615,8 +593,7 @@ class _CaseFilesHomeScreenState
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) =>
-            const TheCreativeCodeCasePathScreen(),
+        builder: (context) => const TheCreativeCodeCasePathScreen(),
       ),
     );
 
@@ -680,9 +657,7 @@ class _CaseFilesHomeScreenState
       return 'COMPLETED';
     }
 
-    return _finalWhistleStarted
-        ? 'IN PROGRESS'
-        : 'VIEW CASE';
+    return _finalWhistleStarted ? 'IN PROGRESS' : 'VIEW CASE';
   }
 
   Future<void> _openFinalWhistleCase() async {
@@ -698,8 +673,7 @@ class _CaseFilesHomeScreenState
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) =>
-            const FinalWhistleCasePathScreen(),
+        builder: (context) => const FinalWhistleCasePathScreen(),
       ),
     );
 
@@ -712,52 +686,47 @@ class _CaseFilesHomeScreenState
 
   @override
   Widget build(BuildContext context) {
-    final bool isDesktop =
-        MediaQuery.sizeOf(context).width >= 1200;
+    final bool isDesktop = MediaQuery.sizeOf(context).width >= 1200;
 
     final Widget animalKingdomCard = _CaseFileCard(
-      imagePath:
-          (_animalKingdomProgress?.isCompleted ?? false)
-              ? 'assets/images/case_files/New folder/animalkingdom_completed.webp'
-              : _animalKingdomStarted
-                  ? 'assets/images/case_files/New folder/animalkingdom_inprogress.webp'
-                  : 'assets/images/case_files/New folder/animalkingdom_start.webp',
+      imagePath: (_animalKingdomProgress?.isCompleted ?? false)
+          ? 'assets/images/case_files/New folder/animalkingdom_completed.webp'
+          : _animalKingdomStarted
+          ? 'assets/images/case_files/New folder/animalkingdom_inprogress.webp'
+          : 'assets/images/case_files/New folder/animalkingdom_start.webp',
       status: _animalKingdomStatus,
       buttonLabel: _animalKingdomButtonLabel,
       onTap: _openAnimalKingdomCase,
     );
 
     final Widget roundTheWorldCard = _CaseFileCard(
-      imagePath:
-          (_roundTheWorldProgress?.isCompleted ?? false)
-              ? 'assets/images/case_files/New folder/aroundtheworld_completed.webp'
-              : _roundTheWorldStarted
-                  ? 'assets/images/case_files/New folder/aroundtheworld_progress.webp'
-                  : 'assets/images/case_files/New folder/aroundtheworld_start.webp',
+      imagePath: (_roundTheWorldProgress?.isCompleted ?? false)
+          ? 'assets/images/case_files/New folder/aroundtheworld_completed.webp'
+          : _roundTheWorldStarted
+          ? 'assets/images/case_files/New folder/aroundtheworld_progress.webp'
+          : 'assets/images/case_files/New folder/aroundtheworld_start.webp',
       status: _roundTheWorldStatus,
       buttonLabel: _roundTheWorldButtonLabel,
       onTap: _openRoundTheWorldCase,
     );
 
     final Widget secretsOfThePastCard = _CaseFileCard(
-      imagePath:
-          (_secretsOfThePastProgress?.isCompleted ?? false)
-              ? 'assets/images/case_files/New folder/tasteofmysterycompleted.webp'
-              : _secretsOfThePastStarted
-                  ? 'assets/images/case_files/New folder/tasteofmysteryprogress.webp'
-                  : 'assets/images/case_files/New folder/tasteofmysterystart.webp',
+      imagePath: (_secretsOfThePastProgress?.isCompleted ?? false)
+          ? 'assets/images/case_files/New folder/tasteofmysterycompleted.webp'
+          : _secretsOfThePastStarted
+          ? 'assets/images/case_files/New folder/tasteofmysteryprogress.webp'
+          : 'assets/images/case_files/New folder/tasteofmysterystart.webp',
       status: _secretsOfThePastStatus,
       buttonLabel: _secretsOfThePastButtonLabel,
       onTap: _openSecretsOfThePastCase,
     );
 
     final Widget tasteAndTreatsCard = _CaseFileCard(
-      imagePath:
-          (_tasteAndTreatsProgress?.isCompleted ?? false)
-              ? 'assets/images/case_files/New folder/tasteofmystery_completed.webp'
-              : _tasteAndTreatsStarted
-                  ? 'assets/images/case_files/New folder/tasteofmystery_progress.webp'
-                  : 'assets/images/case_files/New folder/tasteofmystery_start.webp',
+      imagePath: (_tasteAndTreatsProgress?.isCompleted ?? false)
+          ? 'assets/images/case_files/New folder/tasteofmystery_completed.webp'
+          : _tasteAndTreatsStarted
+          ? 'assets/images/case_files/New folder/tasteofmystery_progress.webp'
+          : 'assets/images/case_files/New folder/tasteofmystery_start.webp',
       status: _tasteAndTreatsStatus,
       buttonLabel: _tasteAndTreatsButtonLabel,
       onTap: _openTasteAndTreatsCase,
@@ -765,36 +734,33 @@ class _CaseFilesHomeScreenState
     );
 
     final Widget natureOfDiscoveryCard = _CaseFileCard(
-      imagePath:
-          (_natureOfDiscoveryProgress?.isCompleted ?? false)
-              ? 'assets/images/case_files/New folder/the_nature_of_discovery_completed_transparent.webp'
-              : _natureOfDiscoveryStarted
-                  ? 'assets/images/case_files/New folder/the_nature_of_discovery_in_progress_transparent.webp'
-                  : 'assets/images/case_files/New folder/the_nature_of_discovery_start_transparent.webp',
+      imagePath: (_natureOfDiscoveryProgress?.isCompleted ?? false)
+          ? 'assets/images/case_files/New folder/the_nature_of_discovery_completed_transparent.webp'
+          : _natureOfDiscoveryStarted
+          ? 'assets/images/case_files/New folder/the_nature_of_discovery_in_progress_transparent.webp'
+          : 'assets/images/case_files/New folder/the_nature_of_discovery_start_transparent.webp',
       status: _natureOfDiscoveryStatus,
       buttonLabel: _natureOfDiscoveryButtonLabel,
       onTap: _openNatureOfDiscoveryCase,
     );
 
     final Widget theWrittenWordCard = _CaseFileCard(
-      imagePath:
-          (_theWrittenWordProgress?.isCompleted ?? false)
-              ? 'assets/images/case_files/New folder/the_written_word_completed_transparent.webp'
-              : _theWrittenWordStarted
-                  ? 'assets/images/case_files/New folder/the_written_word_in_progress_transparent.webp'
-                  : 'assets/images/case_files/New folder/the_written_word_start_transparent.webp',
+      imagePath: (_theWrittenWordProgress?.isCompleted ?? false)
+          ? 'assets/images/case_files/New folder/the_written_word_completed_transparent.webp'
+          : _theWrittenWordStarted
+          ? 'assets/images/case_files/New folder/the_written_word_in_progress_transparent.webp'
+          : 'assets/images/case_files/New folder/the_written_word_start_transparent.webp',
       status: _theWrittenWordStatus,
       buttonLabel: _theWrittenWordButtonLabel,
       onTap: _openTheWrittenWordCase,
     );
 
     final Widget theCreativeCodeCard = _CaseFileCard(
-      imagePath:
-          (_theCreativeCodeProgress?.isCompleted ?? false)
-              ? 'assets/images/case_files/New folder/creativecode_completed.webp'
-              : _theCreativeCodeStarted
-                  ? 'assets/images/case_files/New folder/creativecode_inprogress.webp'
-                  : 'assets/images/case_files/New folder/creativecode_start.webp',
+      imagePath: (_theCreativeCodeProgress?.isCompleted ?? false)
+          ? 'assets/images/case_files/New folder/creativecode_completed.webp'
+          : _theCreativeCodeStarted
+          ? 'assets/images/case_files/New folder/creativecode_inprogress.webp'
+          : 'assets/images/case_files/New folder/creativecode_start.webp',
       status: _theCreativeCodeStatus,
       buttonLabel: _theCreativeCodeButtonLabel,
       onTap: _openTheCreativeCodeCase,
@@ -804,11 +770,11 @@ class _CaseFilesHomeScreenState
       imagePath: (_finalWhistleProgress?.isCompleted ?? false)
           ? 'assets/images/case_files/New folder/finalwhistlecompleted.webp'
           : _finalWhistleStarted
-              ? 'assets/images/case_files/New folder/finalwhistleprogress.webp'
-              : 'assets/images/case_files/New folder/finalwhistlestart.webp',
+          ? 'assets/images/case_files/New folder/finalwhistleprogress.webp'
+          : 'assets/images/case_files/New folder/finalwhistlestart.webp',
       status: _finalWhistleStatus,
       buttonLabel: _finalWhistleButtonLabel,
-      imageScale: 0.94,
+      imageScale: 0.85,
       onTap: _openFinalWhistleCase,
     );
 
@@ -832,9 +798,7 @@ class _CaseFilesHomeScreenState
               if (isDesktop)
                 Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: 1400,
-                    ),
+                    constraints: const BoxConstraints(maxWidth: 1400),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -869,7 +833,10 @@ class _CaseFilesHomeScreenState
                               child: theCreativeCodeCard,
                             ),
                             const SizedBox(width: 18),
-                            SizedBox(width: (1400 - (18 * 3)) / 4, child: finalWhistleCard),
+                            SizedBox(
+                              width: (1400 - (18 * 3)) / 4,
+                              child: finalWhistleCard,
+                            ),
                           ],
                         ),
                       ],
@@ -916,15 +883,12 @@ class _CaseFilesHomeScreenState
       ),
     );
   }
-
 }
 
 class _CaseFilesHeader extends StatelessWidget {
   final VoidCallback onBackPressed;
 
-  const _CaseFilesHeader({
-    required this.onBackPressed,
-  });
+  const _CaseFilesHeader({required this.onBackPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -945,9 +909,7 @@ class _CaseFilesHeader extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 64,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 64),
             child: Image.asset(
               'assets/images/categories/category_headers/classic_first_guess_logo.webp',
               height: 64,
@@ -982,8 +944,7 @@ class _CaseFileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDesktop =
-        MediaQuery.sizeOf(context).width >= 1200;
+    final bool isDesktop = MediaQuery.sizeOf(context).width >= 1200;
 
     return Material(
       color: Colors.transparent,

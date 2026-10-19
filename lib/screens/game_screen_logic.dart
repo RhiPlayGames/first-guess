@@ -3,15 +3,11 @@
 part of 'game_screen.dart';
 
 extension _GameScreenLogic on _GameScreenState {
-  static final Map<_GameScreenState, Set<String>>
-      _practiceCyclePlayedIds =
+  static final Map<_GameScreenState, Set<String>> _practiceCyclePlayedIds =
       <_GameScreenState, Set<String>>{};
 
   Set<String> get _practiceCycleIds =>
-      _practiceCyclePlayedIds.putIfAbsent(
-        this,
-        () => <String>{},
-      );
+      _practiceCyclePlayedIds.putIfAbsent(this, () => <String>{});
 
   String get _analyticsQuestionId => currentItem.id ?? '';
 
@@ -24,7 +20,8 @@ extension _GameScreenLogic on _GameScreenState {
   // the mission's generic category. ID parsing is limited to Case Files.
   String get _caseFileCurrentQuestionPool {
     final String id = currentItem.id ?? '';
-    final String? pool = _countrySubcategoryFromQuestionId(id) ??
+    final String? pool =
+        _countrySubcategoryFromQuestionId(id) ??
         _foodDrinkSubcategoryFromQuestionId(id) ??
         _scienceNatureSubcategoryFromQuestionId(id) ??
         _booksAuthorsSubcategoryFromQuestionId(id) ??
@@ -40,10 +37,16 @@ extension _GameScreenLogic on _GameScreenState {
     }
     // Older Animal Kingdom banks use stand-alone subcategory prefixes.
     for (final String animalPool in <String>[
-      'jungle_safari_animals', 'safari_jungle_animals',
-      'habitats_animal_groups', 'reptiles_amphibians',
-      'insects_spiders', 'sea_creatures', 'mammals', 'birds',
-      'dinosaurs', 'tracks_footprints',
+      'jungle_safari_animals',
+      'safari_jungle_animals',
+      'habitats_animal_groups',
+      'reptiles_amphibians',
+      'insects_spiders',
+      'sea_creatures',
+      'mammals',
+      'birds',
+      'dinosaurs',
+      'tracks_footprints',
     ]) {
       if (id.startsWith('${animalPool}_')) return animalPool;
     }
@@ -183,16 +186,13 @@ extension _GameScreenLogic on _GameScreenState {
         totalQuestionsAvailable: widget.items.length,
       );
     } catch (error, stackTrace) {
-      debugPrint(
-        'CONTENT CONSUMPTION TRACKING ERROR: $error',
-      );
+      debugPrint('CONTENT CONSUMPTION TRACKING ERROR: $error');
       debugPrintStack(stackTrace: stackTrace);
     }
   }
 
   Future<void> loadPlayerStats() async {
-    final PlayerStats savedStats =
-        await PlayerStatsService.loadStats();
+    final PlayerStats savedStats = await PlayerStatsService.loadStats();
 
     if (!mounted) {
       return;
@@ -204,13 +204,9 @@ extension _GameScreenLogic on _GameScreenState {
     });
   }
 
-  QuizItem chooseRandomItem({
-    QuizItem? excluding,
-  }) {
+  QuizItem chooseRandomItem({QuizItem? excluding}) {
     if (widget.items.isEmpty) {
-      throw StateError(
-        'This game category does not contain any quiz items.',
-      );
+      throw StateError('This game category does not contain any quiz items.');
     }
 
     if (widget.items.length == 1) {
@@ -220,11 +216,8 @@ extension _GameScreenLogic on _GameScreenState {
     QuizItem selectedItem;
 
     do {
-      selectedItem = widget.items[
-          random.nextInt(widget.items.length)];
-    } while (
-        excluding != null &&
-        selectedItem.answer == excluding.answer);
+      selectedItem = widget.items[random.nextInt(widget.items.length)];
+    } while (excluding != null && selectedItem.answer == excluding.answer);
 
     return selectedItem;
   }
@@ -256,17 +249,13 @@ extension _GameScreenLogic on _GameScreenState {
   }
 
   bool get _allItemsHaveStableIds {
-    return widget.items.every(
-      (item) => item.id != null && item.id!.isNotEmpty,
-    );
+    return widget.items.every((item) => item.id != null && item.id!.isNotEmpty);
   }
 
   bool _hasPlayedItem(QuizItem item) {
     final String? id = item.id;
 
-    return id != null &&
-        id.isNotEmpty &&
-        playedQuestionIds.contains(id);
+    return id != null && id.isNotEmpty && playedQuestionIds.contains(id);
   }
 
   bool get isPracticeModeActive {
@@ -284,9 +273,7 @@ extension _GameScreenLogic on _GameScreenState {
     return currentQuestionIsReplay;
   }
 
-  QuizItem chooseNextItem({
-    QuizItem? excluding,
-  }) {
+  QuizItem chooseNextItem({QuizItem? excluding}) {
     if (!questionHistoryLoaded || !_allItemsHaveStableIds) {
       return chooseRandomItem(excluding: excluding);
     }
@@ -318,28 +305,18 @@ extension _GameScreenLogic on _GameScreenState {
     }
 
     List<QuizItem> candidates = widget.items
-        .where(
-          (item) =>
-              item.id != null &&
-              !cycleIds.contains(item.id),
-        )
+        .where((item) => item.id != null && !cycleIds.contains(item.id))
         .toList();
 
     if (excluding != null && candidates.length > 1) {
-      candidates = candidates
-          .where((item) => item.id != excluding.id)
-          .toList();
+      candidates = candidates.where((item) => item.id != excluding.id).toList();
     }
 
     if (candidates.isEmpty) {
       cycleIds.clear();
 
       candidates = widget.items
-          .where(
-            (item) =>
-                excluding == null ||
-                item.id != excluding.id,
-          )
+          .where((item) => excluding == null || item.id != excluding.id)
           .toList();
 
       if (candidates.isEmpty) {
@@ -347,8 +324,7 @@ extension _GameScreenLogic on _GameScreenState {
       }
     }
 
-    final QuizItem selected =
-        candidates[random.nextInt(candidates.length)];
+    final QuizItem selected = candidates[random.nextInt(candidates.length)];
 
     final String? selectedId = selected.id;
     if (selectedId != null && selectedId.isNotEmpty) {
@@ -374,14 +350,12 @@ extension _GameScreenLogic on _GameScreenState {
         _allItemsHaveStableIds &&
         widget.items.every(_hasPlayedItem);
 
-    final QuizItem selectedItem =
-        widget.initialItem ?? chooseNextItem();
+    final QuizItem selectedItem = widget.initialItem ?? chooseNextItem();
 
     setState(() {
       currentItem = selectedItem;
       currentQuestionIsReplay =
-          allCurrentChallengesPlayed ||
-          _hasPlayedItem(selectedItem);
+          allCurrentChallengesPlayed || _hasPlayedItem(selectedItem);
     });
 
     // Active Case File missions may reuse previously answered challenges.
@@ -391,8 +365,7 @@ extension _GameScreenLogic on _GameScreenState {
         return;
       }
 
-      final bool? continuePlaying =
-          await showPracticeModeDialog(
+      final bool? continuePlaying = await showPracticeModeDialog(
         context: context,
         categoryLabel: categoryLabel,
       );
@@ -426,12 +399,19 @@ extension _GameScreenLogic on _GameScreenState {
     roundStartedAt = DateTime.now();
     // Do not delay the first Case File question on remote analytics calls.
     if (widget.launchedFromCaseFile) {
-      unawaited(_logClassicGameStarted().catchError((Object error, StackTrace trace) {
-        debugPrint('CASE FILE GAME START ANALYTICS ERROR: $error');
-      }));
-      unawaited(_logClassicQuestionStarted().catchError((Object error, StackTrace trace) {
-        debugPrint('CASE FILE QUESTION START ANALYTICS ERROR: $error');
-      }));
+      unawaited(
+        _logClassicGameStarted().catchError((Object error, StackTrace trace) {
+          debugPrint('CASE FILE GAME START ANALYTICS ERROR: $error');
+        }),
+      );
+      unawaited(
+        _logClassicQuestionStarted().catchError((
+          Object error,
+          StackTrace trace,
+        ) {
+          debugPrint('CASE FILE QUESTION START ANALYTICS ERROR: $error');
+        }),
+      );
     } else {
       await _logClassicGameStarted();
       await _logClassicQuestionStarted();
@@ -454,16 +434,12 @@ extension _GameScreenLogic on _GameScreenState {
       return;
     }
 
-    await QuestionHistoryService.recordPlayedQuestion(
-      questionId,
-    );
+    await QuestionHistoryService.recordPlayedQuestion(questionId);
 
     playedQuestionIds.add(questionId);
   }
 
-  void startClueTimer({
-    bool resetTime = true,
-  }) {
+  void startClueTimer({bool resetTime = true}) {
     // Classic First Guess is now untimed.
     // Daily Flash 5 uses its own separate timer in
     // daily_flash_game_screen.dart and is unaffected.
@@ -474,11 +450,9 @@ extension _GameScreenLogic on _GameScreenState {
     }
 
     if (resetTime &&
-        millisecondsRemaining !=
-            _GameScreenState.clueDurationMilliseconds) {
+        millisecondsRemaining != _GameScreenState.clueDurationMilliseconds) {
       setState(() {
-        millisecondsRemaining =
-            _GameScreenState.clueDurationMilliseconds;
+        millisecondsRemaining = _GameScreenState.clueDurationMilliseconds;
       });
     }
   }
@@ -489,8 +463,7 @@ extension _GameScreenLogic on _GameScreenState {
       return;
     }
 
-    final String guess =
-        guessController.text.trim();
+    final String guess = guessController.text.trim();
 
     if (guess.isEmpty) {
       showGameMessage(
@@ -501,18 +474,16 @@ extension _GameScreenLogic on _GameScreenState {
       return;
     }
 
-    final GuessMatch match =
-        widget.launchedFromCaseFile && CaseFilesQa.enabled
-            ? GuessMatch.correct
-            : currentItem.checkGuess(guess);
+    final GuessMatch match = widget.launchedFromCaseFile && CaseFilesQa.enabled
+        ? GuessMatch.correct
+        : currentItem.checkGuess(guess);
 
     switch (match) {
       case GuessMatch.correct:
         SoundEffectsService.correct();
         clueTimer?.cancel();
 
-        final bool isFirstSubmittedGuess =
-            guessesThisRound == 0;
+        final bool isFirstSubmittedGuess = guessesThisRound == 0;
 
         guessesThisRound++;
 
@@ -523,38 +494,29 @@ extension _GameScreenLogic on _GameScreenState {
         showGameMessage(
           'Correct!',
           type: GameMessageType.success,
-          duration: const Duration(
-            milliseconds: 700,
-          ),
+          duration: const Duration(milliseconds: 700),
         );
 
-        await Future<void>.delayed(
-          const Duration(milliseconds: 700),
-        );
+        await Future<void>.delayed(const Duration(milliseconds: 700));
 
         if (!mounted) {
           return;
         }
 
         await finishCorrectRound(
-          wasFirstGuess:
-              currentClueIndex == 0 &&
-              isFirstSubmittedGuess,
+          wasFirstGuess: currentClueIndex == 0 && isFirstSubmittedGuess,
         );
 
         return;
 
       case GuessMatch.specific:
-        const int specificAnswerGraceMilliseconds =
-            10000;
+        const int specificAnswerGraceMilliseconds = 10000;
 
         setState(() {
           closeGuessesThisClue = 0;
 
-          if (millisecondsRemaining <
-              specificAnswerGraceMilliseconds) {
-            millisecondsRemaining =
-                specificAnswerGraceMilliseconds;
+          if (millisecondsRemaining < specificAnswerGraceMilliseconds) {
+            millisecondsRemaining = specificAnswerGraceMilliseconds;
           }
         });
 
@@ -563,30 +525,25 @@ extension _GameScreenLogic on _GameScreenState {
           type: GameMessageType.warning,
         );
 
-        WidgetsBinding.instance
-            .addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) {
             return;
           }
 
           if (!_useNativePhoneLayout(context)) guessFocusNode.requestFocus();
 
-          guessController.selection =
-              TextSelection(
+          guessController.selection = TextSelection(
             baseOffset: 0,
-            extentOffset:
-                guessController.text.length,
+            extentOffset: guessController.text.length,
           );
         });
 
         return;
 
       case GuessMatch.close:
-        const int spellingGraceMilliseconds =
-            10000;
+        const int spellingGraceMilliseconds = 10000;
 
-        final int updatedCloseGuessCount =
-            closeGuessesThisClue + 1;
+        final int updatedCloseGuessCount = closeGuessesThisClue + 1;
 
         if (updatedCloseGuessCount >= 3) {
           clueTimer?.cancel();
@@ -608,9 +565,7 @@ extension _GameScreenLogic on _GameScreenState {
               duration: const Duration(milliseconds: 2200),
             );
 
-            await Future<void>.delayed(
-              const Duration(milliseconds: 2200),
-            );
+            await Future<void>.delayed(const Duration(milliseconds: 2200));
 
             if (!mounted) {
               return;
@@ -623,14 +578,10 @@ extension _GameScreenLogic on _GameScreenState {
           showGameMessage(
             'Too many spelling attempts! One life lost.',
             type: GameMessageType.error,
-            duration: const Duration(
-              milliseconds: 2200,
-            ),
+            duration: const Duration(milliseconds: 2200),
           );
 
-          await Future<void>.delayed(
-            const Duration(milliseconds: 2200),
-          );
+          await Future<void>.delayed(const Duration(milliseconds: 2200));
 
           if (!mounted) {
             return;
@@ -641,13 +592,10 @@ extension _GameScreenLogic on _GameScreenState {
         }
 
         setState(() {
-          closeGuessesThisClue =
-              updatedCloseGuessCount;
+          closeGuessesThisClue = updatedCloseGuessCount;
 
-          if (millisecondsRemaining <
-              spellingGraceMilliseconds) {
-            millisecondsRemaining =
-                spellingGraceMilliseconds;
+          if (millisecondsRemaining < spellingGraceMilliseconds) {
+            millisecondsRemaining = spellingGraceMilliseconds;
           }
         });
 
@@ -656,19 +604,16 @@ extension _GameScreenLogic on _GameScreenState {
           type: GameMessageType.warning,
         );
 
-        WidgetsBinding.instance
-            .addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) {
             return;
           }
 
           if (!_useNativePhoneLayout(context)) guessFocusNode.requestFocus();
 
-          guessController.selection =
-              TextSelection(
+          guessController.selection = TextSelection(
             baseOffset: 0,
-            extentOffset:
-                guessController.text.length,
+            extentOffset: guessController.text.length,
           );
         });
 
@@ -695,9 +640,7 @@ extension _GameScreenLogic on _GameScreenState {
             duration: const Duration(milliseconds: 2200),
           );
 
-          await Future<void>.delayed(
-            const Duration(milliseconds: 2200),
-          );
+          await Future<void>.delayed(const Duration(milliseconds: 2200));
 
           if (!mounted) {
             return;
@@ -733,8 +676,7 @@ extension _GameScreenLogic on _GameScreenState {
       return true;
     }
 
-    final bool? continuePlaying =
-        await showPracticeModeDialog(
+    final bool? continuePlaying = await showPracticeModeDialog(
       context: context,
       categoryLabel: categoryLabel,
     );
@@ -759,30 +701,24 @@ extension _GameScreenLogic on _GameScreenState {
     bool closeResultDialog = true,
   }) async {
     if (closeResultDialog) {
-      final NavigatorState navigator =
-          Navigator.of(context);
+      final NavigatorState navigator = Navigator.of(context);
 
       if (navigator.canPop()) {
         navigator.pop();
       }
     }
 
-    final bool continuePlaying =
-        await showCompletionNoticeIfNeeded();
+    final bool continuePlaying = await showCompletionNoticeIfNeeded();
 
     if (!mounted || !continuePlaying) {
       return;
     }
 
-    startNewRound(
-      closeDialog: false,
-    );
+    startNewRound(closeDialog: false);
   }
 
   void continueToNextRoundFromResult() {
-    unawaited(
-      continueToNextRoundAfterResult(),
-    );
+    unawaited(continueToNextRoundAfterResult());
   }
 
   Future<void> loadAnimalKingdomGameplayProgress() async {
@@ -793,63 +729,51 @@ extension _GameScreenLogic on _GameScreenState {
     try {
       final String representativeId =
           widget.initialItem?.id ??
-          (widget.items.isNotEmpty
-              ? widget.items.first.id ?? ''
-              : '');
+          (widget.items.isNotEmpty ? widget.items.first.id ?? '' : '');
 
       final bool isRoundTheWorld =
-          widget.caseFilePathId == 'round_the_world' || (_countrySubcategoryFromQuestionId(
-                representativeId,
-              ) !=
-              null);
+          widget.caseFilePathId == 'round_the_world' ||
+          (_countrySubcategoryFromQuestionId(representativeId) != null);
 
       final bool isSecretsOfThePast =
-          widget.caseFilePathId == 'secrets_of_the_past' || (_pastPresentSubcategoryFromQuestionId(
-                representativeId,
-              ) !=
-              null);
+          widget.caseFilePathId == 'secrets_of_the_past' ||
+          (_pastPresentSubcategoryFromQuestionId(representativeId) != null);
 
       final bool isTasteAndTreats =
-          widget.caseFilePathId == 'taste_and_treats' || (_foodDrinkSubcategoryFromQuestionId(
-                representativeId,
-              ) !=
-              null);
+          widget.caseFilePathId == 'taste_and_treats' ||
+          (_foodDrinkSubcategoryFromQuestionId(representativeId) != null);
 
       final bool isNatureOfDiscovery =
-          widget.caseFilePathId == 'nature_of_discovery' || (_scienceNatureSubcategoryFromQuestionId(
-                representativeId,
-              ) !=
-              null);
+          widget.caseFilePathId == 'nature_of_discovery' ||
+          (_scienceNatureSubcategoryFromQuestionId(representativeId) != null);
 
       final bool isTheWrittenWord =
-          widget.caseFilePathId == 'the_written_word' || (_booksAuthorsSubcategoryFromQuestionId(
-                representativeId,
-              ) !=
-              null);
+          widget.caseFilePathId == 'the_written_word' ||
+          (_booksAuthorsSubcategoryFromQuestionId(representativeId) != null);
 
       final bool isTheCreativeCode =
-          widget.caseFilePathId == 'the_creative_code' || (_creativeWorldSubcategoryFromQuestionId(
-                representativeId,
-              ) !=
-              null);
+          widget.caseFilePathId == 'the_creative_code' ||
+          (_creativeWorldSubcategoryFromQuestionId(representativeId) != null);
 
-      final bool isFinalWhistle = widget.caseFilePathId == 'final_whistle' || (_sportsSubcategoryFromQuestionId(representativeId) != null);
+      final bool isFinalWhistle =
+          widget.caseFilePathId == 'final_whistle' ||
+          (_sportsSubcategoryFromQuestionId(representativeId) != null);
 
       final progress = isFinalWhistle
           ? await CasePathService.loadFinalWhistleProgress()
           : isRoundTheWorld
           ? await CasePathService.loadRoundTheWorldProgress()
           : isSecretsOfThePast
-              ? await CasePathService.loadSecretsOfThePastProgress()
-              : isTasteAndTreats
-                  ? await CasePathService.loadTasteAndTreatsProgress()
-                  : isNatureOfDiscovery
-                      ? await CasePathService.loadNatureOfDiscoveryProgress()
-                      : isTheWrittenWord
-                          ? await CasePathService.loadTheWrittenWordProgress()
-                          : isTheCreativeCode
-                              ? await CasePathService.loadTheCreativeCodeProgress()
-                              : await CasePathService.loadAnimalKingdomProgress();
+          ? await CasePathService.loadSecretsOfThePastProgress()
+          : isTasteAndTreats
+          ? await CasePathService.loadTasteAndTreatsProgress()
+          : isNatureOfDiscovery
+          ? await CasePathService.loadNatureOfDiscoveryProgress()
+          : isTheWrittenWord
+          ? await CasePathService.loadTheWrittenWordProgress()
+          : isTheCreativeCode
+          ? await CasePathService.loadTheCreativeCodeProgress()
+          : await CasePathService.loadAnimalKingdomProgress();
 
       if (!mounted) {
         return;
@@ -857,8 +781,7 @@ extension _GameScreenLogic on _GameScreenState {
 
       setState(() {
         activeCaseStage = progress.currentStage;
-        activeCaseCorrectCount =
-            progress.currentStageProgress.correctCount;
+        activeCaseCorrectCount = progress.currentStageProgress.correctCount;
         activeCaseClueThresholdCount =
             progress.currentStageProgress.clueThresholdCount;
         activeCaseFirstGuessCount =
@@ -866,25 +789,18 @@ extension _GameScreenLogic on _GameScreenState {
         caseProgressLoaded = true;
       });
     } catch (error, stackTrace) {
-      debugPrint(
-        'CASE FILE PROGRESS LOAD ERROR: $error',
-      );
+      debugPrint('CASE FILE PROGRESS LOAD ERROR: $error');
       debugPrintStack(stackTrace: stackTrace);
     }
   }
 
-  String? _countrySubcategoryFromQuestionId(
-    String questionId,
-  ) {
+  String? _countrySubcategoryFromQuestionId(String questionId) {
     if (questionId.startsWith('countries_')) {
-      final String remainder =
-          questionId.substring('countries_'.length);
-      final int finalUnderscore =
-          remainder.lastIndexOf('_');
+      final String remainder = questionId.substring('countries_'.length);
+      final int finalUnderscore = remainder.lastIndexOf('_');
 
       if (finalUnderscore > 0) {
-        final String parsed =
-            remainder.substring(0, finalUnderscore);
+        final String parsed = remainder.substring(0, finalUnderscore);
 
         if (parsed == 'currencies') {
           return 'currencies_languages';
@@ -894,8 +810,7 @@ extension _GameScreenLogic on _GameScreenState {
       }
     }
 
-    const Map<String, String> countryQuestionIdPrefixes =
-        <String, String>{
+    const Map<String, String> countryQuestionIdPrefixes = <String, String>{
       'country_silhouettes_': 'country_silhouettes',
       'flags_': 'flags',
       'capitals_': 'capitals',
@@ -920,12 +835,9 @@ extension _GameScreenLogic on _GameScreenState {
     return null;
   }
 
-  String? _pastPresentSubcategoryFromQuestionId(
-    String questionId,
-  ) {
+  String? _pastPresentSubcategoryFromQuestionId(String questionId) {
     if (questionId.startsWith('past_present_')) {
-      final String remainder =
-          questionId.substring('past_present_'.length);
+      final String remainder = questionId.substring('past_present_'.length);
       final int finalUnderscore = remainder.lastIndexOf('_');
 
       if (finalUnderscore > 0) {
@@ -933,24 +845,19 @@ extension _GameScreenLogic on _GameScreenState {
       }
     }
 
-    const Map<String, String> pastPresentQuestionIdPrefixes =
-        <String, String>{
+    const Map<String, String> pastPresentQuestionIdPrefixes = <String, String>{
       'historical_events_': 'historical_events',
       'battles_wars_': 'battles_wars',
-      'ancient_civilisations_empires_':
-          'ancient_civilisations_empires',
+      'ancient_civilisations_empires_': 'ancient_civilisations_empires',
       'historical_eras_': 'historical_eras',
       'historic_objects_': 'historic_objects',
       'castles_ruins_': 'castles_ruins',
       'monarchies_dynasties_': 'monarchies_dynasties',
-      'revolutions_political_movements_':
-          'revolutions_political_movements',
+      'revolutions_political_movements_': 'revolutions_political_movements',
       'historical_mysteries_': 'historical_mysteries',
       'myths_legends_': 'myths_legends',
-      'traditions_cultural_customs_':
-          'traditions_cultural_customs',
-      'ancient_religions_beliefs_':
-          'ancient_religions_beliefs',
+      'traditions_cultural_customs_': 'traditions_cultural_customs',
+      'ancient_religions_beliefs_': 'ancient_religions_beliefs',
       'important_dates_': 'important_dates',
     };
 
@@ -964,17 +871,13 @@ extension _GameScreenLogic on _GameScreenState {
     return null;
   }
 
-  String? _foodDrinkSubcategoryFromQuestionId(
-    String questionId,
-  ) {
+  String? _foodDrinkSubcategoryFromQuestionId(String questionId) {
     if (questionId.startsWith('food_drink_')) {
-      final String remainder =
-          questionId.substring('food_drink_'.length);
+      final String remainder = questionId.substring('food_drink_'.length);
       final int finalUnderscore = remainder.lastIndexOf('_');
 
       if (finalUnderscore > 0) {
-        final String parsed =
-            remainder.substring(0, finalUnderscore);
+        final String parsed = remainder.substring(0, finalUnderscore);
 
         if (parsed.isNotEmpty) {
           return parsed;
@@ -982,8 +885,7 @@ extension _GameScreenLogic on _GameScreenState {
       }
     }
 
-    const Map<String, String> foodDrinkQuestionIdPrefixes =
-        <String, String>{
+    const Map<String, String> foodDrinkQuestionIdPrefixes = <String, String>{
       'breakfast_foods_': 'breakfast',
       'breakfast_': 'breakfast',
       'desserts_cakes_sweets_': 'desserts',
@@ -1005,18 +907,13 @@ extension _GameScreenLogic on _GameScreenState {
     return null;
   }
 
-  String? _scienceNatureSubcategoryFromQuestionId(
-    String questionId,
-  ) {
+  String? _scienceNatureSubcategoryFromQuestionId(String questionId) {
     if (questionId.startsWith('science_nature_')) {
-      final String remainder =
-          questionId.substring('science_nature_'.length);
-      final int finalUnderscore =
-          remainder.lastIndexOf('_');
+      final String remainder = questionId.substring('science_nature_'.length);
+      final int finalUnderscore = remainder.lastIndexOf('_');
 
       if (finalUnderscore > 0) {
-        final String parsed =
-            remainder.substring(0, finalUnderscore);
+        final String parsed = remainder.substring(0, finalUnderscore);
 
         if (parsed.isNotEmpty) {
           return parsed;
@@ -1025,8 +922,7 @@ extension _GameScreenLogic on _GameScreenState {
     }
 
     const Map<String, String> prefixes = <String, String>{
-      'chemistry_physics_biology_maths_':
-          'chemistry_physics_biology_maths',
+      'chemistry_physics_biology_maths_': 'chemistry_physics_biology_maths',
       'chemistry_': 'chemistry',
       'physics_': 'physics',
       'biology_': 'biology',
@@ -1037,19 +933,16 @@ extension _GameScreenLogic on _GameScreenState {
       'medicine_health_': 'medicine_health',
       'periodic_table_': 'periodic_table',
       'plants_trees_': 'plants_trees',
-      'rocks_minerals_volcanoes_':
-          'rocks_minerals_volcanoes',
+      'rocks_minerals_volcanoes_': 'rocks_minerals_volcanoes',
       'scientific_discoveries_experiments_theories_':
           'scientific_discoveries_experiments_theories',
       'space_astronomy_': 'space_astronomy',
       'space_missions_': 'space_missions',
       'human_body_': 'human_body',
-      'weather_oceans_ecosystems_':
-          'weather_oceans_ecosystems',
+      'weather_oceans_ecosystems_': 'weather_oceans_ecosystems',
     };
 
-    for (final MapEntry<String, String> entry
-        in prefixes.entries) {
+    for (final MapEntry<String, String> entry in prefixes.entries) {
       if (questionId.startsWith(entry.key)) {
         return entry.value;
       }
@@ -1058,15 +951,12 @@ extension _GameScreenLogic on _GameScreenState {
     return null;
   }
 
-  String? _booksAuthorsSubcategoryFromQuestionId(
-    String questionId,
-  ) {
+  String? _booksAuthorsSubcategoryFromQuestionId(String questionId) {
     if (!questionId.startsWith('books_authors_')) {
       return null;
     }
 
-    final String remainder =
-        questionId.substring('books_authors_'.length);
+    final String remainder = questionId.substring('books_authors_'.length);
     final int finalUnderscore = remainder.lastIndexOf('_');
 
     if (finalUnderscore <= 0) {
@@ -1077,15 +967,12 @@ extension _GameScreenLogic on _GameScreenState {
     return parsed.isEmpty ? null : parsed;
   }
 
-  String? _creativeWorldSubcategoryFromQuestionId(
-    String questionId,
-  ) {
+  String? _creativeWorldSubcategoryFromQuestionId(String questionId) {
     if (!questionId.startsWith('creative_world_')) {
       return null;
     }
 
-    final String remainder =
-        questionId.substring('creative_world_'.length);
+    final String remainder = questionId.substring('creative_world_'.length);
     final int finalUnderscore = remainder.lastIndexOf('_');
 
     if (finalUnderscore <= 0) {
@@ -1095,7 +982,6 @@ extension _GameScreenLogic on _GameScreenState {
     final String parsed = remainder.substring(0, finalUnderscore);
     return parsed.isEmpty ? null : parsed;
   }
-
 
   String? _sportsSubcategoryFromQuestionId(String id) {
     if (!id.startsWith('sports_')) return null;
@@ -1140,8 +1026,7 @@ extension _GameScreenLogic on _GameScreenState {
       isRoundTheWorld = true;
       category = 'countries';
     } else if (!isFinalWhistle) {
-      subcategory =
-          _pastPresentSubcategoryFromQuestionId(questionId);
+      subcategory = _pastPresentSubcategoryFromQuestionId(questionId);
 
       if (subcategory != null) {
         isSecretsOfThePast = true;
@@ -1153,24 +1038,19 @@ extension _GameScreenLogic on _GameScreenState {
           isTasteAndTreats = true;
           category = 'food_drink';
         } else {
-          subcategory =
-              _scienceNatureSubcategoryFromQuestionId(questionId);
+          subcategory = _scienceNatureSubcategoryFromQuestionId(questionId);
 
           if (subcategory != null) {
             isNatureOfDiscovery = true;
             category = 'science_nature';
-          }
- else {
-            subcategory =
-                _booksAuthorsSubcategoryFromQuestionId(questionId);
+          } else {
+            subcategory = _booksAuthorsSubcategoryFromQuestionId(questionId);
 
             if (subcategory != null) {
               isTheWrittenWord = true;
               category = 'books_authors';
-            }
- else {
-              subcategory =
-                  _creativeWorldSubcategoryFromQuestionId(questionId);
+            } else {
+              subcategory = _creativeWorldSubcategoryFromQuestionId(questionId);
 
               if (subcategory != null) {
                 isTheCreativeCode = true;
@@ -1183,21 +1063,18 @@ extension _GameScreenLogic on _GameScreenState {
 
       if (subcategory == null && widget.gameType == QuizGameType.birds) {
         subcategory = 'birds';
-      } else if (subcategory == null && widget.gameType == QuizGameType.dinosaurs) {
+      } else if (subcategory == null &&
+          widget.gameType == QuizGameType.dinosaurs) {
         subcategory = 'dinosaurs';
       } else if (subcategory == null && questionId.startsWith('animals_')) {
-        final String remainder =
-            questionId.substring('animals_'.length);
-        final int finalUnderscore =
-            remainder.lastIndexOf('_');
+        final String remainder = questionId.substring('animals_'.length);
+        final int finalUnderscore = remainder.lastIndexOf('_');
 
         if (finalUnderscore > 0) {
-          subcategory =
-              remainder.substring(0, finalUnderscore);
+          subcategory = remainder.substring(0, finalUnderscore);
         }
       } else if (subcategory == null) {
-        const Map<String, String> animalQuestionIdPrefixes =
-            <String, String>{
+        const Map<String, String> animalQuestionIdPrefixes = <String, String>{
           'birds_': 'birds',
           'dinosaurs_': 'dinosaurs',
           'habitats_animal_groups_': 'habitats_animal_groups',
@@ -1224,14 +1101,16 @@ extension _GameScreenLogic on _GameScreenState {
           !isTasteAndTreats &&
           !isNatureOfDiscovery &&
           !isTheWrittenWord &&
-          !isTheCreativeCode && !isFinalWhistle) {
+          !isTheCreativeCode &&
+          !isFinalWhistle) {
         category = 'animals';
       }
     }
 
     // Case Files QA: route progress to the case actually launched, never
     // infer its identity from the Firebase question ID (which may be mixed).
-    if (CaseFilesQa.enabled && widget.launchedFromCaseFile &&
+    if (CaseFilesQa.enabled &&
+        widget.launchedFromCaseFile &&
         widget.caseFilePathId != null) {
       isFinalWhistle = widget.caseFilePathId == 'final_whistle';
       isRoundTheWorld = widget.caseFilePathId == 'round_the_world';
@@ -1241,27 +1120,33 @@ extension _GameScreenLogic on _GameScreenState {
       isTheWrittenWord = widget.caseFilePathId == 'the_written_word';
       isTheCreativeCode = widget.caseFilePathId == 'the_creative_code';
       if (isFinalWhistle) {
-        category = 'sports'; subcategory = 'sports_qa';
+        category = 'sports';
+        subcategory = 'sports_qa';
       } else if (isRoundTheWorld) {
-        category = 'countries'; subcategory = 'flags';
+        category = 'countries';
+        subcategory = 'flags';
       } else if (isSecretsOfThePast) {
-        category = 'past_present'; subcategory = 'historical_events';
+        category = 'past_present';
+        subcategory = 'historical_events';
       } else if (isTasteAndTreats) {
-        category = 'food_drink'; subcategory = 'qa';
+        category = 'food_drink';
+        subcategory = 'qa';
       } else if (isNatureOfDiscovery) {
-        category = 'science_nature'; subcategory = 'plants_trees';
+        category = 'science_nature';
+        subcategory = 'plants_trees';
       } else if (isTheWrittenWord) {
-        category = 'books_authors'; subcategory = 'book_series';
+        category = 'books_authors';
+        subcategory = 'book_series';
       } else if (isTheCreativeCode) {
-        category = 'creative_world'; subcategory = 'artists';
+        category = 'creative_world';
+        subcategory = 'artists';
       } else {
-        category = 'animals'; subcategory = 'birds';
+        category = 'animals';
+        subcategory = 'birds';
       }
     }
 
-    if (subcategory == null ||
-        subcategory.isEmpty ||
-        category == null) {
+    if (subcategory == null || subcategory.isEmpty || category == null) {
       return null;
     }
 
@@ -1385,16 +1270,16 @@ extension _GameScreenLogic on _GameScreenState {
             : isRoundTheWorld
             ? await CasePathService.loadRoundTheWorldProgress()
             : isSecretsOfThePast
-                ? await CasePathService.loadSecretsOfThePastProgress()
-                : isTasteAndTreats
-                    ? await CasePathService.loadTasteAndTreatsProgress()
-                    : isNatureOfDiscovery
-                        ? await CasePathService.loadNatureOfDiscoveryProgress()
-                        : isTheWrittenWord
-                            ? await CasePathService.loadTheWrittenWordProgress()
-                            : isTheCreativeCode
-                                ? await CasePathService.loadTheCreativeCodeProgress()
-                                : await CasePathService.loadAnimalKingdomProgress();
+            ? await CasePathService.loadSecretsOfThePastProgress()
+            : isTasteAndTreats
+            ? await CasePathService.loadTasteAndTreatsProgress()
+            : isNatureOfDiscovery
+            ? await CasePathService.loadNatureOfDiscoveryProgress()
+            : isTheWrittenWord
+            ? await CasePathService.loadTheWrittenWordProgress()
+            : isTheCreativeCode
+            ? await CasePathService.loadTheCreativeCodeProgress()
+            : await CasePathService.loadAnimalKingdomProgress();
 
         stageBefore = progressBefore.currentStage;
       }
@@ -1402,8 +1287,7 @@ extension _GameScreenLogic on _GameScreenState {
       final String attemptId =
           '${questionId}_${roundStartedAt.microsecondsSinceEpoch}';
 
-      final GameplayResultEvent event =
-          GameplayResultEvent(
+      final GameplayResultEvent event = GameplayResultEvent(
         attemptId: attemptId,
         questionId: questionId,
         category: category,
@@ -1418,73 +1302,61 @@ extension _GameScreenLogic on _GameScreenState {
       final updatedProgress = isFinalWhistle
           ? await CasePathService.recordFinalWhistleResult(event: event)
           : isRoundTheWorld
-          ? await CasePathService.recordRoundTheWorldResult(
-              event: event,
-            )
+          ? await CasePathService.recordRoundTheWorldResult(event: event)
           : isSecretsOfThePast
-              ? await CasePathService.recordSecretsOfThePastResult(
-                  event: event,
-                )
-              : isTasteAndTreats
-                  ? await CasePathService.recordTasteAndTreatsResult(
-                      event: event,
-                    )
-                  : isNatureOfDiscovery
-                      ? await CasePathService.recordNatureOfDiscoveryResult(
-                          event: event,
-                        )
-                      : isTheWrittenWord
-                          ? await CasePathService.recordTheWrittenWordResult(
-                              event: event,
-                            )
-                          : isTheCreativeCode
-                              ? await CasePathService.recordTheCreativeCodeResult(
-                                  event: event,
-                                )
-                              : await CasePathService.recordAnimalKingdomResult(
-                                  event: event,
-                                );
+          ? await CasePathService.recordSecretsOfThePastResult(event: event)
+          : isTasteAndTreats
+          ? await CasePathService.recordTasteAndTreatsResult(event: event)
+          : isNatureOfDiscovery
+          ? await CasePathService.recordNatureOfDiscoveryResult(event: event)
+          : isTheWrittenWord
+          ? await CasePathService.recordTheWrittenWordResult(event: event)
+          : isTheCreativeCode
+          ? await CasePathService.recordTheCreativeCodeResult(event: event)
+          : await CasePathService.recordAnimalKingdomResult(event: event);
 
       int? completedStage;
 
-      if (widget.launchedFromCaseFile &&
-          stageBefore != null) {
+      if (widget.launchedFromCaseFile && stageBefore != null) {
         final bool stageCompleted = isFinalWhistle
-            ? CasePathService.isFinalWhistleStageCompleted(progress: updatedProgress, stage: stageBefore)
+            ? CasePathService.isFinalWhistleStageCompleted(
+                progress: updatedProgress,
+                stage: stageBefore,
+              )
             : isRoundTheWorld
             ? CasePathService.isRoundTheWorldStageCompleted(
                 progress: updatedProgress,
                 stage: stageBefore,
               )
             : isSecretsOfThePast
-                ? CasePathService.isSecretsOfThePastStageCompleted(
-                    progress: updatedProgress,
-                    stage: stageBefore,
-                  )
-                : isTasteAndTreats
-                    ? CasePathService.isTasteAndTreatsStageCompleted(
-                        progress: updatedProgress,
-                        stage: stageBefore,
-                      )
-                    : isNatureOfDiscovery
-                        ? CasePathService.isNatureOfDiscoveryStageCompleted(
-                            progress: updatedProgress,
-                            stage: stageBefore,
-                          )
-                        : isTheWrittenWord
-                            ? CasePathService.isTheWrittenWordStageCompleted(
-                                progress: updatedProgress,
-                                stage: stageBefore,
-                              )
-                            : isTheCreativeCode
-                                ? CasePathService.isTheCreativeCodeStageCompleted(
-                                    progress: updatedProgress,
-                                    stage: stageBefore,
-                                  )
-                                : CasePathService.isAnimalKingdomStageCompleted(
-                            progress: updatedProgress,
-                            stage: stageBefore,
-                          );
+            ? CasePathService.isSecretsOfThePastStageCompleted(
+                progress: updatedProgress,
+                stage: stageBefore,
+              )
+            : isTasteAndTreats
+            ? CasePathService.isTasteAndTreatsStageCompleted(
+                progress: updatedProgress,
+                stage: stageBefore,
+              )
+            : isNatureOfDiscovery
+            ? CasePathService.isNatureOfDiscoveryStageCompleted(
+                progress: updatedProgress,
+                stage: stageBefore,
+              )
+            : isTheWrittenWord
+            ? CasePathService.isTheWrittenWordStageCompleted(
+                progress: updatedProgress,
+                stage: stageBefore,
+              )
+            : isTheCreativeCode
+            ? CasePathService.isTheCreativeCodeStageCompleted(
+                progress: updatedProgress,
+                stage: stageBefore,
+              )
+            : CasePathService.isAnimalKingdomStageCompleted(
+                progress: updatedProgress,
+                stage: stageBefore,
+              );
 
         if (stageCompleted) {
           completedStage = stageBefore;
@@ -1497,36 +1369,25 @@ extension _GameScreenLogic on _GameScreenState {
             final completedMission = isFinalWhistle
                 ? CasePathService.finalWhistleMissionForStage(completedStage)
                 : isRoundTheWorld
-                ? CasePathService.roundTheWorldMissionForStage(
-                    completedStage
-                  )
+                ? CasePathService.roundTheWorldMissionForStage(completedStage)
                 : isSecretsOfThePast
-                    ? CasePathService.secretsOfThePastMissionForStage(
-                        completedStage
-                      )
-                    : isTasteAndTreats
-                        ? CasePathService.tasteAndTreatsMissionForStage(
-                            completedStage
-                          )
-                        : isNatureOfDiscovery
-                            ? CasePathService.natureOfDiscoveryMissionForStage(
-                                completedStage,
-                              )
-                            : isTheWrittenWord
-                                ? CasePathService.theWrittenWordMissionForStage(
-                                    completedStage,
-                                  )
-                                : isTheCreativeCode
-                                    ? CasePathService.theCreativeCodeMissionForStage(
-                                        completedStage,
-                                      )
-                                    : CasePathService.animalKingdomMissionForStage(
-                                    completedStage,
-                                  );
+                ? CasePathService.secretsOfThePastMissionForStage(
+                    completedStage,
+                  )
+                : isTasteAndTreats
+                ? CasePathService.tasteAndTreatsMissionForStage(completedStage)
+                : isNatureOfDiscovery
+                ? CasePathService.natureOfDiscoveryMissionForStage(
+                    completedStage,
+                  )
+                : isTheWrittenWord
+                ? CasePathService.theWrittenWordMissionForStage(completedStage)
+                : isTheCreativeCode
+                ? CasePathService.theCreativeCodeMissionForStage(completedStage)
+                : CasePathService.animalKingdomMissionForStage(completedStage);
 
             activeCaseStage = completedStage;
-            activeCaseCorrectCount =
-                completedMission?.correctRequired ?? 10;
+            activeCaseCorrectCount = completedMission?.correctRequired ?? 10;
             activeCaseClueThresholdCount =
                 completedMission?.clueThresholdRequired ?? 0;
             activeCaseFirstGuessCount =
@@ -1536,8 +1397,7 @@ extension _GameScreenLogic on _GameScreenState {
             activeCaseCorrectCount =
                 updatedProgress.currentStageProgress.correctCount;
             activeCaseClueThresholdCount =
-                updatedProgress
-                    .currentStageProgress.clueThresholdCount;
+                updatedProgress.currentStageProgress.clueThresholdCount;
             activeCaseFirstGuessCount =
                 updatedProgress.currentStageProgress.firstGuessCount;
           }
@@ -1549,7 +1409,19 @@ extension _GameScreenLogic on _GameScreenState {
       return completedStage;
     } catch (error, stackTrace) {
       debugPrint(
-        '${isRoundTheWorld ? 'AROUND THE WORLD' : isSecretsOfThePast ? 'SECRETS OF THE PAST' : isTasteAndTreats ? 'A TASTE OF MYSTERY' : isNatureOfDiscovery ? 'THE NATURE OF DISCOVERY' : isTheWrittenWord ? 'THE WRITTEN WORD' : isTheCreativeCode ? 'THE CREATIVE CODE' : 'ANIMAL KINGDOM'} '
+        '${isRoundTheWorld
+            ? 'AROUND THE WORLD'
+            : isSecretsOfThePast
+            ? 'SECRETS OF THE PAST'
+            : isTasteAndTreats
+            ? 'A TASTE OF MYSTERY'
+            : isNatureOfDiscovery
+            ? 'THE NATURE OF DISCOVERY'
+            : isTheWrittenWord
+            ? 'THE WRITTEN WORD'
+            : isTheCreativeCode
+            ? 'THE CREATIVE CODE'
+            : 'ANIMAL KINGDOM'} '
         'CASE TRACKING ERROR: $error',
       );
       debugPrintStack(stackTrace: stackTrace);
@@ -1557,9 +1429,7 @@ extension _GameScreenLogic on _GameScreenState {
     }
   }
 
-  String? _mainStatsCategoryKeyForQuestionId(
-    String questionId,
-  ) {
+  String? _mainStatsCategoryKeyForQuestionId(String questionId) {
     final String id = questionId.toLowerCase().trim();
 
     bool startsWithAny(List<String> prefixes) {
@@ -1582,10 +1452,7 @@ extension _GameScreenLogic on _GameScreenState {
       return 'animals';
     }
 
-    if (startsWithAny(const <String>[
-      'books_authors_',
-      'authors_',
-    ])) {
+    if (startsWithAny(const <String>['books_authors_', 'authors_'])) {
       return 'books_authors';
     }
 
@@ -1674,10 +1541,7 @@ extension _GameScreenLogic on _GameScreenState {
       return 'watch_play';
     }
 
-    if (startsWithAny(const <String>[
-      'who_am_i_',
-      'famous_people_',
-    ])) {
+    if (startsWithAny(const <String>['who_am_i_', 'famous_people_'])) {
       return 'famous_people';
     }
 
@@ -1705,8 +1569,7 @@ extension _GameScreenLogic on _GameScreenState {
     required int xpEarned,
     bool caseBadgeEarned = false,
   }) async {
-    final List<EarnedBadge> earnedBadges =
-        AchievementService.newlyEarnedBadges(
+    final List<EarnedBadge> earnedBadges = AchievementService.newlyEarnedBadges(
       previous: previous,
       current: current,
       gameKey: 'first_guess',
@@ -1749,20 +1612,20 @@ extension _GameScreenLogic on _GameScreenState {
 
     final List<Achievement> reached =
         AchievementService.popupAchievementsForClassic(
-      previous: previous,
-      current: current,
-    );
+          previous: previous,
+          current: current,
+        );
 
     for (final Achievement achievement in reached) {
-      final Achievement? next =
-          AchievementService.nextMilestoneAfter(achievement);
+      final Achievement? next = AchievementService.nextMilestoneAfter(
+        achievement,
+      );
 
       if (!mounted) {
         return;
       }
 
-      final String label =
-          AchievementService.milestoneLabelFor(achievement);
+      final String label = AchievementService.milestoneLabelFor(achievement);
 
       await showDialog<void>(
         context: context,
@@ -1783,9 +1646,7 @@ extension _GameScreenLogic on _GameScreenState {
     }
   }
 
-  Future<void> finishCorrectRound({
-    required bool wasFirstGuess,
-  }) async {
+  Future<void> finishCorrectRound({required bool wasFirstGuess}) async {
     if (roundFinished) {
       return;
     }
@@ -1804,11 +1665,10 @@ extension _GameScreenLogic on _GameScreenState {
     final int pointsWon = isReplay
         ? 0
         : wasFirstGuess
-            ? pointsAvailable + firstGuessBonus
-            : pointsAvailable;
+        ? pointsAvailable + firstGuessBonus
+        : pointsAvailable;
 
-    final int clueNumber =
-        currentClueIndex + 1;
+    final int clueNumber = currentClueIndex + 1;
 
     setState(() {
       roundFinished = true;
@@ -1816,34 +1676,28 @@ extension _GameScreenLogic on _GameScreenState {
 
     await recordCurrentQuestionAsPlayed();
 
-    final int? completedCaseStage =
-        await recordAnimalKingdomCaseResult(
+    final int? completedCaseStage = await recordAnimalKingdomCaseResult(
       clueNumber: clueNumber,
       wasFirstGuess: wasFirstGuess,
       practiceMode: isReplay,
     );
 
-    final PlayerRankProgress previousRank =
-        PlayerRankProgress.fromXp(
+    final PlayerRankProgress previousRank = PlayerRankProgress.fromXp(
       playerStats.totalXp,
     );
 
-    final PlayerStats playerStatsBeforeUpdate =
-        playerStats;
+    final PlayerStats playerStatsBeforeUpdate = playerStats;
 
     final PlayerStats updatedStats = isReplay
         ? playerStats
-        : await PlayerStatsService
-            .recordCorrectGame(
+        : await PlayerStatsService.recordCorrectGame(
             currentStats: playerStats,
             category: widget.statsCategory,
             pointsWon: pointsWon,
             clueNumber: clueNumber,
             wasFirstGuess: wasFirstGuess,
-            playTimeSeconds:
-                roundPlayTimeSeconds,
-            mainCategoryKey:
-                _mainStatsCategoryKeyForQuestionId(
+            playTimeSeconds: roundPlayTimeSeconds,
+            mainCategoryKey: _mainStatsCategoryKeyForQuestionId(
               currentItem.id ?? '',
             ),
           );
@@ -1852,8 +1706,7 @@ extension _GameScreenLogic on _GameScreenState {
       return;
     }
 
-    final PlayerRankProgress currentRank =
-        PlayerRankProgress.fromXp(
+    final PlayerRankProgress currentRank = PlayerRankProgress.fromXp(
       updatedStats.totalXp,
     );
 
@@ -1885,9 +1738,11 @@ extension _GameScreenLogic on _GameScreenState {
       );
     }();
     if (widget.launchedFromCaseFile) {
-      unawaited(completedTelemetry.catchError((Object error, StackTrace stack) {
-        debugPrint('CASE FILE COMPLETION ANALYTICS ERROR: $error');
-      }));
+      unawaited(
+        completedTelemetry.catchError((Object error, StackTrace stack) {
+          debugPrint('CASE FILE COMPLETION ANALYTICS ERROR: $error');
+        }),
+      );
     } else {
       await completedTelemetry;
     }
@@ -1895,19 +1750,22 @@ extension _GameScreenLogic on _GameScreenState {
     await _recordClassicContentConsumption();
 
     if (wasFirstGuess && !CaseFilesQa.enabled) {
-      final Future<void> firstGuessTelemetry = AnalyticsService.logFirstGuessEarned(
-        gameType: 'classic_first_guess',
-        category: _analyticsCategoryKey,
-        subcategory: _analyticsSubcategoryKey,
-        questionId: _analyticsQuestionId,
-        source: _analyticsSource,
-        xpEarned: pointsWon,
-        practiceMode: isReplay,
-      );
+      final Future<void> firstGuessTelemetry =
+          AnalyticsService.logFirstGuessEarned(
+            gameType: 'classic_first_guess',
+            category: _analyticsCategoryKey,
+            subcategory: _analyticsSubcategoryKey,
+            questionId: _analyticsQuestionId,
+            source: _analyticsSource,
+            xpEarned: pointsWon,
+            practiceMode: isReplay,
+          );
       if (widget.launchedFromCaseFile) {
-        unawaited(firstGuessTelemetry.catchError((Object error, StackTrace stack) {
-          debugPrint('CASE FILE FIRST GUESS ANALYTICS ERROR: $error');
-        }));
+        unawaited(
+          firstGuessTelemetry.catchError((Object error, StackTrace stack) {
+            debugPrint('CASE FILE FIRST GUESS ANALYTICS ERROR: $error');
+          }),
+        );
       } else {
         await firstGuessTelemetry;
       }
@@ -1941,142 +1799,132 @@ extension _GameScreenLogic on _GameScreenState {
       afterRewards();
     }
 
-    if (widget.launchedFromCaseFile &&
-        completedCaseStage != null) {
-      final bool isFinalWhistleCase = widget.caseFilePathId == 'final_whistle' || _sportsSubcategoryFromQuestionId(currentItem.id ?? '') != null;
-      final bool isRoundTheWorldCase = widget.caseFilePathId == 'round_the_world' ||
-          _countrySubcategoryFromQuestionId(
-                currentItem.id ?? '',
-              ) !=
-              null;
+    if (widget.launchedFromCaseFile && completedCaseStage != null) {
+      final bool isFinalWhistleCase =
+          widget.caseFilePathId == 'final_whistle' ||
+          _sportsSubcategoryFromQuestionId(currentItem.id ?? '') != null;
+      final bool isRoundTheWorldCase =
+          widget.caseFilePathId == 'round_the_world' ||
+          _countrySubcategoryFromQuestionId(currentItem.id ?? '') != null;
 
-      final bool isSecretsOfThePastCase = widget.caseFilePathId == 'secrets_of_the_past' ||
-          _pastPresentSubcategoryFromQuestionId(
-                currentItem.id ?? '',
-              ) !=
-              null;
+      final bool isSecretsOfThePastCase =
+          widget.caseFilePathId == 'secrets_of_the_past' ||
+          _pastPresentSubcategoryFromQuestionId(currentItem.id ?? '') != null;
 
-      final bool isTasteAndTreatsCase = widget.caseFilePathId == 'taste_and_treats' ||
-          _foodDrinkSubcategoryFromQuestionId(
-                currentItem.id ?? '',
-              ) !=
-              null;
+      final bool isTasteAndTreatsCase =
+          widget.caseFilePathId == 'taste_and_treats' ||
+          _foodDrinkSubcategoryFromQuestionId(currentItem.id ?? '') != null;
 
-      final bool isNatureOfDiscoveryCase = widget.caseFilePathId == 'nature_of_discovery' ||
-          _scienceNatureSubcategoryFromQuestionId(
-                currentItem.id ?? '',
-              ) !=
-              null;
+      final bool isNatureOfDiscoveryCase =
+          widget.caseFilePathId == 'nature_of_discovery' ||
+          _scienceNatureSubcategoryFromQuestionId(currentItem.id ?? '') != null;
 
-      final bool isTheWrittenWordCase = widget.caseFilePathId == 'the_written_word' ||
-          _booksAuthorsSubcategoryFromQuestionId(
-                currentItem.id ?? '',
-              ) !=
-              null;
+      final bool isTheWrittenWordCase =
+          widget.caseFilePathId == 'the_written_word' ||
+          _booksAuthorsSubcategoryFromQuestionId(currentItem.id ?? '') != null;
 
-      final bool isTheCreativeCodeCase = widget.caseFilePathId == 'the_creative_code' ||
-          _creativeWorldSubcategoryFromQuestionId(
-                currentItem.id ?? '',
-              ) !=
-              null;
+      final bool isTheCreativeCodeCase =
+          widget.caseFilePathId == 'the_creative_code' ||
+          _creativeWorldSubcategoryFromQuestionId(currentItem.id ?? '') != null;
 
       final int totalStages = isFinalWhistleCase
           ? CasePathService.finalWhistleTotalStages
           : isRoundTheWorldCase
           ? CasePathService.roundTheWorldTotalStages
           : isSecretsOfThePastCase
-              ? CasePathService.secretsOfThePastTotalStages
-              : isTasteAndTreatsCase
-                  ? CasePathService.tasteAndTreatsTotalStages
-                  : isNatureOfDiscoveryCase
-                      ? CasePathService.natureOfDiscoveryTotalStages
-                      : isTheWrittenWordCase
-                          ? CasePathService.theWrittenWordTotalStages
-                          : isTheCreativeCodeCase
-                              ? CasePathService.theCreativeCodeTotalStages
-                              : CasePathService.animalKingdomTotalStages;
+          ? CasePathService.secretsOfThePastTotalStages
+          : isTasteAndTreatsCase
+          ? CasePathService.tasteAndTreatsTotalStages
+          : isNatureOfDiscoveryCase
+          ? CasePathService.natureOfDiscoveryTotalStages
+          : isTheWrittenWordCase
+          ? CasePathService.theWrittenWordTotalStages
+          : isTheCreativeCodeCase
+          ? CasePathService.theCreativeCodeTotalStages
+          : CasePathService.animalKingdomTotalStages;
 
-      final bool completedEntireCasePath =
-          completedCaseStage >= totalStages;
+      final bool completedEntireCasePath = completedCaseStage >= totalStages;
 
       final String caseName = isFinalWhistleCase
-            ? 'THE FINAL WHISTLE'
-            : isRoundTheWorldCase
+          ? 'THE FINAL WHISTLE'
+          : isRoundTheWorldCase
           ? 'AROUND THE WORLD'
           : isSecretsOfThePastCase
-              ? 'SECRETS OF THE PAST'
-              : isTasteAndTreatsCase
-                  ? 'A TASTE OF MYSTERY'
-                  : isNatureOfDiscoveryCase
-                      ? 'THE NATURE OF DISCOVERY'
-                      : isTheWrittenWordCase
-                          ? 'THE WRITTEN WORD'
-                          : isTheCreativeCodeCase
-                              ? 'THE CREATIVE CODE'
-                              : 'ANIMAL KINGDOM';
+          ? 'SECRETS OF THE PAST'
+          : isTasteAndTreatsCase
+          ? 'A TASTE OF MYSTERY'
+          : isNatureOfDiscoveryCase
+          ? 'THE NATURE OF DISCOVERY'
+          : isTheWrittenWordCase
+          ? 'THE WRITTEN WORD'
+          : isTheCreativeCodeCase
+          ? 'THE CREATIVE CODE'
+          : 'ANIMAL KINGDOM';
 
       final String badgeName = isFinalWhistleCase
-            ? 'THE FINAL WHISTLE CASE BADGE'
-            : isRoundTheWorldCase
+          ? 'THE FINAL WHISTLE CASE BADGE'
+          : isRoundTheWorldCase
           ? 'AROUND THE WORLD CASE BADGE'
           : isSecretsOfThePastCase
-              ? 'SECRETS OF THE PAST CASE BADGE'
-              : isTasteAndTreatsCase
-                  ? 'A TASTE OF MYSTERY CASE BADGE'
-                  : isNatureOfDiscoveryCase
-                      ? 'THE NATURE OF DISCOVERY CASE BADGE'
-                      : isTheWrittenWordCase
-                          ? 'THE WRITTEN WORD CASE BADGE'
-                          : isTheCreativeCodeCase
-                              ? 'THE CREATIVE CODE CASE BADGE'
-                              : 'ANIMAL KINGDOM CASE BADGE';
+          ? 'SECRETS OF THE PAST CASE BADGE'
+          : isTasteAndTreatsCase
+          ? 'A TASTE OF MYSTERY CASE BADGE'
+          : isNatureOfDiscoveryCase
+          ? 'THE NATURE OF DISCOVERY CASE BADGE'
+          : isTheWrittenWordCase
+          ? 'THE WRITTEN WORD CASE BADGE'
+          : isTheCreativeCodeCase
+          ? 'THE CREATIVE CODE CASE BADGE'
+          : 'ANIMAL KINGDOM CASE BADGE';
 
       final String caseKey = isFinalWhistleCase
-            ? 'final_whistle'
-            : isRoundTheWorldCase
+          ? 'final_whistle'
+          : isRoundTheWorldCase
           ? 'around_the_world'
           : isSecretsOfThePastCase
-              ? 'secrets_of_the_past'
-              : isTasteAndTreatsCase
-                  ? 'taste_and_treats'
-                  : isNatureOfDiscoveryCase
-                      ? 'nature_of_discovery'
-                      : isTheWrittenWordCase
-                          ? 'the_written_word'
-                          : isTheCreativeCodeCase
-                              ? 'the_creative_code'
-                              : 'animal_kingdom';
+          ? 'secrets_of_the_past'
+          : isTasteAndTreatsCase
+          ? 'taste_and_treats'
+          : isNatureOfDiscoveryCase
+          ? 'nature_of_discovery'
+          : isTheWrittenWordCase
+          ? 'the_written_word'
+          : isTheCreativeCodeCase
+          ? 'the_creative_code'
+          : 'animal_kingdom';
 
       if (completedEntireCasePath && !CaseFilesQa.enabled) {
         // Analytics must not delay the Case File completion/badge dialog.
-        unawaited(AnalyticsService.logCaseFileCompleted(
-          caseKey: caseKey,
-          caseName: caseName,
-          totalStages: totalStages,
-        ).catchError((Object error, StackTrace trace) {
-          debugPrint('Case File completion analytics error: $error');
-        }));
-        unawaited(AnalyticsService.logBadgeEarned(
-          badgeName: badgeName,
-          gameType: 'case_file',
-        ).catchError((Object error, StackTrace trace) {
-          debugPrint('Case File badge analytics error: $error');
-        }));
+        unawaited(
+          AnalyticsService.logCaseFileCompleted(
+            caseKey: caseKey,
+            caseName: caseName,
+            totalStages: totalStages,
+          ).catchError((Object error, StackTrace trace) {
+            debugPrint('Case File completion analytics error: $error');
+          }),
+        );
+        unawaited(
+          AnalyticsService.logBadgeEarned(
+            badgeName: badgeName,
+            gameType: 'case_file',
+          ).catchError((Object error, StackTrace trace) {
+            debugPrint('Case File badge analytics error: $error');
+          }),
+        );
       }
 
-      final String completionTitle =
-          completedEntireCasePath
-              ? '$caseName COMPLETE!'
-              : 'CASE $completedCaseStage COMPLETE!';
+      final String completionTitle = completedEntireCasePath
+          ? '$caseName COMPLETE!'
+          : 'CASE $completedCaseStage COMPLETE!';
 
-      final String completionMessage =
-          completedEntireCasePath
-              ? 'You\'ve correctly identified:\n'
-                  '${currentItem.answer.toUpperCase()}\n'
-                  'BADGE EARNED: $badgeName'
-              : 'You\'ve correctly identified:\n'
-                  '${currentItem.answer.toUpperCase()}\n'
-                  'Case ${completedCaseStage + 1} is now unlocked.';
+      final String completionMessage = completedEntireCasePath
+          ? 'You\'ve correctly identified:\n'
+                '${currentItem.answer.toUpperCase()}\n'
+                'BADGE EARNED: $badgeName'
+          : 'You\'ve correctly identified:\n'
+                '${currentItem.answer.toUpperCase()}\n'
+                'Case ${completedCaseStage + 1} is now unlocked.';
 
       if (completedEntireCasePath) {
         final String finalCaseTitle = isFinalWhistleCase
@@ -2084,46 +1932,47 @@ extension _GameScreenLogic on _GameScreenState {
             : isRoundTheWorldCase
             ? 'AROUND THE WORLD COMPLETE!'
             : isSecretsOfThePastCase
-                ? 'SECRETS OF THE PAST COMPLETE!'
-                : isTasteAndTreatsCase
-                    ? 'A TASTE OF MYSTERY COMPLETE!'
-                    : isNatureOfDiscoveryCase
-                        ? 'THE NATURE OF DISCOVERY COMPLETE!'
-                        : isTheWrittenWordCase
-                            ? 'THE WRITTEN WORD COMPLETE!'
-                            : isTheCreativeCodeCase
-                                ? 'THE CREATIVE CODE COMPLETE!'
-                                : 'ANIMAL KINGDOM COMPLETE!';
+            ? 'SECRETS OF THE PAST COMPLETE!'
+            : isTasteAndTreatsCase
+            ? 'A TASTE OF MYSTERY COMPLETE!'
+            : isNatureOfDiscoveryCase
+            ? 'THE NATURE OF DISCOVERY COMPLETE!'
+            : isTheWrittenWordCase
+            ? 'THE WRITTEN WORD COMPLETE!'
+            : isTheCreativeCodeCase
+            ? 'THE CREATIVE CODE COMPLETE!'
+            : 'ANIMAL KINGDOM COMPLETE!';
 
         final String finalBadgeAsset = isFinalWhistleCase
             ? 'assets/images/case_files/New folder/finalwhistlecompleted.webp'
             : isRoundTheWorldCase
             ? 'assets/images/badges/amazing_world_case_file_badge.webp'
             : isSecretsOfThePastCase
-                ? 'assets/images/badges/mysteries_legends_case_file_badge.webp'
-                : isTasteAndTreatsCase
-                    ? 'assets/images/badges/tastes_treats_case_file_badge.webp'
-                    : isNatureOfDiscoveryCase
-                        ? 'assets/images/badges/nature_of_discovery.webp'
-                    : isTheWrittenWordCase
-                        ? 'assets/images/badges/the_written_word.webp'
-                        : isTheCreativeCodeCase
-                            ? 'assets/images/badges/the_creative_code.webp'
-                            : 'assets/images/badges/animal_kingdom_case_file_badge.webp';
+            ? 'assets/images/badges/mysteries_legends_case_file_badge.webp'
+            : isTasteAndTreatsCase
+            ? 'assets/images/badges/tastes_treats_case_file_badge.webp'
+            : isNatureOfDiscoveryCase
+            ? 'assets/images/badges/nature_of_discovery.webp'
+            : isTheWrittenWordCase
+            ? 'assets/images/badges/the_written_word.webp'
+            : isTheCreativeCodeCase
+            ? 'assets/images/badges/the_creative_code.webp'
+            : 'assets/images/badges/animal_kingdom_case_file_badge.webp';
 
         await showResult(
           title: finalCaseTitle,
-          message: 'CONGRATULATIONS!\n'
+          message:
+              'CONGRATULATIONS!\n'
               'YOU SOLVED THE CASE\n'
               'BADGE EARNED',
           imageAsset: finalBadgeAsset,
-          primaryButtonLabel: 'BACK TO CASE FILES',
+          primaryButtonLabel: 'BACK TO CASE MAP',
           secondaryButtonLabel: 'PLAY AGAIN',
           // The dialog's PRIMARY button invokes onPlayAgain, so BACK TO
           // CASE FILES must use this callback, regardless of its name.
           onPlayAgainOverride: () async {
             await showPostResultRewardsThen(
-              () => returnToCaseFilesHome(closeDialog: false),
+              () => returnToCaseMap(closeDialog: false),
               caseBadgeEarned: true,
             );
           },
@@ -2144,31 +1993,31 @@ extension _GameScreenLogic on _GameScreenState {
         message: completionMessage,
         imageAsset: completedEntireCasePath
             ? isFinalWhistleCase
-                ? 'assets/images/case_files/New folder/finalwhistlecompleted.webp'
-                : isRoundTheWorldCase
-                ? 'assets/images/badges/amazing_world_case_file_badge.webp'
-                : isSecretsOfThePastCase
-                    ? 'assets/images/badges/mysteries_legends_case_file_badge.webp'
-                    : isTasteAndTreatsCase
-                        ? 'assets/images/badges/tastes_treats_case_file_badge.webp'
-                        : isNatureOfDiscoveryCase
-                            ? 'assets/images/badges/nature_of_discovery.webp'
-                            : isTheWrittenWordCase
-                                ? 'assets/images/badges/the_written_word.webp'
-                                : isTheCreativeCodeCase
-                                    ? 'assets/images/badges/the_creative_code.webp'
-                                    : 'assets/images/badges/animal_kingdom_case_file_badge.webp'
+                  ? 'assets/images/case_files/New folder/finalwhistlecompleted.webp'
+                  : isRoundTheWorldCase
+                  ? 'assets/images/badges/amazing_world_case_file_badge.webp'
+                  : isSecretsOfThePastCase
+                  ? 'assets/images/badges/mysteries_legends_case_file_badge.webp'
+                  : isTasteAndTreatsCase
+                  ? 'assets/images/badges/tastes_treats_case_file_badge.webp'
+                  : isNatureOfDiscoveryCase
+                  ? 'assets/images/badges/nature_of_discovery.webp'
+                  : isTheWrittenWordCase
+                  ? 'assets/images/badges/the_written_word.webp'
+                  : isTheCreativeCodeCase
+                  ? 'assets/images/badges/the_creative_code.webp'
+                  : 'assets/images/badges/animal_kingdom_case_file_badge.webp'
             : 'assets/images/ui/popups/challenges_complete.webp',
-        primaryButtonLabel: 'BACK TO CASE FILES',
+        primaryButtonLabel: 'BACK TO CASE MAP',
         suppressDefaultSecondaryButton: true,
         onPlayAgainOverride: () async {
           await showPostResultRewardsThen(
-            () => returnToCaseFilesHome(closeDialog: false),
+            () => returnToCaseMap(closeDialog: false),
           );
         },
         onHomeOverride: () async {
           await showPostResultRewardsThen(
-            () => returnToCaseFilesHome(closeDialog: false),
+            () => returnToCaseMap(closeDialog: false),
           );
         },
       );
@@ -2178,13 +2027,9 @@ extension _GameScreenLogic on _GameScreenState {
 
     if (isReplay) {
       if (widget.launchedFromSurpriseMe) {
-        startNextSurpriseGame(
-          closeDialog: false,
-        );
+        startNextSurpriseGame(closeDialog: false);
       } else {
-        startNewRound(
-          closeDialog: false,
-        );
+        startNewRound(closeDialog: false);
       }
       return;
     }
@@ -2193,45 +2038,33 @@ extension _GameScreenLogic on _GameScreenState {
       title: isReplay
           ? 'CORRECT!'
           : wasFirstGuess
-              ? 'FIRST GUESS!'
-              : 'CORRECT!',
+          ? 'FIRST GUESS!'
+          : 'CORRECT!',
       message: isReplay
           ? 'You identified ${currentItem.answer.toUpperCase()}'
           : wasFirstGuess
-              ? 'You identified ${currentItem.answer.toUpperCase()}\n\n'
-                  '$pointsAvailable XP\n'
-                  '$firstGuessBonus XP First Guess Bonus\n\n'
-                  '$pointsWon XP TOTAL'
-              : 'You identified ${currentItem.answer.toUpperCase()}\n\n'
-                  '$pointsWon XP',
-      icon: !isReplay && wasFirstGuess
-          ? Icons.looks_one
-          : Icons.emoji_events,
+          ? 'You identified ${currentItem.answer.toUpperCase()}\n\n'
+                '$pointsAvailable XP\n'
+                '$firstGuessBonus XP First Guess Bonus\n\n'
+                '$pointsWon XP TOTAL'
+          : 'You identified ${currentItem.answer.toUpperCase()}\n\n'
+                '$pointsWon XP',
+      icon: !isReplay && wasFirstGuess ? Icons.looks_one : Icons.emoji_events,
       onPlayAgainOverride: () async {
         await showPostResultRewardsThen(() {
           if (widget.launchedFromSurpriseMe) {
-            startNextSurpriseGame(
-              closeDialog: false,
-            );
+            startNextSurpriseGame(closeDialog: false);
           } else {
-            unawaited(
-              continueToNextRoundAfterResult(
-                closeResultDialog: false,
-              ),
-            );
+            unawaited(continueToNextRoundAfterResult(closeResultDialog: false));
           }
         });
       },
       onHomeOverride: () async {
         await showPostResultRewardsThen(() {
           if (widget.launchedFromCaseFile) {
-            returnToCaseMap(
-              closeDialog: false,
-            );
+            returnToCaseMap(closeDialog: false);
           } else {
-            returnHome(
-              closeDialog: false,
-            );
+            returnHome(closeDialog: false);
           }
         });
       },
@@ -2249,7 +2082,8 @@ extension _GameScreenLogic on _GameScreenState {
 
     clueTimer?.cancel();
 
-    final bool isReplay = currentQuestionIsReplay ||
+    final bool isReplay =
+        currentQuestionIsReplay ||
         (widget.launchedFromCaseFile && CaseFilesQa.enabled);
 
     setState(() {
@@ -2260,11 +2094,9 @@ extension _GameScreenLogic on _GameScreenState {
 
     final PlayerStats updatedStats = isReplay
         ? playerStats
-        : await PlayerStatsService
-            .recordFailedGame(
+        : await PlayerStatsService.recordFailedGame(
             currentStats: playerStats,
-            playTimeSeconds:
-                roundPlayTimeSeconds,
+            playTimeSeconds: roundPlayTimeSeconds,
           );
 
     if (!mounted) {
@@ -2291,8 +2123,7 @@ extension _GameScreenLogic on _GameScreenState {
 
     await showResult(
       title: 'GAME OVER',
-      message:
-          'The answer was ${currentItem.answer}.',
+      message: 'The answer was ${currentItem.answer}.',
       imageAsset: 'assets/images/stats/game_over.png',
     );
   }
@@ -2320,11 +2151,9 @@ extension _GameScreenLogic on _GameScreenState {
 
     final PlayerStats updatedStats = isReplay
         ? playerStats
-        : await PlayerStatsService
-            .recordFailedGame(
+        : await PlayerStatsService.recordFailedGame(
             currentStats: playerStats,
-            playTimeSeconds:
-                roundPlayTimeSeconds,
+            playTimeSeconds: roundPlayTimeSeconds,
           );
 
     if (!mounted) {
@@ -2351,12 +2180,11 @@ extension _GameScreenLogic on _GameScreenState {
 
     await showResult(
       title: 'YOU GAVE UP!',
-      message:
-          'The answer was ${currentItem.answer}.',
+      message: 'The answer was ${currentItem.answer}.',
       imageAsset: 'assets/images/ui/popups/give_up.webp',
       primaryButtonLabel: 'NEXT QUESTION',
       secondaryButtonLabel: widget.launchedFromCaseFile
-          ? 'BACK TO CASE FILES'
+          ? 'BACK TO CASE MAP'
           : 'BACK TO HOME',
     );
   }
@@ -2379,9 +2207,7 @@ extension _GameScreenLogic on _GameScreenState {
     advanceToNextClue();
   }
 
-  void advanceToNextClue({
-    bool clearGuess = true,
-  }) {
+  void advanceToNextClue({bool clearGuess = true}) {
     if (isLastClue || roundFinished) {
       return;
     }
@@ -2408,11 +2234,8 @@ extension _GameScreenLogic on _GameScreenState {
 
   void showGameMessage(
     String message, {
-    GameMessageType type =
-        GameMessageType.info,
-    Duration duration = const Duration(
-      milliseconds: 2200,
-    ),
+    GameMessageType type = GameMessageType.info,
+    Duration duration = const Duration(milliseconds: 2200),
   }) {
     messageTimer?.cancel();
 
@@ -2425,18 +2248,15 @@ extension _GameScreenLogic on _GameScreenState {
       gameMessageType = type;
     });
 
-    messageTimer = Timer(
-      duration,
-      () {
-        if (!mounted) {
-          return;
-        }
+    messageTimer = Timer(duration, () {
+      if (!mounted) {
+        return;
+      }
 
-        setState(() {
-          gameMessage = null;
-        });
-      },
-    );
+      setState(() {
+        gameMessage = null;
+      });
+    });
   }
 
   Future<void> showResult({
@@ -2464,15 +2284,11 @@ extension _GameScreenLogic on _GameScreenState {
     }
 
     if (!widget.launchedFromSurpriseMe && !widget.launchedFromCaseFile) {
-      preloadedNextItem = chooseNextItem(
-        excluding: currentItem,
-      );
+      preloadedNextItem = chooseNextItem(excluding: currentItem);
 
       try {
         await precacheImage(
-          imageProviderForPath(
-            preloadedNextItem!.imagePath,
-          ),
+          imageProviderForPath(preloadedNextItem!.imagePath),
           context,
         );
       } catch (_) {
@@ -2490,27 +2306,23 @@ extension _GameScreenLogic on _GameScreenState {
       message: message,
       icon: icon,
       imageAsset: imageAsset,
-      onPlayAgain: onPlayAgainOverride ??
+      onPlayAgain:
+          onPlayAgainOverride ??
           (widget.launchedFromSurpriseMe
               ? startNextSurpriseGame
               : continueToNextRoundFromResult),
-      onHome: onHomeOverride ??
-          (widget.launchedFromCaseFile
-              ? returnToCaseMap
-              : returnHome),
+      onHome:
+          onHomeOverride ??
+          (widget.launchedFromCaseFile ? returnToCaseMap : returnHome),
       primaryButtonLabel: primaryButtonLabel,
       secondaryButtonLabel: suppressDefaultSecondaryButton
           ? null
           : secondaryButtonLabel ??
-              (widget.launchedFromCaseFile
-                  ? 'BACK TO CASE FILES'
-                  : null),
+                (widget.launchedFromCaseFile ? 'BACK TO CASE MAP' : null),
     );
   }
 
-  void returnToCategory({
-    bool closeDialog = true,
-  }) {
+  void returnToCategory({bool closeDialog = true}) {
     _practiceCyclePlayedIds.remove(this);
 
     clueTimer?.cancel();
@@ -2530,9 +2342,7 @@ extension _GameScreenLogic on _GameScreenState {
   }
 
   // ignore: unused_element
-  void returnToCase({
-    bool closeDialog = true,
-  }) {
+  void returnToCase({bool closeDialog = true}) {
     _practiceCyclePlayedIds.remove(this);
 
     clueTimer?.cancel();
@@ -2555,9 +2365,7 @@ extension _GameScreenLogic on _GameScreenState {
     }
   }
 
-  void returnToCaseMap({
-    bool closeDialog = true,
-  }) {
+  void returnToCaseMap({bool closeDialog = true}) {
     _practiceCyclePlayedIds.remove(this);
     clueTimer?.cancel();
     messageTimer?.cancel();
@@ -2573,9 +2381,7 @@ extension _GameScreenLogic on _GameScreenState {
   }
 
   // ignore: unused_element
-  void returnToCaseFilesHome({
-    bool closeDialog = true,
-  }) {
+  void returnToCaseFilesHome({bool closeDialog = true}) {
     _practiceCyclePlayedIds.remove(this);
 
     clueTimer?.cancel();
@@ -2595,9 +2401,7 @@ extension _GameScreenLogic on _GameScreenState {
     }
   }
 
-  void returnHome({
-    bool closeDialog = true,
-  }) {
+  void returnHome({bool closeDialog = true}) {
     _practiceCyclePlayedIds.remove(this);
 
     clueTimer?.cancel();
@@ -2614,9 +2418,7 @@ extension _GameScreenLogic on _GameScreenState {
     navigator.popUntil((route) => route.isFirst);
   }
 
-  Future<void> startNextSurpriseGame({
-    bool closeDialog = true,
-  }) async {
+  Future<void> startNextSurpriseGame({bool closeDialog = true}) async {
     final NavigatorState navigator = Navigator.of(context);
 
     clueTimer?.cancel();
@@ -2654,7 +2456,8 @@ extension _GameScreenLogic on _GameScreenState {
       }
     }
 
-    if (currentCategory != null && currentId.startsWith('${currentCategory}_')) {
+    if (currentCategory != null &&
+        currentId.startsWith('${currentCategory}_')) {
       final String rest = currentId.substring(currentCategory.length + 1);
       final int lastUnderscore = rest.lastIndexOf('_');
       if (lastUnderscore > 0) {
@@ -2674,20 +2477,19 @@ extension _GameScreenLogic on _GameScreenState {
 
       final FirebaseSurpriseSelection? selected =
           scopedCategory != null && scopedCategory.isNotEmpty
-              ? await FirebaseChallengeService
-                  .loadRandomLiveCategorySurpriseQuestion(
-                  category: scopedCategory,
-                  playedQuestionIds: <String>{
-                    ...playedIds,
-                    if (currentId.isNotEmpty) currentId,
-                  },
-                )
-              : await FirebaseChallengeService.loadRandomLiveSurpriseQuestion(
-                  playedQuestionIds: playedIds,
-                  previousCategory: currentCategory,
-                  previousSubcategory: currentSubcategory,
-                  excludedQuestionId: currentId,
-                );
+          ? await FirebaseChallengeService.loadRandomLiveCategorySurpriseQuestion(
+              category: scopedCategory,
+              playedQuestionIds: <String>{
+                ...playedIds,
+                if (currentId.isNotEmpty) currentId,
+              },
+            )
+          : await FirebaseChallengeService.loadRandomLiveSurpriseQuestion(
+              playedQuestionIds: playedIds,
+              previousCategory: currentCategory,
+              previousSubcategory: currentSubcategory,
+              excludedQuestionId: currentId,
+            );
 
       if (!mounted) {
         return;
@@ -2726,17 +2528,13 @@ extension _GameScreenLogic on _GameScreenState {
         ..hideCurrentSnackBar()
         ..showSnackBar(
           const SnackBar(
-            content: Text(
-              'Surprise Me could not load the next live question.',
-            ),
+            content: Text('Surprise Me could not load the next live question.'),
           ),
         );
     }
   }
 
-  void startNewRound({
-    bool closeDialog = true,
-  }) {
+  void startNewRound({bool closeDialog = true}) {
     if (closeDialog) {
       Navigator.of(context).pop();
     }
@@ -2747,38 +2545,29 @@ extension _GameScreenLogic on _GameScreenState {
     surpriseToastTimer?.cancel();
 
     setState(() {
-      currentItem = preloadedNextItem ??
-          chooseNextItem(
-            excluding: currentItem,
-          );
-      currentQuestionIsReplay =
-          _hasPlayedItem(currentItem);
+      currentItem = preloadedNextItem ?? chooseNextItem(excluding: currentItem);
+      currentQuestionIsReplay = _hasPlayedItem(currentItem);
       preloadedNextItem = null;
       imageReady = false;
 
       currentClueIndex = 0;
-      lives =
-          _GameScreenState.maximumLives;
+      lives = _GameScreenState.maximumLives;
       guessesThisRound = 0;
       closeGuessesThisClue = 0;
-      millisecondsRemaining =
-          _GameScreenState
-              .clueDurationMilliseconds;
+      millisecondsRemaining = _GameScreenState.clueDurationMilliseconds;
 
       roundFinished = false;
       showTimeUpOverlay = false;
       showSurpriseToast = false;
 
       gameMessage = null;
-      gameMessageType =
-          GameMessageType.info;
+      gameMessageType = GameMessageType.info;
 
       guessController.clear();
       roundStartedAt = DateTime.now();
     });
 
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       await prepareCurrentImage();
 
       if (!mounted) {
