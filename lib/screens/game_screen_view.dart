@@ -202,7 +202,11 @@ extension _GameScreenView on _GameScreenState {
       messageTimer?.cancel();
       timeUpOverlayTimer?.cancel();
       surpriseToastTimer?.cancel();
-      Navigator.of(context).pop();
+      if (widget.launchedFromCaseFile) {
+        returnToCaseFilesHome(closeDialog: false);
+      } else {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -345,7 +349,11 @@ extension _GameScreenView on _GameScreenState {
       messageTimer?.cancel();
       timeUpOverlayTimer?.cancel();
       surpriseToastTimer?.cancel();
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      if (widget.launchedFromCaseFile) {
+        returnToCaseFilesHome(closeDialog: false);
+      } else {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
     }
   }
 
@@ -1163,7 +1171,7 @@ extension _GameScreenView on _GameScreenState {
         children: [
           Row(children: [
             Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
-              child: Text(widget.launchedFromCaseFile && widget.subcategoryTitle != null ? _caseFileQuestionPoolLabel(widget.subcategoryTitle!) : (_mainStatsCategoryKeyForQuestionId(currentItem.id ?? '')?.replaceAll('_', ' ').toUpperCase() ?? widget.statsCategory.name.replaceAll(RegExp(r'(?<=[a-z])(?=[A-Z])'), ' ').toUpperCase()),
+              child: Text(widget.launchedFromCaseFile ? _caseFileQuestionPoolLabel(_caseFileCurrentQuestionPool) : (_mainStatsCategoryKeyForQuestionId(currentItem.id ?? '')?.replaceAll('_', ' ').toUpperCase() ?? widget.statsCategory.name.replaceAll(RegExp(r'(?<=[a-z])(?=[A-Z])'), ' ').toUpperCase()),
               style: const TextStyle(fontFamily: 'Oswald', fontSize: 19,
                 fontWeight: FontWeight.w700, color: AppColors.white)))),
             LivesDisplay(lives: lives, maximumLives: _GameScreenState.maximumLives),
@@ -1349,6 +1357,9 @@ extension _GameScreenView on _GameScreenState {
       'books authors (mixed)': 'BOOKS & AUTHORS (GENERAL)',
       'creative world (mixed)': 'CREATIVE WORLD (GENERAL)',
       'countries (mixed)': 'COUNTRIES (GENERAL)',
+      'national_symbols': 'NATIONAL SYMBOLS',
+      'national symbols': 'NATIONAL SYMBOLS',
+      'safari jungle animals': 'JUNGLE & SAFARI ANIMALS',
       'sports (mixed)': 'SPORTS (GENERAL)',
       'snacks street food': 'SNACKS & STREET FOODS',
       'snacks street foods': 'SNACKS & STREET FOODS',

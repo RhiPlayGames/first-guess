@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../models/quiz_item.dart';
@@ -173,13 +174,15 @@ class _AnimalKingdomMissionScreenState
                 stageProgress.clueThresholdCount > 0 ||
                 stageProgress.firstGuessCount > 0);
 
-        await AnalyticsService.logCaseFileStageStarted(
+        unawaited(AnalyticsService.logCaseFileStageStarted(
           caseKey: 'animal_kingdom',
           caseName: 'ANIMAL KINGDOM',
           stageNumber: stageNumber,
           totalStages: CasePathService.animalKingdomTotalStages,
           resume: resume,
-        );
+        ).catchError((Object error, StackTrace stackTrace) {
+          debugPrint('CASE FILE START ANALYTICS ERROR: $error');
+        }));
 
         if (!mounted) {
           return;
@@ -847,7 +850,7 @@ class _MissionCard extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         mission.missionText,
-                        maxLines: 4,
+                        maxLines: 7,
                         textAlign: TextAlign.left,
                         style: AppTextStyles.category.copyWith(
                           color: Colors.white,
@@ -857,7 +860,7 @@ class _MissionCard extends StatelessWidget {
                           height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 34),
+                      const SizedBox(height: 42),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: SizedBox(
@@ -887,8 +890,8 @@ class _MissionCard extends StatelessWidget {
           final double originalHeight =
               width * (1402 / 1122);
 
-          const double missionTextTopFactor = 0.57;
-          const double missionTextHeightFactor = 0.15;
+          const double missionTextTopFactor = 0.54;
+          const double missionTextHeightFactor = 0.20;
 
           return Stack(
             fit: StackFit.expand,
@@ -948,7 +951,7 @@ class _MissionCard extends StatelessWidget {
               Positioned(
                 left: width * 0.08,
                 right: width * 0.08,
-                bottom: originalHeight * 0.025,
+                bottom: originalHeight * 0.008,
                 child: Image.asset(
                   ctaAsset,
                   fit: BoxFit.contain,

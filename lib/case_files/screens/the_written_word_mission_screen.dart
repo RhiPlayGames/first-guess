@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../models/quiz_item.dart';
@@ -172,13 +173,15 @@ class _TheWrittenWordMissionScreenState
                 stageProgress.clueThresholdCount > 0 ||
                 stageProgress.firstGuessCount > 0);
 
-        await AnalyticsService.logCaseFileStageStarted(
+        unawaited(AnalyticsService.logCaseFileStageStarted(
           caseKey: 'the_written_word',
           caseName: 'THE WRITTEN WORD',
           stageNumber: stageNumber,
           totalStages: CasePathService.theWrittenWordTotalStages,
           resume: resume,
-        );
+        ).catchError((Object error, StackTrace stackTrace) {
+          debugPrint('CASE FILE START ANALYTICS ERROR: $error');
+        }));
 
         if (!mounted) {
           return;
@@ -835,7 +838,7 @@ class _MissionCard extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         mission.missionText,
-                        maxLines: 4,
+                        maxLines: 7,
                         textAlign: TextAlign.left,
                         style: AppTextStyles.category.copyWith(
                           color: Colors.white,
@@ -845,7 +848,7 @@ class _MissionCard extends StatelessWidget {
                           height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 34),
+                      const SizedBox(height: 42),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: SizedBox(
@@ -876,7 +879,7 @@ class _MissionCard extends StatelessWidget {
               width * (1402 / 1122);
 
           const double missionTextTopFactor = 0.48;
-          const double missionTextHeightFactor = 0.18;
+          const double missionTextHeightFactor = 0.22;
 
           return Stack(
             fit: StackFit.expand,
@@ -932,7 +935,7 @@ class _MissionCard extends StatelessWidget {
                 child: Center(
                   child: Text(
                     mission.missionText,
-                    maxLines: 3,
+                    maxLines: 5,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.category.copyWith(
                       color: Colors.white,
@@ -948,7 +951,7 @@ class _MissionCard extends StatelessWidget {
               Positioned(
                 left: width * 0.08,
                 right: width * 0.08,
-                bottom: originalHeight * 0.025,
+                bottom: originalHeight * 0.008,
                 child: Image.asset(
                   ctaAsset,
                   fit: BoxFit.contain,

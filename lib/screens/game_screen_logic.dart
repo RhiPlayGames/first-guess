@@ -20,6 +20,36 @@ extension _GameScreenLogic on _GameScreenState {
         widget.statsCategory.name;
   }
 
+  // Case Files mixed pools display the actual question subcategory, not
+  // the mission's generic category. ID parsing is limited to Case Files.
+  String get _caseFileCurrentQuestionPool {
+    final String id = currentItem.id ?? '';
+    final String? pool = _countrySubcategoryFromQuestionId(id) ??
+        _foodDrinkSubcategoryFromQuestionId(id) ??
+        _scienceNatureSubcategoryFromQuestionId(id) ??
+        _booksAuthorsSubcategoryFromQuestionId(id) ??
+        _creativeWorldSubcategoryFromQuestionId(id) ??
+        _pastPresentSubcategoryFromQuestionId(id) ??
+        _sportsSubcategoryFromQuestionId(id);
+    if (pool != null && pool.isNotEmpty) return pool;
+    final String prefix = id.startsWith('animals_') ? 'animals_' : '';
+    if (prefix.isNotEmpty) {
+      final String rest = id.substring(prefix.length);
+      final int index = rest.lastIndexOf('_');
+      if (index > 0) return rest.substring(0, index);
+    }
+    // Older Animal Kingdom banks use stand-alone subcategory prefixes.
+    for (final String animalPool in <String>[
+      'jungle_safari_animals', 'safari_jungle_animals',
+      'habitats_animal_groups', 'reptiles_amphibians',
+      'insects_spiders', 'sea_creatures', 'mammals', 'birds',
+      'dinosaurs', 'tracks_footprints',
+    ]) {
+      if (id.startsWith('${animalPool}_')) return animalPool;
+    }
+    return widget.subcategoryTitle ?? widget.statsCategory.name;
+  }
+
   String get _analyticsSubcategoryKey {
     final String? explicitTitle = widget.subcategoryTitle?.trim();
     if (explicitTitle != null && explicitTitle.isNotEmpty) {
@@ -1821,26 +1851,36 @@ extension _GameScreenLogic on _GameScreenState {
       playerStats = updatedStats;
     });
 
-    if (!isReplay) {
-      await AnalyticsService.logEarnedRewards(
-        previous: playerStatsBeforeUpdate,
-        current: updatedStats,
-        gameKey: 'first_guess',
-        gameLabel: 'First Guess',
+    // Case File completion shouldn't wait for nonessential analytics network
+    // calls before the player sees the result and any earned badge. Keep
+    // gameplay progress and stats persistence awaited above.
+    final Future<void> completedTelemetry = () async {
+      if (!isReplay) {
+        await AnalyticsService.logEarnedRewards(
+          previous: playerStatsBeforeUpdate,
+          current: updatedStats,
+          gameKey: 'first_guess',
+          gameLabel: 'First Guess',
+        );
+      }
+      await _logClassicGameCompleted(
+        result: 'correct',
+        xpEarned: pointsWon,
+        firstGuess: wasFirstGuess,
       );
+      await _logClassicQuestionCompleted(
+        result: 'correct',
+        xpEarned: pointsWon,
+        firstGuess: wasFirstGuess,
+      );
+    }();
+    if (widget.launchedFromCaseFile) {
+      unawaited(completedTelemetry.catchError((Object error, StackTrace stack) {
+        debugPrint('CASE FILE COMPLETION ANALYTICS ERROR: $error');
+      }));
+    } else {
+      await completedTelemetry;
     }
-
-    await _logClassicGameCompleted(
-      result: 'correct',
-      xpEarned: pointsWon,
-      firstGuess: wasFirstGuess,
-    );
-
-    await _logClassicQuestionCompleted(
-      result: 'correct',
-      xpEarned: pointsWon,
-      firstGuess: wasFirstGuess,
-    );
 
     await _recordClassicContentConsumption();
 
@@ -2075,7 +2115,7 @@ extension _GameScreenLogic on _GameScreenState {
           onHomeOverride: () async {
             await showPostResultRewardsThen(
               () {
-              returnToCaseMap(
+              returnToCaseFilesHome(
                 closeDialog: false,
               );
               },

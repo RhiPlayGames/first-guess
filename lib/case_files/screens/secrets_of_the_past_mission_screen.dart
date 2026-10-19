@@ -1,3 +1,4 @@
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 
@@ -171,13 +172,15 @@ class _SecretsOfThePastMissionScreenState
                 stageProgress.clueThresholdCount > 0 ||
                 stageProgress.firstGuessCount > 0);
 
-        await AnalyticsService.logCaseFileStageStarted(
+        unawaited(AnalyticsService.logCaseFileStageStarted(
           caseKey: 'secrets_of_the_past',
           caseName: 'SECRETS OF THE PAST',
           stageNumber: stageNumber,
           totalStages: CasePathService.secretsOfThePastTotalStages,
           resume: resume,
-        );
+        ).catchError((Object error, StackTrace stackTrace) {
+          debugPrint('CASE FILE START ANALYTICS ERROR: $error');
+        }));
 
         if (!mounted) {
           return;
@@ -749,8 +752,8 @@ class _MissionCard extends StatelessWidget {
           final double width = constraints.maxWidth;
           final double originalHeight = width * (1402 / 1122);
 
-          const double missionTextTopFactor = 0.57;
-          const double missionTextHeightFactor = 0.15;
+          const double missionTextTopFactor = 0.54;
+          const double missionTextHeightFactor = 0.20;
 
           final bool missionCompleted =
               !replayMode &&
@@ -809,7 +812,7 @@ class _MissionCard extends StatelessWidget {
                 child: Center(
                   child: Text(
                     mission.missionText,
-                    maxLines: 3,
+                    maxLines: 5,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.category.copyWith(
                       color: Colors.white,
@@ -825,7 +828,7 @@ class _MissionCard extends StatelessWidget {
               Positioned(
                 left: width * 0.08,
                 right: width * 0.08,
-                bottom: originalHeight * 0.025,
+                bottom: originalHeight * 0.008,
                 child: Image.asset(
                   ctaAsset,
                   fit: BoxFit.contain,
