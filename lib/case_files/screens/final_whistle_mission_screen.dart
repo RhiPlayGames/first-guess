@@ -94,6 +94,9 @@ class _FinalWhistleMissionScreenState
         _loadFailed = mission == null &&
             !(progress.isCompleted && widget.replayStage == null);
       });
+      // Load the question pool while the mission instructions are visible.
+      _pendingQuestions = mission == null ? null : _questionsFor(mission);
+
     } catch (error, stackTrace) {
       debugPrint(
         'THE FINAL WHISTLE MISSION LOAD ERROR: $error',
@@ -111,6 +114,17 @@ class _FinalWhistleMissionScreenState
     }
   }
 
+  Future<List<QuizItem>>? _pendingQuestions;
+
+  Future<List<QuizItem>> _questionsFor(CaseMission mission) {
+    return mission.hasSubcategoryRequirement
+        ? FirebaseChallengeService.loadLiveSubcategory(
+            category: mission.category,
+            subcategory: mission.subcategory!,
+          )
+        : _loadAllSportsQuestions();
+  }
+
   Future<void> _startMission() async {
     final CaseMission? mission = _mission;
 
@@ -123,12 +137,7 @@ class _FinalWhistleMissionScreenState
     });
 
     try {
-      final items = mission.hasSubcategoryRequirement
-          ? await FirebaseChallengeService.loadLiveSubcategory(
-              category: mission.category,
-              subcategory: mission.subcategory!,
-            )
-          : await _loadAllSportsQuestions();
+      final items = await (_pendingQuestions ??= _questionsFor(mission));
 
       if (!mounted) {
         return;
@@ -176,6 +185,7 @@ class _FinalWhistleMissionScreenState
               launchedFromSurpriseMe: false,
               showSurpriseToast: false,
               launchedFromCaseFile: true,
+              caseFilePathId: 'final_whistle',
               subcategoryTitle: mission.subcategory ?? '${mission.category} (mixed)',
                 caseFileReplay:
                     (_progress?.isCompleted ?? false) &&
@@ -784,8 +794,7 @@ class _MissionCard extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         mission.missionText,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 4,
                         textAlign: TextAlign.left,
                         style: AppTextStyles.category.copyWith(
                           color: Colors.white,
@@ -795,7 +804,7 @@ class _MissionCard extends StatelessWidget {
                           height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 34),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: SizedBox(
@@ -843,7 +852,7 @@ class _MissionCard extends StatelessWidget {
               Positioned(
                 left: width * 0.33,
                 right: width * 0.33,
-                top: originalHeight * 0.17,
+                top: originalHeight * 0.195,
                 child: Image.asset(
                   FinalWhistleMissionScreen._iconAsset,
                   fit: BoxFit.contain,
@@ -873,7 +882,7 @@ class _MissionCard extends StatelessWidget {
                 child: Center(
                   child: Text(
                     mission.missionText,
-                    maxLines: 2,
+                    maxLines: 4,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.category.copyWith(
                       color: Colors.white,
@@ -889,7 +898,7 @@ class _MissionCard extends StatelessWidget {
               Positioned(
                 left: width * 0.08,
                 right: width * 0.08,
-                bottom: originalHeight * 0.045,
+                bottom: originalHeight * 0.025,
                 child: Image.asset(
                   ctaAsset,
                   fit: BoxFit.contain,

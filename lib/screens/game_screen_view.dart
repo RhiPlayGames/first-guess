@@ -1337,17 +1337,34 @@ extension _GameScreenView on _GameScreenState {
     );
   }
   String _caseFileQuestionPoolLabel(String key) {
+    final String normalized = key.trim().toLowerCase().replaceAll('_', ' ');
     const labels = <String, String>{
-      'animals (mixed)': 'ANIMALS (MIXED)',
-      'jungle_safari_animals': 'JUNGLE & SAFARI ANIMALS',
-      'habitats_animal_groups': 'HABITATS & ANIMAL GROUPS',
-      'insects_spiders': 'INSECTS & SPIDERS',
-      'mammals': 'MAMMALS',
-      'birds': 'BIRDS',
-      'reptiles_amphibians': 'REPTILES & AMPHIBIANS',
-      'sea_creatures': 'SEA CREATURES',
+      'animals (mixed)': 'ANIMALS (GENERAL)',
+      'animals': 'ANIMALS (GENERAL)',
+      'food drink (mixed)': 'FOOD & DRINK (GENERAL)',
+      'food drink': 'FOOD & DRINK (GENERAL)',
+      'past present (mixed)': 'PAST & PRESENT (GENERAL)',
+      'past present': 'PAST & PRESENT (GENERAL)',
+      'science nature (mixed)': 'SCIENCE & NATURE (GENERAL)',
+      'books authors (mixed)': 'BOOKS & AUTHORS (GENERAL)',
+      'creative world (mixed)': 'CREATIVE WORLD (GENERAL)',
+      'countries (mixed)': 'COUNTRIES (GENERAL)',
+      'sports (mixed)': 'SPORTS (GENERAL)',
+      'snacks street food': 'SNACKS & STREET FOODS',
+      'snacks street foods': 'SNACKS & STREET FOODS',
+      'jungle safari animals': 'JUNGLE & SAFARI ANIMALS',
+      'habitats animal groups': 'HABITATS & ANIMAL GROUPS',
+      'insects spiders': 'INSECTS & SPIDERS',
+      'reptiles amphibians': 'REPTILES & AMPHIBIANS',
+      'books novels': 'BOOKS & NOVELS',
+      'authors poets playwrights': 'AUTHORS, POETS & PLAYWRIGHTS',
+      'computers internet': 'COMPUTERS & THE INTERNET',
+      'medicine health': 'MEDICINE & HEALTH',
+      'plants trees': 'PLANTS & TREES',
+      'paintings sculptures': 'PAINTINGS & SCULPTURES',
+      'architecture architects': 'ARCHITECTURE & ARCHITECTS',
     };
-    return labels[key] ?? key.replaceAll('_', ' ').toUpperCase();
+    return labels[normalized] ?? normalized.toUpperCase();
   }
 }
 

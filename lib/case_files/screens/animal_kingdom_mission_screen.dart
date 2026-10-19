@@ -103,6 +103,9 @@ class _AnimalKingdomMissionScreenState
         _loadFailed = mission == null &&
             !(progress.isCompleted && widget.replayStage == null);
       });
+      // Load the question pool while the mission instructions are visible.
+      _pendingQuestions = mission == null ? null : _questionsFor(mission);
+
     } catch (error, stackTrace) {
       debugPrint(
         'ANIMAL KINGDOM MISSION LOAD ERROR: $error',
@@ -120,6 +123,17 @@ class _AnimalKingdomMissionScreenState
     }
   }
 
+  Future<List<QuizItem>>? _pendingQuestions;
+
+  Future<List<QuizItem>> _questionsFor(CaseMission mission) {
+    return mission.hasSubcategoryRequirement
+        ? FirebaseChallengeService.loadLiveSubcategory(
+            category: mission.category,
+            subcategory: mission.subcategory!,
+          )
+        : _loadAllAnimalQuestions();
+  }
+
   Future<void> _startMission() async {
     final CaseMission? mission = _mission;
 
@@ -132,12 +146,7 @@ class _AnimalKingdomMissionScreenState
     });
 
     try {
-      final items = mission.hasSubcategoryRequirement
-          ? await FirebaseChallengeService.loadLiveSubcategory(
-              category: mission.category,
-              subcategory: mission.subcategory!,
-            )
-          : await _loadAllAnimalQuestions();
+      final items = await (_pendingQuestions ??= _questionsFor(mission));
 
       if (!mounted) {
         return;
@@ -184,6 +193,7 @@ class _AnimalKingdomMissionScreenState
               return GameScreen.birds(
                 items: items,
                 launchedFromCaseFile: true,
+              caseFilePathId: 'animal_kingdom',
                 subcategoryTitle: mission.subcategory,
                 caseFileReplay:
                     (_progress?.isCompleted ?? false) &&
@@ -195,6 +205,7 @@ class _AnimalKingdomMissionScreenState
               return GameScreen.dinosaurs(
                 items: items,
                 launchedFromCaseFile: true,
+              caseFilePathId: 'animal_kingdom',
                 subcategoryTitle: mission.subcategory,
                 caseFileReplay:
                     (_progress?.isCompleted ?? false) &&
@@ -207,6 +218,7 @@ class _AnimalKingdomMissionScreenState
               launchedFromSurpriseMe: false,
               showSurpriseToast: false,
               launchedFromCaseFile: true,
+              caseFilePathId: 'animal_kingdom',
               subcategoryTitle: mission.subcategory ?? '${mission.category} (mixed)',
                 caseFileReplay:
                     (_progress?.isCompleted ?? false) &&
@@ -835,8 +847,7 @@ class _MissionCard extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         mission.missionText,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 4,
                         textAlign: TextAlign.left,
                         style: AppTextStyles.category.copyWith(
                           color: Colors.white,
@@ -846,7 +857,7 @@ class _MissionCard extends StatelessWidget {
                           height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 34),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: SizedBox(
@@ -921,7 +932,7 @@ class _MissionCard extends StatelessWidget {
                 child: Center(
                   child: Text(
                     mission.missionText,
-                    maxLines: 2,
+                    maxLines: 4,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.category.copyWith(
                       color: Colors.white,
@@ -937,7 +948,7 @@ class _MissionCard extends StatelessWidget {
               Positioned(
                 left: width * 0.08,
                 right: width * 0.08,
-                bottom: originalHeight * 0.045,
+                bottom: originalHeight * 0.025,
                 child: Image.asset(
                   ctaAsset,
                   fit: BoxFit.contain,

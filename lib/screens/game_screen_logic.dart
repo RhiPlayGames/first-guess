@@ -758,42 +758,42 @@ extension _GameScreenLogic on _GameScreenState {
               : '');
 
       final bool isRoundTheWorld =
-          _countrySubcategoryFromQuestionId(
+          widget.caseFilePathId == 'round_the_world' || (_countrySubcategoryFromQuestionId(
                 representativeId,
               ) !=
-              null;
+              null);
 
       final bool isSecretsOfThePast =
-          _pastPresentSubcategoryFromQuestionId(
+          widget.caseFilePathId == 'secrets_of_the_past' || (_pastPresentSubcategoryFromQuestionId(
                 representativeId,
               ) !=
-              null;
+              null);
 
       final bool isTasteAndTreats =
-          _foodDrinkSubcategoryFromQuestionId(
+          widget.caseFilePathId == 'taste_and_treats' || (_foodDrinkSubcategoryFromQuestionId(
                 representativeId,
               ) !=
-              null;
+              null);
 
       final bool isNatureOfDiscovery =
-          _scienceNatureSubcategoryFromQuestionId(
+          widget.caseFilePathId == 'nature_of_discovery' || (_scienceNatureSubcategoryFromQuestionId(
                 representativeId,
               ) !=
-              null;
+              null);
 
       final bool isTheWrittenWord =
-          _booksAuthorsSubcategoryFromQuestionId(
+          widget.caseFilePathId == 'the_written_word' || (_booksAuthorsSubcategoryFromQuestionId(
                 representativeId,
               ) !=
-              null;
+              null);
 
       final bool isTheCreativeCode =
-          _creativeWorldSubcategoryFromQuestionId(
+          widget.caseFilePathId == 'the_creative_code' || (_creativeWorldSubcategoryFromQuestionId(
                 representativeId,
               ) !=
-              null;
+              null);
 
-      final bool isFinalWhistle = _sportsSubcategoryFromQuestionId(representativeId) != null;
+      final bool isFinalWhistle = widget.caseFilePathId == 'final_whistle' || (_sportsSubcategoryFromQuestionId(representativeId) != null);
 
       final progress = isFinalWhistle
           ? await CasePathService.loadFinalWhistleProgress()
@@ -1189,6 +1189,36 @@ extension _GameScreenLogic on _GameScreenState {
       }
     }
 
+    // Case Files QA: route progress to the case actually launched, never
+    // infer its identity from the Firebase question ID (which may be mixed).
+    if (CaseFilesQa.enabled && widget.launchedFromCaseFile &&
+        widget.caseFilePathId != null) {
+      isFinalWhistle = widget.caseFilePathId == 'final_whistle';
+      isRoundTheWorld = widget.caseFilePathId == 'round_the_world';
+      isSecretsOfThePast = widget.caseFilePathId == 'secrets_of_the_past';
+      isTasteAndTreats = widget.caseFilePathId == 'taste_and_treats';
+      isNatureOfDiscovery = widget.caseFilePathId == 'nature_of_discovery';
+      isTheWrittenWord = widget.caseFilePathId == 'the_written_word';
+      isTheCreativeCode = widget.caseFilePathId == 'the_creative_code';
+      if (isFinalWhistle) {
+        category = 'sports'; subcategory = 'sports_qa';
+      } else if (isRoundTheWorld) {
+        category = 'countries'; subcategory = 'flags';
+      } else if (isSecretsOfThePast) {
+        category = 'past_present'; subcategory = 'historical_events';
+      } else if (isTasteAndTreats) {
+        category = 'food_drink'; subcategory = 'qa';
+      } else if (isNatureOfDiscovery) {
+        category = 'science_nature'; subcategory = 'plants_trees';
+      } else if (isTheWrittenWord) {
+        category = 'books_authors'; subcategory = 'book_series';
+      } else if (isTheCreativeCode) {
+        category = 'creative_world'; subcategory = 'artists';
+      } else {
+        category = 'animals'; subcategory = 'birds';
+      }
+    }
+
     if (subcategory == null ||
         subcategory.isEmpty ||
         category == null) {
@@ -1309,7 +1339,7 @@ extension _GameScreenLogic on _GameScreenState {
 
     try {
       if (widget.launchedFromCaseFile &&
-          stageBefore == null) {
+          (stageBefore == null || CaseFilesQa.enabled)) {
         final progressBefore = isFinalWhistle
             ? await CasePathService.loadFinalWhistleProgress()
             : isRoundTheWorld
@@ -1856,38 +1886,38 @@ extension _GameScreenLogic on _GameScreenState {
 
     if (widget.launchedFromCaseFile &&
         completedCaseStage != null) {
-      final bool isFinalWhistleCase = _sportsSubcategoryFromQuestionId(currentItem.id ?? '') != null;
-      final bool isRoundTheWorldCase =
+      final bool isFinalWhistleCase = widget.caseFilePathId == 'final_whistle' || _sportsSubcategoryFromQuestionId(currentItem.id ?? '') != null;
+      final bool isRoundTheWorldCase = widget.caseFilePathId == 'round_the_world' ||
           _countrySubcategoryFromQuestionId(
                 currentItem.id ?? '',
               ) !=
               null;
 
-      final bool isSecretsOfThePastCase =
+      final bool isSecretsOfThePastCase = widget.caseFilePathId == 'secrets_of_the_past' ||
           _pastPresentSubcategoryFromQuestionId(
                 currentItem.id ?? '',
               ) !=
               null;
 
-      final bool isTasteAndTreatsCase =
+      final bool isTasteAndTreatsCase = widget.caseFilePathId == 'taste_and_treats' ||
           _foodDrinkSubcategoryFromQuestionId(
                 currentItem.id ?? '',
               ) !=
               null;
 
-      final bool isNatureOfDiscoveryCase =
+      final bool isNatureOfDiscoveryCase = widget.caseFilePathId == 'nature_of_discovery' ||
           _scienceNatureSubcategoryFromQuestionId(
                 currentItem.id ?? '',
               ) !=
               null;
 
-      final bool isTheWrittenWordCase =
+      final bool isTheWrittenWordCase = widget.caseFilePathId == 'the_written_word' ||
           _booksAuthorsSubcategoryFromQuestionId(
                 currentItem.id ?? '',
               ) !=
               null;
 
-      final bool isTheCreativeCodeCase =
+      final bool isTheCreativeCodeCase = widget.caseFilePathId == 'the_creative_code' ||
           _creativeWorldSubcategoryFromQuestionId(
                 currentItem.id ?? '',
               ) !=
@@ -1961,16 +1991,20 @@ extension _GameScreenLogic on _GameScreenState {
                               : 'animal_kingdom';
 
       if (completedEntireCasePath && !CaseFilesQa.enabled) {
-        await AnalyticsService.logCaseFileCompleted(
+        // Analytics must not delay the Case File completion/badge dialog.
+        unawaited(AnalyticsService.logCaseFileCompleted(
           caseKey: caseKey,
           caseName: caseName,
           totalStages: totalStages,
-        );
-
-        await AnalyticsService.logBadgeEarned(
+        ).catchError((Object error, StackTrace trace) {
+          debugPrint('Case File completion analytics error: $error');
+        }));
+        unawaited(AnalyticsService.logBadgeEarned(
           badgeName: badgeName,
           gameType: 'case_file',
-        );
+        ).catchError((Object error, StackTrace trace) {
+          debugPrint('Case File badge analytics error: $error');
+        }));
       }
 
       final String completionTitle =

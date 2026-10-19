@@ -98,6 +98,9 @@ class _TheCreativeCodeMissionScreenState
         _loadFailed = mission == null &&
             !(progress.isCompleted && widget.replayStage == null);
       });
+      // Load the question pool while the mission instructions are visible.
+      _pendingQuestions = mission == null ? null : _questionsFor(mission);
+
     } catch (error, stackTrace) {
       debugPrint(
         'THE CREATIVE CODE MISSION LOAD ERROR: $error',
@@ -115,6 +118,17 @@ class _TheCreativeCodeMissionScreenState
     }
   }
 
+  Future<List<QuizItem>>? _pendingQuestions;
+
+  Future<List<QuizItem>> _questionsFor(CaseMission mission) {
+    return mission.hasSubcategoryRequirement
+        ? FirebaseChallengeService.loadLiveSubcategory(
+            category: mission.category,
+            subcategory: mission.subcategory!,
+          )
+        : _loadAllCreativeWorldQuestions();
+  }
+
   Future<void> _startMission() async {
     final CaseMission? mission = _mission;
 
@@ -127,12 +141,7 @@ class _TheCreativeCodeMissionScreenState
     });
 
     try {
-      final items = mission.hasSubcategoryRequirement
-          ? await FirebaseChallengeService.loadLiveSubcategory(
-              category: mission.category,
-              subcategory: mission.subcategory!,
-            )
-          : await _loadAllCreativeWorldQuestions();
+      final items = await (_pendingQuestions ??= _questionsFor(mission));
 
       if (!mounted) {
         return;
@@ -180,6 +189,7 @@ class _TheCreativeCodeMissionScreenState
               launchedFromSurpriseMe: false,
               showSurpriseToast: false,
               launchedFromCaseFile: true,
+              caseFilePathId: 'the_creative_code',
               subcategoryTitle: mission.subcategory ?? '${mission.category} (mixed)',
                 caseFileReplay:
                     (_progress?.isCompleted ?? false) &&
@@ -813,8 +823,7 @@ class _MissionCard extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         mission.missionText,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 4,
                         textAlign: TextAlign.left,
                         style: AppTextStyles.category.copyWith(
                           color: Colors.white,
@@ -824,7 +833,7 @@ class _MissionCard extends StatelessWidget {
                           height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 34),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: SizedBox(
@@ -927,7 +936,7 @@ class _MissionCard extends StatelessWidget {
               Positioned(
                 left: width * 0.08,
                 right: width * 0.08,
-                bottom: originalHeight * 0.045,
+                bottom: originalHeight * 0.025,
                 child: Image.asset(
                   ctaAsset,
                   fit: BoxFit.contain,

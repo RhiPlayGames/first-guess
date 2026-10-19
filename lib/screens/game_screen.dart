@@ -51,6 +51,7 @@ class GameScreen extends StatefulWidget {
   final bool showSurpriseToast;
   final bool launchedFromCaseFile;
   final bool caseFileReplay;
+  final String? caseFilePathId;
   final String? subcategoryTitle;
   final String? surpriseCategory;
 
@@ -62,6 +63,7 @@ class GameScreen extends StatefulWidget {
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
+    this.caseFilePathId,
   }) : gameType = QuizGameType.capitalCities,
        subcategoryTitle = null,
        surpriseCategory = null;
@@ -74,6 +76,7 @@ class GameScreen extends StatefulWidget {
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
+    this.caseFilePathId,
   }) : gameType = QuizGameType.countrySilhouettes,
        subcategoryTitle = null,
        surpriseCategory = null;
@@ -86,6 +89,7 @@ class GameScreen extends StatefulWidget {
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
+    this.caseFilePathId,
   }) : gameType = QuizGameType.currencies,
        subcategoryTitle = null,
        surpriseCategory = null;
@@ -98,6 +102,7 @@ class GameScreen extends StatefulWidget {
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
+    this.caseFilePathId,
   }) : gameType = QuizGameType.majorCities,
        subcategoryTitle = null,
        surpriseCategory = null;
@@ -110,6 +115,7 @@ class GameScreen extends StatefulWidget {
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
+    this.caseFilePathId,
     this.subcategoryTitle,
   }) : gameType = QuizGameType.birds,
        surpriseCategory = null;
@@ -122,6 +128,7 @@ class GameScreen extends StatefulWidget {
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
+    this.caseFilePathId,
     this.subcategoryTitle,
   }) : gameType = QuizGameType.dinosaurs,
        surpriseCategory = null;
@@ -134,6 +141,7 @@ class GameScreen extends StatefulWidget {
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
+    this.caseFilePathId,
   }) : gameType = QuizGameType.breakfastFoods,
        subcategoryTitle = null,
        surpriseCategory = null;
@@ -146,6 +154,7 @@ class GameScreen extends StatefulWidget {
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
+    this.caseFilePathId,
   }) : gameType = QuizGameType.dessertsCakesSweets,
        subcategoryTitle = null,
        surpriseCategory = null;
@@ -159,6 +168,7 @@ class GameScreen extends StatefulWidget {
     this.showSurpriseToast = false,
     this.launchedFromCaseFile = false,
     this.caseFileReplay = false,
+    this.caseFilePathId,
     this.subcategoryTitle,
     this.surpriseCategory,
   }) : gameType = QuizGameType.firebaseDynamic;
