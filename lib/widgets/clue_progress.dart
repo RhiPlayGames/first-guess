@@ -14,7 +14,10 @@ class ClueProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Semantics(
+      label: 'Clue ${currentClueIndex + 1} of $clueCount',
+      child: ExcludeSemantics(
+        child: SizedBox(
       width: 34,
       child: Column(
         children: List.generate(clueCount, (index) {
@@ -45,6 +48,8 @@ class ClueProgress extends StatelessWidget {
             ),
           );
         }),
+        ),
+      ),
       ),
     );
   }

@@ -35,13 +35,19 @@ class FirstGuessHomeButton extends StatelessWidget {
           child: InkWell(
             customBorder: const CircleBorder(),
             onTap: onPressed ?? () => goToFirstGuessHome(context),
-            child: const Tooltip(
-              message: 'Home',
-              child: Center(
-                child: Icon(
-                  Icons.home_outlined,
-                  color: AppColors.white,
-                  size: 23,
+            child: Semantics(
+              button: true,
+              label: 'Go to First Guess home',
+              child: ExcludeSemantics(
+                child: Tooltip(
+                  message: tooltip,
+                  child: const Center(
+                    child: Icon(
+                      Icons.home_outlined,
+                      color: AppColors.white,
+                      size: 23,
+                    ),
+                  ),
                 ),
               ),
             ),

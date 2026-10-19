@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../theme/app_text_styles.dart';
 import '../../widgets/app_home_button.dart';
@@ -276,7 +277,12 @@ class _BackButton extends StatelessWidget {
       height: 46,
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
+        child: Semantics(
+          label: 'Back',
+          button: true,
+          excludeSemantics: true,
+          onTap: onPressed,
+          child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(23),
           child: const Icon(
@@ -289,6 +295,7 @@ class _BackButton extends StatelessWidget {
                 blurRadius: 5,
               ),
             ],
+          ),
           ),
         ),
       ),
@@ -432,7 +439,29 @@ class _CaseNode extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Center(
-            child: GestureDetector(
+            child: Focus(
+              canRequestFocus: caseCompleted || isCurrent,
+              skipTraversal: !(caseCompleted || isCurrent),
+              onKeyEvent: (node, event) {
+                if (event is KeyDownEvent &&
+                    (event.logicalKey == LogicalKeyboardKey.enter ||
+                     event.logicalKey == LogicalKeyboardKey.space)) {
+                  if (caseCompleted || isCurrent) {
+                    onTap();
+                    return KeyEventResult.handled;
+                  }
+                }
+                return KeyEventResult.ignored;
+              },
+              child: Semantics(
+              label: 'Mission $number of 20, '
+                  '${isComplete ? "completed" : isCurrent ? "available" : "locked"}'
+                  '${isCurrent && currentStageHasProgress ? ", in progress" : ""}',
+              button: true,
+              enabled: caseCompleted || isCurrent,
+              onTap: (caseCompleted || isCurrent) ? onTap : null,
+              excludeSemantics: true,
+              child: GestureDetector(
             onTap: (caseCompleted || isCurrent) ? onTap : null,
             child: Container(
               width: nodeSize,
@@ -520,6 +549,8 @@ class _CaseNode extends StatelessWidget {
                               ),
                             ),
             ),
+          ),
+          ),
           ),
           ),
           if (isCurrent) ...[

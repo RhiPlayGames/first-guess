@@ -691,54 +691,5 @@ class DailyFlashProgressService {
     _cacheProgress(progress);
   }
 
-  // =========================================================
-  // DEBUG / TESTING RESET
-  // =========================================================
-
-  /// Clears today's Classic Daily Flash play progress locally and in Firestore.
-  /// Intended for debug builds only.
-  static Future<void> resetForTesting() async {
-    final SharedPreferences preferences =
-        await SharedPreferences.getInstance();
-
-    await Future.wait(<Future<bool>>[
-      preferences.remove(_datePreference),
-      preferences.remove(_nextQuestionPreference),
-      preferences.remove(_totalXpPreference),
-      preferences.remove(_correctPreference),
-      preferences.remove(_firstGuessPreference),
-      preferences.remove(_loadingSeenDatePreference),
-    ]);
-
-    _cachedTodayProgress = null;
-    _cachedTodayUserId = null;
-    _loadTodayInFlight = null;
-    _loadTodayInFlightDate = null;
-    _loadTodayInFlightUserId = null;
-
-    final DocumentReference<Map<String, dynamic>>? cloudDocument =
-        _cloudProgressDocument;
-
-    if (cloudDocument == null) {
-      return;
-    }
-
-    try {
-      final QuerySnapshot<Map<String, dynamic>> processedResults =
-          await cloudDocument.collection('processed_results').get();
-
-      final WriteBatch batch = _firestore.batch();
-
-      for (final QueryDocumentSnapshot<Map<String, dynamic>> document
-          in processedResults.docs) {
-        batch.delete(document.reference);
-      }
-
-      batch.delete(cloudDocument);
-      await batch.commit();
-    } on FirebaseException {
-      // Local reset still succeeds if Firestore is temporarily unavailable.
-    }
-  }
 
 }

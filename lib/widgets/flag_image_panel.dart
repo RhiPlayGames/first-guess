@@ -50,6 +50,7 @@ class FlagImagePanel extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             child: Image.asset(
               imagePath,
+              semanticLabel: 'Flag image, visual quiz clue',
               fit: BoxFit.contain,
               filterQuality: FilterQuality.high,
               gaplessPlayback: true,

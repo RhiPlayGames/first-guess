@@ -75,7 +75,9 @@ class _GuessPanelState extends State<GuessPanel> {
                 width: isDesktop
                     ? constraints.maxWidth
                     : constraints.maxWidth + 20,
-                child: TextField(
+                child: Semantics(
+                  label: 'Your answer',
+                  child: TextField(
                   controller: widget.controller,
                   focusNode: widget.focusNode,
                   enabled: widget.enabled,
@@ -139,6 +141,7 @@ class _GuessPanelState extends State<GuessPanel> {
                         color: AppColors.darkGrey,
                       ),
                     ),
+                  ),
                   ),
                 ),
               ),

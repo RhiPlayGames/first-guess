@@ -444,7 +444,12 @@ class _HomeHeader extends StatelessWidget {
                   children: [
                     Material(
                       color: Colors.transparent,
-                      child: InkWell(
+                      child: Semantics(
+          label: 'Profile',
+          button: true,
+          onTap: onProfilePressed,
+          excludeSemantics: true,
+          child: InkWell(
                         onTap: onProfilePressed,
                         borderRadius: BorderRadius.circular(12),
                         child: SizedBox(
@@ -457,14 +462,19 @@ class _HomeHeader extends StatelessWidget {
                             filterQuality: FilterQuality.high,
                           ),
                         ),
-                      ),
+                      )),
                     ),
                     SizedBox(width: isDesktop ? 16 : 14),
                     Tooltip(
                       message: 'Settings',
                       child: Material(
                         color: Colors.transparent,
-                        child: InkWell(
+                        child: Semantics(
+          label: 'Settings',
+          button: true,
+          onTap: onSettingsPressed,
+          excludeSemantics: true,
+          child: InkWell(
                           onTap: onSettingsPressed,
                           borderRadius: BorderRadius.circular(settingsSize / 2),
                           child: SizedBox(
@@ -476,7 +486,7 @@ class _HomeHeader extends StatelessWidget {
                               size: settingsSize,
                             ),
                           ),
-                        ),
+                        )),
                       ),
                     ),
                   ],
@@ -565,7 +575,12 @@ class _DailyFlashHomeBannerState extends State<_DailyFlashHomeBanner> {
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(14),
             clipBehavior: Clip.antiAlias,
-            child: InkWell(
+            child: Semantics(
+          label: 'Daily Flash 5. Play daily challenges',
+          button: true,
+          onTap: widget.onPressed,
+          excludeSemantics: true,
+          child: InkWell(
               onTap: widget.onPressed,
               borderRadius: BorderRadius.circular(14),
               child: SizedBox(
@@ -610,7 +625,7 @@ class _DailyFlashHomeBannerState extends State<_DailyFlashHomeBanner> {
                   ],
                 ),
               ),
-            ),
+            )),
           );
         }
 
@@ -627,6 +642,11 @@ class _DailyFlashHomeBannerState extends State<_DailyFlashHomeBanner> {
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(radius),
           clipBehavior: Clip.antiAlias,
+          child: Semantics(
+          label: 'Daily Flash 5. Play daily challenges',
+          button: true,
+          onTap: widget.onPressed,
+          excludeSemantics: true,
           child: InkWell(
             onTap: widget.onPressed,
             borderRadius: BorderRadius.circular(radius),
@@ -691,7 +711,7 @@ class _DailyFlashHomeBannerState extends State<_DailyFlashHomeBanner> {
                 ],
               ),
             ),
-          ),
+          )),
         );
       },
     );
@@ -784,7 +804,13 @@ class _CategoryCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(radius),
-        child: InkWell(
+        child: Semantics(
+          label: '${category.title}. ${isAvailable ? 'Play' : 'Coming soon'}',
+          button: true,
+          enabled: isAvailable,
+          onTap: isAvailable ? category.onPressed : null,
+          excludeSemantics: true,
+          child: InkWell(
           onTap: isAvailable ? category.onPressed : null,
           borderRadius: BorderRadius.circular(radius),
           child: Ink(
@@ -889,7 +915,7 @@ class _CategoryCard extends StatelessWidget {
               ),
             ),
           ),
-        ),
+        )),
       ),
     );
   }

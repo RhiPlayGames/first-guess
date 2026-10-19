@@ -12,26 +12,11 @@ import '../models/gameplay_result_event.dart';
 import 'case_progress_service.dart';
 import 'case_progress_storage_service.dart';
 import 'case_tracking_service.dart';
-import 'case_files_qa.dart';
 
 class CasePathService {
   CasePathService._();
 
-  // Temporary QA mission definitions are confined to opt-in QA builds.
-  static CaseMission _forQa(CaseMission mission) => !CaseFilesQa.enabled
-      ? mission
-      : CaseMission(
-          stage: mission.stage,
-          difficulty: mission.difficulty,
-          title: mission.title,
-          missionText: mission.missionText,
-          category: mission.category,
-          subcategory: mission.subcategory,
-          correctRequired: 2,
-        );
-
-  // Display the original mission requirements even in temporary QA builds.
-  // QA scoring and completion continue to use _forQa independently.
+  // Return the real mission requirements used by normal gameplay.
   static CaseMission? originalMissionForDisplay({
     required String casePathId,
     required int stage,
@@ -59,8 +44,6 @@ class CasePathService {
         return null;
     }
   }
-
-  static CaseProgress _applyCaseFileTestUnlock(CaseProgress progress) => progress;
 
   static const String animalKingdomCasePathId =
       'animal_kingdom';
@@ -118,7 +101,7 @@ class CasePathService {
     );
 
     if (savedProgress != null) {
-      return _applyCaseFileTestUnlock(savedProgress);
+      return savedProgress;
     }
 
     final CaseProgress initialProgress =
@@ -131,7 +114,7 @@ class CasePathService {
       initialProgress,
     );
 
-    return _applyCaseFileTestUnlock(initialProgress);
+    return initialProgress;
   }
 
   static CaseMission? animalKingdomMissionForStage(
@@ -142,7 +125,7 @@ class CasePathService {
       return null;
     }
 
-    return _forQa(animalKingdomCaseMissions[stage - 1]);
+    return animalKingdomCaseMissions[stage - 1];
   }
 
   static CaseMission?
@@ -253,7 +236,7 @@ class CasePathService {
     );
 
     if (savedProgress != null) {
-      return _applyCaseFileTestUnlock(savedProgress);
+      return savedProgress;
     }
 
     final CaseProgress initialProgress =
@@ -266,7 +249,7 @@ class CasePathService {
       initialProgress,
     );
 
-    return _applyCaseFileTestUnlock(initialProgress);
+    return initialProgress;
   }
 
   static CaseMission? finalWhistleMissionForStage(
@@ -277,7 +260,7 @@ class CasePathService {
       return null;
     }
 
-    return _forQa(finalWhistleCaseMissions[stage - 1]);
+    return finalWhistleCaseMissions[stage - 1];
   }
 
   static CaseMission?
@@ -388,7 +371,7 @@ class CasePathService {
     );
 
     if (savedProgress != null) {
-      return _applyCaseFileTestUnlock(savedProgress);
+      return savedProgress;
     }
 
     final CaseProgress initialProgress =
@@ -401,7 +384,7 @@ class CasePathService {
       initialProgress,
     );
 
-    return _applyCaseFileTestUnlock(initialProgress);
+    return initialProgress;
   }
 
   static CaseMission? roundTheWorldMissionForStage(
@@ -412,7 +395,7 @@ class CasePathService {
       return null;
     }
 
-    return _forQa(roundTheWorldCaseMissions[stage - 1]);
+    return roundTheWorldCaseMissions[stage - 1];
   }
 
   static CaseMission? currentRoundTheWorldMission(
@@ -522,7 +505,7 @@ class CasePathService {
     );
 
     if (savedProgress != null) {
-      return _applyCaseFileTestUnlock(savedProgress);
+      return savedProgress;
     }
 
     final CaseProgress initialProgress =
@@ -535,7 +518,7 @@ class CasePathService {
       initialProgress,
     );
 
-    return _applyCaseFileTestUnlock(initialProgress);
+    return initialProgress;
   }
 
   static CaseMission? secretsOfThePastMissionForStage(
@@ -546,7 +529,7 @@ class CasePathService {
       return null;
     }
 
-    return _forQa(secretsOfThePastCaseMissions[stage - 1]);
+    return secretsOfThePastCaseMissions[stage - 1];
   }
 
   static CaseMission? currentSecretsOfThePastMission(
@@ -656,7 +639,7 @@ class CasePathService {
     );
 
     if (savedProgress != null) {
-      return _applyCaseFileTestUnlock(savedProgress);
+      return savedProgress;
     }
 
     final CaseProgress initialProgress =
@@ -669,7 +652,7 @@ class CasePathService {
       initialProgress,
     );
 
-    return _applyCaseFileTestUnlock(initialProgress);
+    return initialProgress;
   }
 
   static CaseMission? tasteAndTreatsMissionForStage(
@@ -680,7 +663,7 @@ class CasePathService {
       return null;
     }
 
-    return _forQa(tasteAndTreatsCaseMissions[stage - 1]);
+    return tasteAndTreatsCaseMissions[stage - 1];
   }
 
   static CaseMission? currentTasteAndTreatsMission(
@@ -790,7 +773,7 @@ class CasePathService {
     );
 
     if (savedProgress != null) {
-      return _applyCaseFileTestUnlock(savedProgress);
+      return savedProgress;
     }
 
     final CaseProgress initialProgress =
@@ -803,7 +786,7 @@ class CasePathService {
       initialProgress,
     );
 
-    return _applyCaseFileTestUnlock(initialProgress);
+    return initialProgress;
   }
 
   static CaseMission? natureOfDiscoveryMissionForStage(
@@ -814,7 +797,7 @@ class CasePathService {
       return null;
     }
 
-    return _forQa(natureOfDiscoveryCaseMissions[stage - 1]);
+    return natureOfDiscoveryCaseMissions[stage - 1];
   }
 
   static CaseMission? currentNatureOfDiscoveryMission(
@@ -924,7 +907,7 @@ class CasePathService {
     );
 
     if (savedProgress != null) {
-      return _applyCaseFileTestUnlock(savedProgress);
+      return savedProgress;
     }
 
     final CaseProgress initialProgress =
@@ -937,7 +920,7 @@ class CasePathService {
       initialProgress,
     );
 
-    return _applyCaseFileTestUnlock(initialProgress);
+    return initialProgress;
   }
 
   static CaseMission? theWrittenWordMissionForStage(
@@ -948,7 +931,7 @@ class CasePathService {
       return null;
     }
 
-    return _forQa(theWrittenWordCaseMissions[stage - 1]);
+    return theWrittenWordCaseMissions[stage - 1];
   }
 
   static CaseMission? currentTheWrittenWordMission(
@@ -1059,7 +1042,7 @@ class CasePathService {
     );
 
     if (savedProgress != null) {
-      return _applyCaseFileTestUnlock(savedProgress);
+      return savedProgress;
     }
 
     final CaseProgress initialProgress =
@@ -1072,7 +1055,7 @@ class CasePathService {
       initialProgress,
     );
 
-    return _applyCaseFileTestUnlock(initialProgress);
+    return initialProgress;
   }
 
   static CaseMission? theCreativeCodeMissionForStage(
@@ -1083,7 +1066,7 @@ class CasePathService {
       return null;
     }
 
-    return _forQa(theCreativeCodeCaseMissions[stage - 1]);
+    return theCreativeCodeCaseMissions[stage - 1];
   }
 
   static CaseMission? currentTheCreativeCodeMission(

@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/case_progress.dart';
-import 'case_files_qa.dart';
 
 class CaseProgressStorageService {
   CaseProgressStorageService._();
@@ -21,11 +20,10 @@ class CaseProgressStorageService {
   static const int _schemaVersion = 1;
 
   static String _localKey(String casePathId) =>
-      CaseFilesQa.enabled ? 'case_path_qa_only_v1_$casePathId' : 'case_path_progress_v1_$casePathId';
+      'case_path_progress_v1_$casePathId';
 
   static DocumentReference<Map<String, dynamic>>?
       _cloudDocument(String casePathId) {
-    if (CaseFilesQa.enabled) return null;
     final User? user = _auth.currentUser;
 
     if (user == null) {

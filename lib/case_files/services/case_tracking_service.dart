@@ -1,7 +1,6 @@
 import '../models/case_mission.dart';
 import '../models/case_progress.dart';
 import '../models/gameplay_result_event.dart';
-import 'case_files_qa.dart';
 
 class CaseTrackingService {
   const CaseTrackingService();
@@ -94,13 +93,6 @@ class CaseTrackingService {
   }) {
     if (!event.correct) {
       return false;
-    }
-
-    // QA mode is opt-in and used only by Case Files. During QA, an accepted
-    // answer counts even if a source question has mismatched pool metadata.
-    // Production builds continue to enforce category/subcategory requirements.
-    if (CaseFilesQa.enabled) {
-      return _hasValidClueNumber(event.clueNumberSolved);
     }
 
     if (!_hasValidClueNumber(event.clueNumberSolved)) {

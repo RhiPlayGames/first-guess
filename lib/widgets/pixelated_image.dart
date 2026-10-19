@@ -31,6 +31,7 @@ class PixelatedImage extends StatelessWidget {
       height: height,
       child: Image(
         image: imageProvider,
+        semanticLabel: 'Visual quiz clue',
         fit: BoxFit.contain,
         filterQuality: FilterQuality.high,
         isAntiAlias: true,

@@ -43,3 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Temporary UI testing screenshots
+/ui_audit_screenshots/
+/ui_audit_screenshots.zip
+/flutter_02.png
+
+# ChromeDriver testing files
+/chromedriver/
+
+# Temporary Dart backups
+*.bak

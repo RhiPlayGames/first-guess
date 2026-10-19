@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -31,25 +30,6 @@ class _FirstPickCategoriesScreenState extends State<FirstPickCategoriesScreen> {
       _error = null;
     });
     try {
-      debugPrint(
-        '[FIRST PICK CATEGORIES] project=${Firebase.app().options.projectId}',
-      );
-      // Temporary read-only diagnostic: check a document confirmed by Admin SDK.
-      final testDoc = await FirebaseFirestore.instance
-          .collection('challenges')
-          .doc('first_pick_animals_0001')
-          .get(const GetOptions(source: Source.server));
-      debugPrint('[FIRST PICK TEST] Document exists: ${testDoc.exists}');
-      if (testDoc.exists) {
-        final data = testDoc.data();
-        debugPrint(
-          '[FIRST PICK TEST] id=${testDoc.id} '
-          'category=${data?['category']} '
-          'status=${data?['status']} '
-          'subcategory=${data?['subcategory']}',
-        );
-      }
-
       // A single-field query needs no category/status composite index.
       final snapshot = await FirebaseFirestore.instance
           .collection('challenges')

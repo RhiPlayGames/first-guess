@@ -179,6 +179,7 @@ class RevealImagePanel extends StatelessWidget {
         child: _applyImageScale(
           Image(
             image: _imageProvider(),
+        semanticLabel: 'Visual quiz clue',
             fit: fit,
             filterQuality: FilterQuality.high,
             gaplessPlayback: true,
@@ -193,6 +194,7 @@ class RevealImagePanel extends StatelessWidget {
     return _applyImageScale(
       Image(
         image: _imageProvider(),
+        semanticLabel: 'Visual quiz clue',
         key: ValueKey('clear-$imagePath'),
         fit: fit,
         filterQuality: FilterQuality.high,

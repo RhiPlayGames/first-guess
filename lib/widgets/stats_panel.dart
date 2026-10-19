@@ -140,7 +140,8 @@ class _StatBadge extends StatelessWidget {
     if (isWebCard) {
       return Semantics(
         label: '$semanticsLabel $value',
-        child: Container(
+        child: ExcludeSemantics(
+          child: Container(
           height: 64,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
@@ -184,6 +185,7 @@ class _StatBadge extends StatelessWidget {
               ),
             ),
           ),
+          ),
         ),
       );
     }
@@ -198,7 +200,8 @@ class _StatBadge extends StatelessWidget {
 
     return Semantics(
       label: '$semanticsLabel $value',
-      child: SizedBox(
+      child: ExcludeSemantics(
+        child: SizedBox(
         height: badgeHeight,
         child: Center(
           child: FittedBox(
@@ -229,6 +232,7 @@ class _StatBadge extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ),

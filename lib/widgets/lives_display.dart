@@ -14,7 +14,8 @@ class LivesDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label: '$lives of $maximumLives lives remaining',
-      child: Row(
+      liveRegion: true,
+      child: ExcludeSemantics(child: Row(
         mainAxisSize: MainAxisSize.min,
         children: List.generate(
           maximumLives,
@@ -41,7 +42,7 @@ class LivesDisplay extends StatelessWidget {
             );
           },
         ),
-      ),
+      )),
     );
   }
 }

@@ -132,7 +132,10 @@ class MilestoneReachedDialog extends StatelessWidget {
                       child: Material(
                         color: AppColors.orange,
                         shape: const CircleBorder(),
-                        child: InkWell(
+                        child: Semantics(
+                          label: 'Close achievement dialog',
+                          button: true,
+                          child: InkWell(
                           onTap: () {
                             Navigator.of(context).pop();
                           },
@@ -145,6 +148,7 @@ class MilestoneReachedDialog extends StatelessWidget {
                               color: Colors.white,
                               size: 29,
                             ),
+                          ),
                           ),
                         ),
                       ),

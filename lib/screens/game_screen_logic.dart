@@ -98,7 +98,7 @@ extension _GameScreenLogic on _GameScreenState {
       questionId: _analyticsQuestionId,
       source: _analyticsSource,
       practiceMode: widget.launchedFromCaseFile
-          ? (CaseFilesQa.enabled || widget.caseFileReplay)
+          ? (widget.caseFileReplay)
           : currentQuestionIsReplay,
     );
   }
@@ -118,7 +118,7 @@ extension _GameScreenLogic on _GameScreenState {
       xpEarned: xpEarned,
       firstGuess: firstGuess,
       practiceMode: widget.launchedFromCaseFile
-          ? (CaseFilesQa.enabled || widget.caseFileReplay)
+          ? (widget.caseFileReplay)
           : currentQuestionIsReplay,
       clueNumber: currentClueIndex + 1,
       guesses: guessesThisRound,
@@ -135,7 +135,7 @@ extension _GameScreenLogic on _GameScreenState {
       questionId: _analyticsQuestionId,
       source: _analyticsSource,
       practiceMode: widget.launchedFromCaseFile
-          ? (CaseFilesQa.enabled || widget.caseFileReplay)
+          ? (widget.caseFileReplay)
           : currentQuestionIsReplay,
     );
   }
@@ -159,7 +159,7 @@ extension _GameScreenLogic on _GameScreenState {
       livesRemaining: lives,
       playTimeSeconds: roundPlayTimeSeconds,
       practiceMode: widget.launchedFromCaseFile
-          ? (CaseFilesQa.enabled || widget.caseFileReplay)
+          ? (widget.caseFileReplay)
           : currentQuestionIsReplay,
     );
   }
@@ -260,9 +260,9 @@ extension _GameScreenLogic on _GameScreenState {
 
   bool get isPracticeModeActive {
     // Reused questions in active Case File missions remain rewarding gameplay.
-    // QA builds and deliberately replayed completed missions remain non-rewarding.
+    // Deliberately replayed completed missions remain non-rewarding.
     if (widget.launchedFromCaseFile) {
-      return CaseFilesQa.enabled || widget.caseFileReplay;
+      return widget.caseFileReplay;
     }
     if (widget.launchedFromSurpriseMe ||
         !questionHistoryLoaded ||
@@ -427,8 +427,7 @@ extension _GameScreenLogic on _GameScreenState {
   Future<void> recordCurrentQuestionAsPlayed() async {
     final String? questionId = currentItem.id;
 
-    if ((widget.launchedFromCaseFile && CaseFilesQa.enabled) ||
-        questionId == null ||
+    if (questionId == null ||
         questionId.isEmpty ||
         playedQuestionIds.contains(questionId)) {
       return;
@@ -474,9 +473,7 @@ extension _GameScreenLogic on _GameScreenState {
       return;
     }
 
-    final GuessMatch match = widget.launchedFromCaseFile && CaseFilesQa.enabled
-        ? GuessMatch.correct
-        : currentItem.checkGuess(guess);
+    final GuessMatch match = currentItem.checkGuess(guess);
 
     switch (match) {
       case GuessMatch.correct:
@@ -1107,45 +1104,6 @@ extension _GameScreenLogic on _GameScreenState {
       }
     }
 
-    // Case Files QA: route progress to the case actually launched, never
-    // infer its identity from the Firebase question ID (which may be mixed).
-    if (CaseFilesQa.enabled &&
-        widget.launchedFromCaseFile &&
-        widget.caseFilePathId != null) {
-      isFinalWhistle = widget.caseFilePathId == 'final_whistle';
-      isRoundTheWorld = widget.caseFilePathId == 'round_the_world';
-      isSecretsOfThePast = widget.caseFilePathId == 'secrets_of_the_past';
-      isTasteAndTreats = widget.caseFilePathId == 'taste_and_treats';
-      isNatureOfDiscovery = widget.caseFilePathId == 'nature_of_discovery';
-      isTheWrittenWord = widget.caseFilePathId == 'the_written_word';
-      isTheCreativeCode = widget.caseFilePathId == 'the_creative_code';
-      if (isFinalWhistle) {
-        category = 'sports';
-        subcategory = 'sports_qa';
-      } else if (isRoundTheWorld) {
-        category = 'countries';
-        subcategory = 'flags';
-      } else if (isSecretsOfThePast) {
-        category = 'past_present';
-        subcategory = 'historical_events';
-      } else if (isTasteAndTreats) {
-        category = 'food_drink';
-        subcategory = 'qa';
-      } else if (isNatureOfDiscovery) {
-        category = 'science_nature';
-        subcategory = 'plants_trees';
-      } else if (isTheWrittenWord) {
-        category = 'books_authors';
-        subcategory = 'book_series';
-      } else if (isTheCreativeCode) {
-        category = 'creative_world';
-        subcategory = 'artists';
-      } else {
-        category = 'animals';
-        subcategory = 'birds';
-      }
-    }
-
     if (subcategory == null || subcategory.isEmpty || category == null) {
       return null;
     }
@@ -1264,7 +1222,7 @@ extension _GameScreenLogic on _GameScreenState {
 
     try {
       if (widget.launchedFromCaseFile &&
-          (stageBefore == null || CaseFilesQa.enabled)) {
+          (stageBefore == null)) {
         final progressBefore = isFinalWhistle
             ? await CasePathService.loadFinalWhistleProgress()
             : isRoundTheWorld
@@ -1656,10 +1614,10 @@ extension _GameScreenLogic on _GameScreenState {
     const int firstGuessBonus = 50;
 
     // Repeat questions still earn XP while advancing an active Case File
-    // mission. Keep zero XP for QA, completed-mission replays, and ordinary
+    // mission. Keep zero XP for completed-mission replays and ordinary
     // First Guess Practice Mode.
     final bool isReplay = widget.launchedFromCaseFile
-        ? (CaseFilesQa.enabled || widget.caseFileReplay)
+        ? (widget.caseFileReplay)
         : currentQuestionIsReplay;
 
     final int pointsWon = isReplay
@@ -1749,7 +1707,7 @@ extension _GameScreenLogic on _GameScreenState {
 
     await _recordClassicContentConsumption();
 
-    if (wasFirstGuess && !CaseFilesQa.enabled) {
+    if (wasFirstGuess) {
       final Future<void> firstGuessTelemetry =
           AnalyticsService.logFirstGuessEarned(
             gameType: 'classic_first_guess',
@@ -1893,7 +1851,7 @@ extension _GameScreenLogic on _GameScreenState {
           ? 'the_creative_code'
           : 'animal_kingdom';
 
-      if (completedEntireCasePath && !CaseFilesQa.enabled) {
+      if (completedEntireCasePath) {
         // Analytics must not delay the Case File completion/badge dialog.
         unawaited(
           AnalyticsService.logCaseFileCompleted(
@@ -2083,8 +2041,7 @@ extension _GameScreenLogic on _GameScreenState {
     clueTimer?.cancel();
 
     final bool isReplay =
-        currentQuestionIsReplay ||
-        (widget.launchedFromCaseFile && CaseFilesQa.enabled);
+        currentQuestionIsReplay;
 
     setState(() {
       roundFinished = true;

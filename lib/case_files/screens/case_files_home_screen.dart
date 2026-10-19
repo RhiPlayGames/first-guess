@@ -774,7 +774,7 @@ class _CaseFilesHomeScreenState extends State<CaseFilesHomeScreen> {
           : 'assets/images/case_files/New folder/finalwhistlestart.webp',
       status: _finalWhistleStatus,
       buttonLabel: _finalWhistleButtonLabel,
-      imageScale: 0.85,
+      imageScale: 1.11,
       onTap: _openFinalWhistleCase,
     );
 

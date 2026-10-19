@@ -313,45 +313,5 @@ class DailyFlashGameProgressService {
     }
   }
 
-  /// Clears today's non-Classic Daily Flash progress for every supported game.
-  /// Intended for debug builds only.
-  static Future<void> resetAllForTesting() async {
-    final SharedPreferences preferences =
-        await SharedPreferences.getInstance();
-
-    for (final String gameKey in supportedGameKeys) {
-      await Future.wait(<Future<bool>>[
-        preferences.remove(_pref(gameKey, 'date')),
-        preferences.remove(_pref(gameKey, 'next_question')),
-        preferences.remove(_pref(gameKey, 'total_xp')),
-        preferences.remove(_pref(gameKey, 'questions_correct')),
-        preferences.remove(_pref(gameKey, 'first_guesses')),
-      ]);
-
-      final DocumentReference<Map<String, dynamic>>? cloud =
-          _cloudDocument(gameKey);
-
-      if (cloud == null) {
-        continue;
-      }
-
-      try {
-        final QuerySnapshot<Map<String, dynamic>> processedResults =
-            await cloud.collection('processed_results').get();
-
-        final WriteBatch batch = _firestore.batch();
-
-        for (final QueryDocumentSnapshot<Map<String, dynamic>> document
-            in processedResults.docs) {
-          batch.delete(document.reference);
-        }
-
-        batch.delete(cloud);
-        await batch.commit();
-      } on FirebaseException {
-        // Local reset still succeeds if Firestore is temporarily unavailable.
-      }
-    }
-  }
 
 }

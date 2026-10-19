@@ -60,6 +60,7 @@ Future<void> showGameResultDialog({
     barrierDismissible: false,
     builder: (dialogContext) {
       return AlertDialog(
+        semanticLabel: title,
         backgroundColor: AppColors.panel,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(22),

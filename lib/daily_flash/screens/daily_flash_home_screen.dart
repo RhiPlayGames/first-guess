@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../services/feature_flag_service.dart';
@@ -243,71 +242,6 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
     }
   }
 
-  Future<void> _resetDailyFlashForTesting() async {
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppColors.panel,
-          title: const Text(
-            'RESET DAILY FLASH?',
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              color: AppColors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          content: const Text(
-            'This resets today’s Daily Flash play progress for testing. '
-            'It does not remove lifetime XP, badges or achievements.',
-            style: TextStyle(color: AppColors.white, height: 1.4),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('CANCEL'),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.orange,
-                foregroundColor: AppColors.white,
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('RESET'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed != true || !mounted) {
-      return;
-    }
-
-    setState(() {
-      _loading = true;
-    });
-
-    await DailyFlashProgressService.resetForTesting();
-    await DailyFlashGameProgressService.resetAllForTesting();
-
-    if (!mounted) {
-      return;
-    }
-
-    await _loadProgress();
-
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(content: Text('Daily Flash reset for testing.')),
-      );
-  }
-
   // ignore: unused_element - retained for an upcoming Daily Flash mode.
   void _showModeComingSoon(String gameName) {
     ScaffoldMessenger.of(context)
@@ -454,27 +388,6 @@ class _DailyFlashHomeScreenState extends State<DailyFlashHomeScreen> {
             ),
             children: [
               _DailyFlashEventHero(countdownText: _countdownText),
-              if (kDebugMode) ...<Widget>[
-                SizedBox(height: isDesktop ? 12 : 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: _loading ? null : _resetDailyFlashForTesting,
-                    icon: const Icon(Icons.restart_alt_rounded, size: 18),
-                    label: const Text(
-                      'RESET DAILY FLASH',
-                      style: TextStyle(
-                        fontFamily: 'Oswald',
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.orange,
-                    ),
-                  ),
-                ),
-              ],
               SizedBox(height: isDesktop ? 20 : 16),
               const _SectionHeading(text: 'TODAY\'S CHALLENGES'),
               SizedBox(height: isDesktop ? 16 : 12),
