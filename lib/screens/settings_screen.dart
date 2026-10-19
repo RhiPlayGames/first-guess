@@ -75,7 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Apple is already connected to this First Guess account.',
+            'Apple is already connected to this First Guess™ account.',
           ),
         ),
       );
@@ -90,7 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Apple connected. Your First Guess progress is protected.',
+            'Apple connected. Your First Guess™ progress is protected.',
           ),
         ),
       );
@@ -101,7 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'That Apple ID belongs to a different First Guess account. Your existing connected account has not been changed.',
+              'That Apple ID belongs to a different First Guess™ account. Your existing connected account has not been changed.',
             ),
           ),
         );
@@ -118,7 +118,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(fontFamily: 'Oswald', color: AppColors.white),
             ),
             content: const Text(
-              'This Apple ID is linked to another First Guess account. '
+              'This Apple ID is linked to another First Guess™ account. '
               'Would you like to restore that account and merge the guest progress '
               'from this device? The existing account avatar will be kept.',
               style: TextStyle(color: AppColors.white),
@@ -268,7 +268,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          SnackBar(content: Text('First Guess is connected to $accountLabel.')),
+          SnackBar(content: Text('First Guess™ is connected to $accountLabel.')),
         );
       return;
     }
@@ -292,8 +292,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
 
       final String message = result.status == AccountLinkStatus.alreadyLinked
-          ? 'Google is already connected to this First Guess account.'
-          : 'Google connected. Your First Guess progress is now protected.';
+          ? 'Google is already connected to this First Guess™ account.'
+          : 'Google connected. Your First Guess™ progress is now protected.';
 
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -320,7 +320,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               content: const Text(
                 'This Google account is already connected to an existing '
-                'First Guess account.\n\n'
+                'First Guess™ account.\n\n'
                 'Restore that account and merge the guest progress from '
                 'this device into it.\n\n'
                 'The existing account avatar will be kept.',
@@ -636,7 +636,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 12),
             _SettingsTile(
               icon: Icons.info_outline_rounded,
-              title: 'ABOUT FIRST GUESS',
+              title: 'ABOUT FIRST GUESS™',
               subtitle: 'App information',
               onTap: () => _openAbout(context),
             ),
@@ -651,7 +651,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _SettingsTile(
               imagePath: 'assets/images/settings/contact_support.webp',
               title: 'CONTACT SUPPORT',
-              subtitle: 'Get help with First Guess',
+              subtitle: 'Get help with First Guess™',
               onTap: () => _openSupport(context),
             ),
             const SizedBox(height: 12),
@@ -679,7 +679,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _SettingsTile(
               imagePath: 'assets/images/settings/terms_conditions.webp',
               title: 'TERMS OF USE',
-              subtitle: 'Terms for using First Guess',
+              subtitle: 'Terms for using First Guess™',
               onTap: () => _openTermsOfUse(context),
             ),
           ],

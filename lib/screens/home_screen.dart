@@ -418,7 +418,7 @@ class _HomeHeader extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: isNarrow ? 72 : 84),
                   child: Image.asset(
-                    'assets/images/first_guess_header.png',
+                    'assets/images/logo/firstguestmlogo.webp',
                     height: titleHeight,
                     fit: BoxFit.contain,
                     alignment: Alignment.center,
