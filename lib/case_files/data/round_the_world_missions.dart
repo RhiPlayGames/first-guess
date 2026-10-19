@@ -225,11 +225,11 @@ const List<CaseMission> roundTheWorldCaseMissions = [
     stage: 20,
     difficulty: CaseDifficulty.finalChallenge,
     title: 'FINAL CASE',
-    missionText: 'GET 10 COUNTRIES QUESTIONS CORRECT, INCLUDING 7 BY CLUE 3 AND 3 FIRST GUESSES',
+    missionText: 'GET 10 COUNTRIES QUESTIONS CORRECT, INCLUDING 7 BY CLUE 3 AND 4 FIRST GUESSES',
     category: 'countries',
     correctRequired: 10,
     clueThreshold: 3,
     clueThresholdRequired: 7,
-    firstGuessesRequired: 3,
+    firstGuessesRequired: 4,
   ),
 ];

@@ -208,11 +208,11 @@ const List<CaseMission> theWrittenWordCaseMissions = [
     stage: 20,
     difficulty: CaseDifficulty.finalChallenge,
     title: 'FINAL CASE',
-    missionText: 'GET 10 BOOKS & AUTHORS QUESTIONS CORRECT, INCLUDING 7 BY CLUE 3 AND 3 FIRST GUESSES',
+    missionText: 'GET 10 BOOKS & AUTHORS QUESTIONS CORRECT, INCLUDING 7 BY CLUE 3 AND 4 FIRST GUESSES',
     category: 'books_authors',
     correctRequired: 10,
     clueThreshold: 3,
     clueThresholdRequired: 7,
-    firstGuessesRequired: 3,
+    firstGuessesRequired: 4,
   ),
 ];

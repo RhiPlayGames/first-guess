@@ -1666,16 +1666,6 @@ class _SurpriseChallengeBanner extends StatelessWidget {
                     flex: isVeryNarrow ? 6 : 7,
                     child: Row(
                       children: [
-                        SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: Image.asset(
-                            categoryImagePath,
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.high,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
                         Expanded(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,

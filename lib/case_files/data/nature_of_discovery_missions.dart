@@ -209,11 +209,11 @@ const List<CaseMission> natureOfDiscoveryCaseMissions = [
     stage: 20,
     difficulty: CaseDifficulty.finalChallenge,
     title: 'FINAL CASE',
-    missionText: 'GET 10 SCIENCE & NATURE QUESTIONS CORRECT, INCLUDING 7 BY CLUE 3 AND 3 FIRST GUESSES',
+    missionText: 'GET 10 SCIENCE & NATURE QUESTIONS CORRECT, INCLUDING 7 BY CLUE 3 AND 4 FIRST GUESSES',
     category: 'science_nature',
     correctRequired: 10,
     clueThreshold: 3,
     clueThresholdRequired: 7,
-    firstGuessesRequired: 3,
+    firstGuessesRequired: 4,
   ),
 ];

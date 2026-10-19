@@ -204,11 +204,11 @@ const List<CaseMission> secretsOfThePastCaseMissions = [
     stage: 20,
     difficulty: CaseDifficulty.finalChallenge,
     title: 'FINAL CASE',
-    missionText: 'GET 10 PAST & PRESENT QUESTIONS CORRECT, INCLUDING 7 BY CLUE 3 AND 3 FIRST GUESSES',
+    missionText: 'GET 10 PAST & PRESENT QUESTIONS CORRECT, INCLUDING 7 BY CLUE 3 AND 4 FIRST GUESSES',
     category: 'past_present',
     correctRequired: 10,
     clueThreshold: 3,
     clueThresholdRequired: 7,
-    firstGuessesRequired: 3,
+    firstGuessesRequired: 4,
   ),
 ];
