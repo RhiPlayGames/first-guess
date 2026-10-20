@@ -816,9 +816,10 @@ class _DailyFlashFirstMatchScreenState
         }
       },
       primaryButtonLabel: (_dailyProgress?.allQuestionsAttempted ?? false)
-          ? 'VIEW RESULTS'
+          ? 'SEE RESULTS'
           : 'NEXT QUESTION',
       secondaryButtonLabel: 'BACK TO DAILY FLASH',
+      hideSecondaryButton: (_dailyProgress?.allQuestionsAttempted ?? false),
     );
   }
 

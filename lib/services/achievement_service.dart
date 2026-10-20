@@ -1929,7 +1929,7 @@ class AchievementService {
       case AchievementCategory.xp:
         return 'XP';
       case AchievementCategory.dailyFlash:
-        return 'DAILY FLASH 5s';
+        return 'DAILY FLASH DAYS';
       case AchievementCategory.firstPick:
         return 'FIRST PICK';
       case AchievementCategory.firstConnection:

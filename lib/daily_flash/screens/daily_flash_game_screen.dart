@@ -988,6 +988,7 @@ class _DailyFlashGameScreenState
           '$xpEarned XP TOTAL',
       primaryButtonLabel: isLastQuestion ? 'SEE RESULTS' : 'NEXT QUESTION',
       secondaryButtonLabel: 'BACK TO DAILY FLASH',
+      hideSecondaryButton: isLastQuestion,
       onPlayAgain: () {
         continuePressed = true;
         Navigator.of(context).pop();
@@ -1264,6 +1265,7 @@ class _DailyFlashGameScreenState
               : 'NEXT QUESTION',
       secondaryButtonLabel:
           'LEAVE FLASH 5',
+      hideSecondaryButton: isLastQuestion,
       onPlayAgain: () {
         continuePressed = true;
 
@@ -1360,10 +1362,9 @@ class _DailyFlashGameScreenState
     messageTimer?.cancel();
     timeUpOverlayTimer?.cancel();
 
-    Navigator.of(context).popUntil(
-      (Route<dynamic> route) =>
-          route.isFirst,
-    );
+    // Classic Daily Flash is pushed from the Daily Flash 5 home screen.
+    // Return to that screen, not the app's root home screen.
+    Navigator.of(context).maybePop();
   }
 
   // =========================================================

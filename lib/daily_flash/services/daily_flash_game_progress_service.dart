@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'daily_flash_schedule_service.dart';
+import '../../services/player_stats_service.dart';
 
 class DailyFlashGameProgress {
   final String dateKey;
@@ -231,6 +232,37 @@ class DailyFlashGameProgressService {
   }
 
   static Future<DailyFlashGameProgress> recordResult({
+    required String gameKey,
+    required DailyFlashGameProgress progress,
+    required int questionIndex,
+    required bool correct,
+    required int xpEarned,
+    required bool wasFirstGuess,
+  }) async {
+    final DailyFlashGameProgress result = await _recordResultRaw(
+      gameKey: gameKey,
+      progress: progress,
+      questionIndex: questionIndex,
+      correct: correct,
+      xpEarned: xpEarned,
+      wasFirstGuess: wasFirstGuess,
+    );
+    // First Pick already records a full PlayerStats result itself.
+    if (gameKey != 'first_pick' &&
+        progress.dateKey == result.dateKey &&
+        questionIndex == progress.nextQuestionIndex &&
+        result.nextQuestionIndex == questionIndex + 1) {
+      await PlayerStatsService.recordDailyFgOutcome(
+        gameKey: gameKey,
+        dateKey: result.dateKey,
+        questionIndex: questionIndex,
+        wasFirstGuess: correct && wasFirstGuess,
+      );
+    }
+    return result;
+  }
+
+  static Future<DailyFlashGameProgress> _recordResultRaw({
     required String gameKey,
     required DailyFlashGameProgress progress,
     required int questionIndex,

@@ -1283,8 +1283,8 @@ class _StatsDetailScreenState extends State<StatsDetailScreen> {
               ),
               _ProfileStatCard(
                 imagePath: 'assets/images/stats/stat_streak.png',
-                label: 'STREAK',
-                value: _stats.currentStreak,
+                label: 'FG STREAK',
+                value: _stats.fgCurrentStreak,
                 formatValue: _formatNumber,
               ),
               _ProfileStatCard(
@@ -1603,6 +1603,12 @@ class _StatsDetailScreenState extends State<StatsDetailScreen> {
         label: 'First Guesses',
         value: _formatNumber(firstGuesses),
       ),
+      if (mode == _StatsGameMode.all)
+        _ProfileDetailRow(
+          imagePath: 'assets/images/stats/stat_streak.png',
+          label: 'Highest FG Streak',
+          value: _formatNumber(_stats.fgHighestStreak),
+        ),
     ];
 
     if (mode == _StatsGameMode.classic) {

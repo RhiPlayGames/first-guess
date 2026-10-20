@@ -55,6 +55,8 @@ class MilestoneReachedDialog extends StatelessWidget {
         return 'CORRECT ANSWER';
       case 'FIRST GUESSES':
         return 'FIRST GUESS';
+      case 'DAILY FLASH DAYS':
+        return 'DAILY FLASH DAY';
       case 'DAILY FLASH 5S':
         return 'DAILY FLASH 5';
       case 'FIRST WORD CHALLENGES':

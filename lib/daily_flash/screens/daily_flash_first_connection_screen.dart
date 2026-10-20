@@ -901,9 +901,10 @@ class _DailyFlashFirstConnectionScreenState
         }
       },
       primaryButtonLabel: isFinalQuestion
-          ? 'VIEW RESULTS'
+          ? 'SEE RESULTS'
           : 'NEXT QUESTION',
       secondaryButtonLabel: 'BACK TO DAILY FLASH 5',
+      hideSecondaryButton: (_dailyProgress?.allQuestionsAttempted ?? false),
     );
   }
 

@@ -1011,212 +1011,50 @@ extension _GameScreenLogic on _GameScreenState {
     bool isTheWrittenWord = false;
     bool isTheCreativeCode = false;
     String? category;
-    String? subcategory = _sportsSubcategoryFromQuestionId(questionId);
-    if (subcategory != null) {
-      isFinalWhistle = true;
-      category = 'sports';
-    } else {
-      subcategory = _countrySubcategoryFromQuestionId(questionId);
-    }
+    String? subcategory;
 
-    if (subcategory != null && !isFinalWhistle) {
-      isRoundTheWorld = true;
-      category = 'countries';
-    } else if (!isFinalWhistle) {
-      subcategory = _pastPresentSubcategoryFromQuestionId(questionId);
-
-      if (subcategory != null) {
-        isSecretsOfThePast = true;
-        category = 'past_present';
-      } else {
-        subcategory = _foodDrinkSubcategoryFromQuestionId(questionId);
-
-        if (subcategory != null) {
-          isTasteAndTreats = true;
-          category = 'food_drink';
-        } else {
-          subcategory = _scienceNatureSubcategoryFromQuestionId(questionId);
-
-          if (subcategory != null) {
-            isNatureOfDiscovery = true;
-            category = 'science_nature';
-          } else {
-            subcategory = _booksAuthorsSubcategoryFromQuestionId(questionId);
-
-            if (subcategory != null) {
-              isTheWrittenWord = true;
-              category = 'books_authors';
-            } else {
-              subcategory = _creativeWorldSubcategoryFromQuestionId(questionId);
-
-              if (subcategory != null) {
-                isTheCreativeCode = true;
-                category = 'creative_world';
-              }
-            }
-          }
-        }
-      }
-
-      if (subcategory == null && widget.gameType == QuizGameType.birds) {
-        subcategory = 'birds';
-      } else if (subcategory == null &&
-          widget.gameType == QuizGameType.dinosaurs) {
-        subcategory = 'dinosaurs';
-      } else if (subcategory == null && questionId.startsWith('animals_')) {
-        final String remainder = questionId.substring('animals_'.length);
-        final int finalUnderscore = remainder.lastIndexOf('_');
-
-        if (finalUnderscore > 0) {
-          subcategory = remainder.substring(0, finalUnderscore);
-        }
-      } else if (subcategory == null) {
-        const Map<String, String> animalQuestionIdPrefixes = <String, String>{
-          'birds_': 'birds',
-          'dinosaurs_': 'dinosaurs',
-          'habitats_animal_groups_': 'habitats_animal_groups',
-          'insects_spiders_': 'insects_spiders',
-          'safari_jungle_animals_': 'jungle_safari_animals',
-          'jungle_safari_animals_': 'jungle_safari_animals',
-          'mammals_': 'mammals',
-          'reptiles_amphibians_': 'reptiles_amphibians',
-          'sea_creatures_': 'sea_creatures',
-          'tracks_footprints_': 'tracks_footprints',
-        };
-
-        for (final MapEntry<String, String> entry
-            in animalQuestionIdPrefixes.entries) {
-          if (questionId.startsWith(entry.key)) {
-            subcategory = entry.value;
-            break;
-          }
-        }
-      }
-
-      if (subcategory != null &&
-          !isSecretsOfThePast &&
-          !isTasteAndTreats &&
-          !isNatureOfDiscovery &&
-          !isTheWrittenWord &&
-          !isTheCreativeCode &&
-          !isFinalWhistle) {
-        category = 'animals';
-      }
-    }
-
-    if (subcategory == null || subcategory.isEmpty || category == null) {
+    // Case Files load questions by Firestore category/subcategory. Their
+    // permanent document IDs do not always carry the category prefix (for
+    // example book_series_0001). Use the verified document classification
+    // and explicit Case File launch path instead of guessing from the ID.
+    const Map<String, String> caseCategoryByPath = <String, String>{
+      'animal_kingdom': 'animals',
+      'round_the_world': 'countries',
+      'secrets_of_the_past': 'past_present',
+      'taste_and_treats': 'food_drink',
+      'nature_of_discovery': 'science_nature',
+      'the_written_word': 'books_authors',
+      'the_creative_code': 'creative_world',
+      'final_whistle': 'sports',
+    };
+    final String? expectedCategory = caseCategoryByPath[widget.caseFilePathId];
+    if (expectedCategory == null ||
+        currentItem.firebaseCategory != expectedCategory ||
+        currentItem.firebaseSubcategory == null ||
+        currentItem.firebaseSubcategory!.isEmpty) {
+      debugPrint('CASE FILE TRACKING: question $questionId missing or '
+          'mismatched Firestore category/subcategory for '
+          '${widget.caseFilePathId}');
       return null;
     }
+    category = expectedCategory;
+    subcategory = currentItem.firebaseSubcategory;
+    isFinalWhistle = widget.caseFilePathId == 'final_whistle';
+    isRoundTheWorld = widget.caseFilePathId == 'round_the_world';
+    isSecretsOfThePast = widget.caseFilePathId == 'secrets_of_the_past';
+    isTasteAndTreats = widget.caseFilePathId == 'taste_and_treats';
+    isNatureOfDiscovery = widget.caseFilePathId == 'nature_of_discovery';
+    isTheWrittenWord = widget.caseFilePathId == 'the_written_word';
+    isTheCreativeCode = widget.caseFilePathId == 'the_creative_code';
 
-    const Set<String> animalSubcategories = <String>{
-      'birds',
-      'dinosaurs',
-      'habitats_animal_groups',
-      'insects_spiders',
-      'jungle_safari_animals',
-      'mammals',
-      'reptiles_amphibians',
-      'sea_creatures',
-      'tracks_footprints',
-    };
+    if (subcategory == null || subcategory.isEmpty) return null;
 
-    const Set<String> scienceNatureSubcategories = <String>{
-      'chemistry_physics_biology_maths',
-      'computers_internet',
-      'inventions_technology',
-      'medicine_health',
-      'periodic_table',
-      'plants_trees',
-      'rocks_minerals_volcanoes',
-      'scientific_discoveries_experiments_theories',
-      'space_astronomy',
-      'space_missions',
-      'human_body',
-      'weather_oceans_ecosystems',
-    };
-
-    const Set<String> booksAuthorsSubcategories = <String>{
-      'authors_poets_playwrights',
-      'book_series',
-      'books_novels',
-      'childrens_books',
-      'fictional_literary_locations',
-      'folk_tales_fairy_tales',
-      'graphic_novels_comics',
-      'literary_genres',
-      'opening_lines_quotations',
-      'plays',
-      'poems',
-    };
-
-    const Set<String> creativeWorldSubcategories = <String>{
-      'architecture_architects',
-      'artists',
-      'crafts_pottery_ceramics',
-      'fashion',
-      'museums_galleries',
-      'paintings_sculptures',
-      'theatre',
-    };
-
-    const Set<String> countrySubcategories = <String>{
-      'country_silhouettes',
-      'flags',
-      'capitals',
-      'major_cities',
-      'states_regions',
-      'maps_borders',
-      'landmarks_world_wonders',
-      'currencies_languages',
-      'national_symbols',
-      'islands_mountains_rivers',
-      'national_foods',
-    };
-
-    const Set<String> pastPresentSubcategories = <String>{
-      'historical_events',
-      'battles_wars',
-      'ancient_civilisations_empires',
-      'historical_eras',
-      'historic_objects',
-      'castles_ruins',
-      'monarchies_dynasties',
-      'revolutions_political_movements',
-      'historical_mysteries',
-      'myths_legends',
-      'traditions_cultural_customs',
-      'ancient_religions_beliefs',
-      'important_dates',
-    };
-
-    if (isFinalWhistle) {
-      // Sports uses the existing live category and subcategory questions.
-    } else if (isRoundTheWorld) {
-      if (!countrySubcategories.contains(subcategory)) {
-        return null;
-      }
-    } else if (isSecretsOfThePast) {
-      if (!pastPresentSubcategories.contains(subcategory)) {
-        return null;
-      }
-    } else if (isTasteAndTreats) {
-      // Food & Drink uses dynamic Firebase subcategory IDs.
-      // Any non-empty food_drink_* subcategory is valid here.
-    } else if (isNatureOfDiscovery) {
-      if (!scienceNatureSubcategories.contains(subcategory)) {
-        return null;
-      }
-    } else if (isTheWrittenWord) {
-      if (!booksAuthorsSubcategories.contains(subcategory)) {
-        return null;
-      }
-    } else if (isTheCreativeCode) {
-      if (!creativeWorldSubcategories.contains(subcategory)) {
-        return null;
-      }
-    } else if (!animalSubcategories.contains(subcategory)) {
-      return null;
-    }
+    // Firestore is the authoritative source of a challenge's category and
+    // subcategory. Do not duplicate category subcategory allow-lists here:
+    // valid live banks may use different permanent document ID prefixes, and
+    // category banks evolve independently of app releases.
+    // CaseTrackingService validates the active mission's exact category and,
+    // where required, exact subcategory before it increments progress.
 
     int? stageBefore = activeCaseStage;
 

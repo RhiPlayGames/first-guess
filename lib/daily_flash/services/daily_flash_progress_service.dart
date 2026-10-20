@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'daily_flash_schedule_service.dart';
+import '../../services/player_stats_service.dart';
 
 class DailyFlashProgress {
   final String dateKey;
@@ -430,8 +431,29 @@ class DailyFlashProgressService {
   // CONSUME QUESTION
   // =========================================================
 
+  static Future<DailyFlashProgress> consumeQuestion({
+    required DailyFlashProgress progress,
+    required int questionIndex,
+  }) async {
+    final DailyFlashProgress result = await _consumeQuestionRaw(
+      progress: progress,
+      questionIndex: questionIndex,
+    );
+    if (progress.dateKey == result.dateKey &&
+        questionIndex == progress.nextQuestionIndex &&
+        result.nextQuestionIndex == questionIndex + 1) {
+      await PlayerStatsService.recordDailyFgOutcome(
+        gameKey: 'classic_first_guess',
+        dateKey: result.dateKey,
+        questionIndex: questionIndex,
+        wasFirstGuess: false,
+      );
+    }
+    return result;
+  }
+
   static Future<DailyFlashProgress>
-      consumeQuestion({
+      _consumeQuestionRaw({
     required DailyFlashProgress progress,
     required int questionIndex,
   }) async {
@@ -527,8 +549,33 @@ class DailyFlashProgressService {
   // SAVE A CORRECT RESULT
   // =========================================================
 
+  static Future<DailyFlashProgress> recordCorrectAnswer({
+    required DailyFlashProgress progress,
+    required int questionIndex,
+    required int xpEarned,
+    required bool wasFirstGuess,
+  }) async {
+    final DailyFlashProgress result = await _recordCorrectAnswerRaw(
+      progress: progress,
+      questionIndex: questionIndex,
+      xpEarned: xpEarned,
+      wasFirstGuess: wasFirstGuess,
+    );
+    if (progress.dateKey == result.dateKey &&
+        questionIndex == progress.nextQuestionIndex &&
+        result.nextQuestionIndex == questionIndex + 1) {
+      await PlayerStatsService.recordDailyFgOutcome(
+        gameKey: 'classic_first_guess',
+        dateKey: result.dateKey,
+        questionIndex: questionIndex,
+        wasFirstGuess: wasFirstGuess,
+      );
+    }
+    return result;
+  }
+
   static Future<DailyFlashProgress>
-      recordCorrectAnswer({
+      _recordCorrectAnswerRaw({
     required DailyFlashProgress progress,
     required int questionIndex,
     required int xpEarned,

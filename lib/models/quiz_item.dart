@@ -14,6 +14,9 @@ enum AnswerPolicy {
 
 class QuizItem {
   final String? id;
+  // Authoritative Firestore classification for Case File mission tracking.
+  final String? firebaseCategory;
+  final String? firebaseSubcategory;
   final String answer;
   final String imagePath;
   final List<String> clues;
@@ -22,6 +25,8 @@ class QuizItem {
 
   const QuizItem({
     this.id,
+    this.firebaseCategory,
+    this.firebaseSubcategory,
     required this.answer,
     required this.imagePath,
     required this.clues,

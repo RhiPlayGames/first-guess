@@ -20,6 +20,7 @@ Future<void> showGameResultDialog({
   required VoidCallback onHome,
   String? primaryButtonLabel,
   String? secondaryButtonLabel,
+  bool hideSecondaryButton = false,
 }) {
   final bool isFinalCaseComplete =
       title == 'AROUND THE WORLD COMPLETE!' ||
@@ -264,8 +265,8 @@ Future<void> showGameResultDialog({
                     ),
                   ),
                 ),
-                if (useFeatureLayout ||
-                    secondaryButtonLabel != null) ...[
+                if (!hideSecondaryButton && (useFeatureLayout ||
+                    secondaryButtonLabel != null)) ...[
                   const SizedBox(height: 8),
                   SizedBox(
                     width: 210,

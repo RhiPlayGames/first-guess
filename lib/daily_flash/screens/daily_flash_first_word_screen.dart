@@ -725,8 +725,9 @@ class _DailyFlashFirstWordScreenState extends State<DailyFlashFirstWordScreen> {
         if (mounted) Navigator.of(context).pop();
       },
       primaryButtonLabel:
-          isFinalQuestion ? 'VIEW RESULTS' : 'NEXT QUESTION',
+          isFinalQuestion ? 'SEE RESULTS' : 'NEXT QUESTION',
       secondaryButtonLabel: 'BACK TO DAILY FLASH 5',
+      hideSecondaryButton: (_dailyProgress?.allQuestionsAttempted ?? false),
     );
   }
 

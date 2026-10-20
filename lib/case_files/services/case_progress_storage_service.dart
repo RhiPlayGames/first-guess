@@ -408,6 +408,16 @@ class CaseProgressStorageService {
           : cloud;
     }
 
+    // A same-stage snapshot must not erase recorded mission progress.
+    // A newly-created or stale zero-count snapshot can have a later timestamp.
+    if (local.currentStageProgress.correctCount !=
+        cloud.currentStageProgress.correctCount) {
+      return local.currentStageProgress.correctCount >
+              cloud.currentStageProgress.correctCount
+          ? local
+          : cloud;
+    }
+
     final DateTime localUpdated =
         local.updatedAt ??
             DateTime.fromMillisecondsSinceEpoch(0);

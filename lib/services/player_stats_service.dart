@@ -291,6 +291,10 @@ class PlayerStats {
 
   final int currentStreak;
   final int longestStreak;
+  // Separate from legacy consecutive-correct streaks.
+  final int fgCurrentStreak;
+  final int fgHighestStreak;
+  final List<String> fgProcessedDailyEvents;
   final int firstWordCurrentStreak;
   final int firstWordLongestStreak;
   final int highestScore;
@@ -323,6 +327,9 @@ class PlayerStats {
     this.firstGuesses = 0,
     this.currentStreak = 0,
     this.longestStreak = 0,
+    this.fgCurrentStreak = 0,
+    this.fgHighestStreak = 0,
+    this.fgProcessedDailyEvents = const <String>[],
     this.firstWordCurrentStreak = 0,
     this.firstWordLongestStreak = 0,
     this.highestScore = 0,
@@ -369,6 +376,9 @@ class PlayerStats {
     int? firstGuesses,
     int? currentStreak,
     int? longestStreak,
+    int? fgCurrentStreak,
+    int? fgHighestStreak,
+    List<String>? fgProcessedDailyEvents,
     int? firstWordCurrentStreak,
     int? firstWordLongestStreak,
     int? highestScore,
@@ -405,6 +415,10 @@ class PlayerStats {
           currentStreak ?? this.currentStreak,
       longestStreak:
           longestStreak ?? this.longestStreak,
+      fgCurrentStreak: fgCurrentStreak ?? this.fgCurrentStreak,
+      fgHighestStreak: fgHighestStreak ?? this.fgHighestStreak,
+      fgProcessedDailyEvents:
+          fgProcessedDailyEvents ?? this.fgProcessedDailyEvents,
       firstWordCurrentStreak:
           firstWordCurrentStreak ?? this.firstWordCurrentStreak,
       firstWordLongestStreak:
@@ -1095,6 +1109,9 @@ class PlayerStatsService {
 
   static const String _longestStreakKey =
       'longest_streak';
+  static const String _fgCurrentStreakKey = 'fg_current_streak_v1';
+  static const String _fgHighestStreakKey = 'fg_highest_streak_v1';
+  static const String _fgDailyEventsKey = 'fg_daily_events_v1';
 
   static const String _firstWordCurrentStreakKey =
       'first_word_current_streak';
@@ -1572,10 +1589,11 @@ class PlayerStatsService {
           ) ??
           0,
       longestStreak:
-          await _preferences.getInt(
-            _longestStreakKey,
-          ) ??
-          0,
+          await _preferences.getInt(_longestStreakKey) ?? 0,
+      fgCurrentStreak: await _preferences.getInt(_fgCurrentStreakKey) ?? 0,
+      fgHighestStreak: await _preferences.getInt(_fgHighestStreakKey) ?? 0,
+      fgProcessedDailyEvents: _readFgDailyEvents(
+          await _preferences.getString(_fgDailyEventsKey)),
       firstWordCurrentStreak:
           await _preferences.getInt(
             _firstWordCurrentStreakKey,
@@ -1741,6 +1759,12 @@ class PlayerStatsService {
         'longestStreak',
         fallback.longestStreak,
       ),
+      fgCurrentStreak: _cloudInt(data, 'fgCurrentStreak', fallback.fgCurrentStreak),
+      fgHighestStreak: _cloudInt(data, 'fgHighestStreak', fallback.fgHighestStreak),
+      fgProcessedDailyEvents: data['fgProcessedDailyEvents'] is List
+          ? (data['fgProcessedDailyEvents'] as List)
+              .whereType<String>().toList(growable: false)
+          : fallback.fgProcessedDailyEvents,
       firstWordCurrentStreak: _cloudInt(
         data,
         'firstWordCurrentStreak',
@@ -1851,6 +1875,9 @@ class PlayerStatsService {
       'firstGuesses': stats.firstGuesses,
       'currentStreak': stats.currentStreak,
       'longestStreak': stats.longestStreak,
+      'fgCurrentStreak': stats.fgCurrentStreak,
+      'fgHighestStreak': stats.fgHighestStreak,
+      'fgProcessedDailyEvents': stats.fgProcessedDailyEvents,
       'firstWordCurrentStreak': stats.firstWordCurrentStreak,
       'firstWordLongestStreak': stats.firstWordLongestStreak,
       'highestScore': stats.highestScore,
@@ -1919,6 +1946,9 @@ class PlayerStatsService {
         _longestStreakKey,
         stats.longestStreak,
       ),
+      _preferences.setInt(_fgCurrentStreakKey, stats.fgCurrentStreak),
+      _preferences.setInt(_fgHighestStreakKey, stats.fgHighestStreak),
+      _preferences.setString(_fgDailyEventsKey, jsonEncode(stats.fgProcessedDailyEvents)),
       _preferences.setInt(
         _firstWordCurrentStreakKey,
         stats.firstWordCurrentStreak,
@@ -2020,8 +2050,8 @@ class PlayerStatsService {
     required int playTimeSeconds,
     String? mainCategoryKey,
   }) {
-    final int newCurrentStreak =
-        baseStats.currentStreak + 1;
+    final int newCurrentStreak = baseStats.currentStreak + 1;
+    final int nextFg = wasFirstGuess ? baseStats.fgCurrentStreak + 1 : 0;
 
     final int newCountriesCompleted =
         category == GameCategory.countries
@@ -2120,6 +2150,9 @@ class PlayerStatsService {
           (wasFirstGuess ? 1 : 0),
       currentStreak:
           newCurrentStreak,
+      fgCurrentStreak: nextFg,
+      fgHighestStreak: nextFg > baseStats.fgHighestStreak
+          ? nextFg : baseStats.fgHighestStreak,
       longestStreak:
           newCurrentStreak >
                   baseStats.longestStreak
@@ -2183,6 +2216,7 @@ class PlayerStatsService {
       gamesPlayed:
           baseStats.gamesPlayed + 1,
       currentStreak: 0,
+      fgCurrentStreak: 0,
       firstWordCurrentStreak: mainCategoryKey == 'first_word'
           ? 0
           : baseStats.firstWordCurrentStreak,
@@ -2191,6 +2225,42 @@ class PlayerStatsService {
       totalPlayTimeSeconds:
           baseStats.totalPlayTimeSeconds +
           playTimeSeconds,
+    );
+  }
+
+  static List<String> _readFgDailyEvents(String? json) {
+    if (json == null) return const <String>[];
+    try {
+      final dynamic value = jsonDecode(json);
+      if (value is List) return value.whereType<String>().toList();
+    } catch (_) { /* Old/corrupt preference: start fresh. */ }
+    return const <String>[];
+  }
+
+  /// Record a Daily Flash outcome without changing XP, games played or
+  /// First Guess totals. One event per date/game/question; duplicates do not
+  /// change the streak. The list is bounded to avoid unbounded Firestore data.
+  static Future<void> recordDailyFgOutcome({
+    required String gameKey,
+    required String dateKey,
+    required int questionIndex,
+    required bool wasFirstGuess,
+  }) async {
+    final String id = '$dateKey/$gameKey/$questionIndex';
+    final PlayerStats current = await loadStats();
+    await _updateStatsSafely(
+      fallbackStats: current,
+      update: (PlayerStats base) {
+        if (base.fgProcessedDailyEvents.contains(id)) return base;
+        final int next = wasFirstGuess ? base.fgCurrentStreak + 1 : 0;
+        final List<String> events = <String>[...base.fgProcessedDailyEvents, id];
+        if (events.length > 3000) events.removeRange(0, events.length - 3000);
+        return base.copyWith(
+          fgCurrentStreak: next,
+          fgHighestStreak: next > base.fgHighestStreak ? next : base.fgHighestStreak,
+          fgProcessedDailyEvents: events,
+        );
+      },
     );
   }
 
@@ -2497,6 +2567,9 @@ class PlayerStatsService {
         _firstGuessesKey,
         _currentStreakKey,
         _longestStreakKey,
+        _fgCurrentStreakKey,
+        _fgHighestStreakKey,
+        _fgDailyEventsKey,
         _firstWordCurrentStreakKey,
         _firstWordLongestStreakKey,
         _highestScoreKey,

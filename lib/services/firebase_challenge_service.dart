@@ -455,6 +455,8 @@ class FirebaseChallengeService {
 
     return QuizItem(
       id: questionId,
+      firebaseCategory: _readString(data['category']),
+      firebaseSubcategory: _readString(data['subcategory']),
       answer: answer,
       imagePath: imagePath,
       clues: clues,

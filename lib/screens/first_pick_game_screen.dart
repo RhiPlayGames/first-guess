@@ -16,6 +16,7 @@ import '../widgets/milestone_reached_dialog.dart';
 import '../services/player_stats_service.dart';
 import '../theme/app_colors.dart';
 import '../daily_flash/services/daily_flash_game_progress_service.dart';
+import '../daily_flash/widgets/daily_flash_results_dialog.dart';
 
 class FirstPickGameScreen extends StatefulWidget {
   const FirstPickGameScreen({
@@ -435,6 +436,26 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
       await _showRewards(previousStats, updatedStats);
     }
     if (!mounted) return;
+    if (widget.dailyFlash && (_dailyProgress?.allQuestionsAttempted ?? false)) {
+      final progress = _dailyProgress!;
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => DailyFlashResultsDialog(
+          perfect: progress.questionsCorrect == 5,
+          score: progress.questionsCorrect,
+          baseXp: progress.totalXp ~/ 2,
+          bonusXp: progress.totalXp - (progress.totalXp ~/ 2),
+          totalXp: progress.totalXp,
+          hasMilestone: false,
+          onContinue: () => Navigator.of(dialogContext).pop(),
+        ),
+      );
+      if (!mounted) return;
+      widget.onChallengeFinished?.call();
+      Navigator.of(context).maybePop();
+      return;
+    }
     if (goHome) {
       if (widget.dailyFlash) widget.onChallengeFinished?.call();
       if (widget.dailyFlash) {
@@ -442,9 +463,6 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
       } else {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
-    } else if (widget.dailyFlash && (_dailyProgress?.allQuestionsAttempted ?? false)) {
-      widget.onChallengeFinished?.call();
-      Navigator.of(context).maybePop();
     } else {
       _next();
     }
@@ -475,8 +493,9 @@ class _FirstPickGameScreenState extends State<FirstPickGameScreen> {
         previousStats: previousStats,
         updatedStats: updatedStats,
       )),
-      primaryButtonLabel: widget.dailyFlash && (_dailyProgress?.allQuestionsAttempted ?? false) ? 'FINISH DAILY FLASH' : 'NEXT QUESTION',
+      primaryButtonLabel: widget.dailyFlash && (_dailyProgress?.allQuestionsAttempted ?? false) ? 'SEE RESULTS' : 'NEXT QUESTION',
       secondaryButtonLabel: 'HOME',
+      hideSecondaryButton: widget.dailyFlash && (_dailyProgress?.allQuestionsAttempted ?? false),
     );
   }
 

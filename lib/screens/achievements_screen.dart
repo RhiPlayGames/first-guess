@@ -68,7 +68,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_1',
         title: 'Flash Starter',
-        description: 'Complete your first Daily Flash 5.',
+        description: 'Complete a Daily Flash 5 game on 1 day.',
         rarity: AchievementRarity.bronze,
         category: AchievementCategory.dailyFlash,
         target: 1,
@@ -78,7 +78,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_10',
         title: 'Flash Regular',
-        description: 'Complete 10 Daily Flash 5 challenges.',
+        description: 'Complete a Daily Flash 5 game on 10 different days.',
         rarity: AchievementRarity.bronze,
         category: AchievementCategory.dailyFlash,
         target: 10,
@@ -88,7 +88,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_50',
         title: 'Flash Veteran',
-        description: 'Complete 50 Daily Flash 5 challenges.',
+        description: 'Complete a Daily Flash 5 game on 50 different days.',
         rarity: AchievementRarity.silver,
         category: AchievementCategory.dailyFlash,
         target: 50,
@@ -98,7 +98,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_100',
         title: 'Flash Legend',
-        description: 'Complete 100 Daily Flash 5 challenges.',
+        description: 'Complete a Daily Flash 5 game on 100 different days.',
         rarity: AchievementRarity.gold,
         category: AchievementCategory.dailyFlash,
         target: 100,
@@ -108,7 +108,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_250',
         title: 'Flash Master',
-        description: 'Complete 250 Daily Flash 5 challenges.',
+        description: 'Complete a Daily Flash 5 game on 250 different days.',
         rarity: AchievementRarity.diamond,
         category: AchievementCategory.dailyFlash,
         target: 250,
@@ -118,7 +118,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       Achievement(
         id: 'daily_flash_365',
         title: 'Year of Flash',
-        description: 'Complete 365 Daily Flash 5 challenges.',
+        description: 'Complete a Daily Flash 5 game on 365 different days.',
         rarity: AchievementRarity.diamond,
         category: AchievementCategory.dailyFlash,
         target: 365,
