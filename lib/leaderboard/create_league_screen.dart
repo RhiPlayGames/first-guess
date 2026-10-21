@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/public_name_filter.dart';
+
 import '../services/league_service.dart';
 import '../widgets/app_home_button.dart';
 
@@ -190,78 +192,11 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
       _badges[_selectedBadgeIndex];
 
 
-  String _normaliseLeagueNameForModeration(
-    String value,
-  ) {
-    String normalised = value.toLowerCase();
-
-    const Map<String, String> substitutions = {
-      '0': 'o',
-      '1': 'i',
-      '3': 'e',
-      '4': 'a',
-      '5': 's',
-      '7': 't',
-      '@': 'a',
-      r'$': 's',
-    };
-
-    substitutions.forEach((from, to) {
-      normalised = normalised.replaceAll(from, to);
-    });
-
-    normalised = normalised.replaceAll(
-      RegExp(r'[^a-z0-9]+'),
-      '',
-    );
-
-    normalised = normalised.replaceAllMapped(
-      RegExp(r'(.)\1{2,}'),
-      (match) => '${match.group(1)}${match.group(1)}',
-    );
-
-    return normalised;
-  }
-
-  bool _containsBlockedLeagueName(
-    String value,
-  ) {
-    final String normalised =
-        _normaliseLeagueNameForModeration(value);
-
-    const List<String> blockedTerms = [
-      'fuck',
-      'fuk',
-      'shit',
-      'sh1t',
-      'bitch',
-      'cunt',
-      'dick',
-      'cock',
-      'pussy',
-      'asshole',
-      'arsehole',
-      'wanker',
-      'twat',
-      'bastard',
-      'slut',
-      'whore',
-      'nigger',
-      'nigga',
-      'faggot',
-      'retard',
-    ];
-
-    return blockedTerms.any(
-      normalised.contains,
-    );
-  }
-
   bool _validateLeagueName(
     BuildContext context,
     String value,
   ) {
-    if (_containsBlockedLeagueName(value)) {
+    if (PublicNameFilter.isBlocked(value)) {
       final ScaffoldMessengerState messenger =
           ScaffoldMessenger.of(context);
 
@@ -453,6 +388,11 @@ class _CreateLeagueScreenState extends State<CreateLeagueScreen> {
                     ),
                     const SizedBox(height: 10),
                     _buildNameField(),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Choose your league name carefully. You won\'t be able to change it later.',
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    ),
                     const SizedBox(height: 18),
                     _buildSectionDivider(),
                     const SizedBox(height: 18),

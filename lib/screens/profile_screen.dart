@@ -25,6 +25,7 @@ class _ProfileHubState extends State<ProfileScreen> {
   String? _selectedAvatarPath;
   bool _isPlayerNameLoading = true;
   bool _isPlayerNameSaving = false;
+  bool _hasSavedPlayerName = false;
   String? _playerNameStatus;
   bool _playerNameStatusIsError = false;
 
@@ -51,6 +52,7 @@ class _ProfileHubState extends State<ProfileScreen> {
     _playerNameController.text = displayName ?? '';
 
     setState(() {
+      _hasSavedPlayerName = (displayName ?? '').trim().isNotEmpty;
       _isPlayerNameLoading = false;
     });
   }
@@ -69,7 +71,7 @@ class _ProfileHubState extends State<ProfileScreen> {
   }
 
   Future<void> _savePlayerName() async {
-    if (_isPlayerNameSaving) {
+    if (_isPlayerNameSaving || _hasSavedPlayerName) {
       return;
     }
 
@@ -91,6 +93,7 @@ class _ProfileHubState extends State<ProfileScreen> {
       FocusScope.of(context).unfocus();
 
       setState(() {
+        _hasSavedPlayerName = true;
         _playerNameStatus = 'Your player name has been saved.';
         _playerNameStatusIsError = false;
       });
@@ -143,7 +146,7 @@ class _ProfileHubState extends State<ProfileScreen> {
 
     final Widget playerNameField = TextField(
       controller: _playerNameController,
-      enabled: !_isPlayerNameLoading && !_isPlayerNameSaving,
+      enabled: !_isPlayerNameLoading && !_isPlayerNameSaving && !_hasSavedPlayerName,
       maxLength: 20,
       textInputAction: TextInputAction.done,
       onChanged: (_) {
@@ -208,7 +211,7 @@ class _ProfileHubState extends State<ProfileScreen> {
       width: double.infinity,
       height: 46,
       child: ElevatedButton.icon(
-        onPressed: _isPlayerNameLoading || _isPlayerNameSaving
+        onPressed: _isPlayerNameLoading || _isPlayerNameSaving || _hasSavedPlayerName
             ? null
             : _savePlayerName,
         icon: _isPlayerNameSaving
@@ -322,6 +325,11 @@ class _ProfileHubState extends State<ProfileScreen> {
                   fontWeight: FontWeight.w500,
                   height: 1.3,
                 ),
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                'Choose your player name carefully. You won\'t be able to change it later.',
+                style: TextStyle(fontFamily: 'Inter', color: AppColors.white, fontSize: 12),
               ),
               const SizedBox(height: 12),
               if (isDesktop) ...[

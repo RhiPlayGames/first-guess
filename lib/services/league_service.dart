@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'analytics_service.dart';
 import 'avatar_preferences_service.dart';
 import 'player_profile_service.dart';
+import 'public_name_approval_service.dart';
 
 class LeagueService {
   LeagueService._();
@@ -60,6 +61,12 @@ class LeagueService {
       throw const LeagueServiceException(
         'Choose a player name in My Profile before creating a league.',
       );
+    }
+
+    try {
+      await PublicNameApprovalService.approve(name: cleanedName, scope: 'league');
+    } on PublicNameApprovalException catch (error) {
+      throw LeagueServiceException(error.message);
     }
 
     final String avatarPath =

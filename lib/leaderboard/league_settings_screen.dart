@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/public_name_filter.dart';
+
 import '../widgets/app_home_button.dart';
 
 class LeagueSettingsScreen extends StatefulWidget {
@@ -100,78 +102,11 @@ class _LeagueSettingsScreenState extends State<LeagueSettingsScreen> {
   }
 
 
-  String _normaliseLeagueNameForModeration(
-    String value,
-  ) {
-    String normalised = value.toLowerCase();
-
-    const Map<String, String> substitutions = {
-      '0': 'o',
-      '1': 'i',
-      '3': 'e',
-      '4': 'a',
-      '5': 's',
-      '7': 't',
-      '@': 'a',
-      r'$': 's',
-    };
-
-    substitutions.forEach((from, to) {
-      normalised = normalised.replaceAll(from, to);
-    });
-
-    normalised = normalised.replaceAll(
-      RegExp(r'[^a-z0-9]+'),
-      '',
-    );
-
-    normalised = normalised.replaceAllMapped(
-      RegExp(r'(.)\1{2,}'),
-      (match) => '${match.group(1)}${match.group(1)}',
-    );
-
-    return normalised;
-  }
-
-  bool _containsBlockedLeagueName(
-    String value,
-  ) {
-    final String normalised =
-        _normaliseLeagueNameForModeration(value);
-
-    const List<String> blockedTerms = [
-      'fuck',
-      'fuk',
-      'shit',
-      'sh1t',
-      'bitch',
-      'cunt',
-      'dick',
-      'cock',
-      'pussy',
-      'asshole',
-      'arsehole',
-      'wanker',
-      'twat',
-      'bastard',
-      'slut',
-      'whore',
-      'nigger',
-      'nigga',
-      'faggot',
-      'retard',
-    ];
-
-    return blockedTerms.any(
-      normalised.contains,
-    );
-  }
-
   bool _validateLeagueName(
     BuildContext context,
     String value,
   ) {
-    if (_containsBlockedLeagueName(value)) {
+    if (PublicNameFilter.isBlocked(value)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Color(0xFF111111),
@@ -240,6 +175,9 @@ class _LeagueSettingsScreenState extends State<LeagueSettingsScreen> {
                     _buildSectionTitle('LEAGUE NAME'),
                     const SizedBox(height: 10),
                     _buildNameField(),
+                    const SizedBox(height: 6),
+                    const Text('League names cannot be changed after creation.',
+                      style: TextStyle(color: Colors.white, fontSize: 12)),
                     SizedBox(height: isDesktop ? 16 : 22),
                     _buildSectionTitle('LEAGUE BADGE'),
                     const SizedBox(height: 10),
@@ -381,6 +319,7 @@ class _LeagueSettingsScreenState extends State<LeagueSettingsScreen> {
   Widget _buildNameField() {
     return TextField(
       controller: _nameController,
+      readOnly: true,
       maxLength: 28,
       onChanged: (_) => setState(() {}),
       style: const TextStyle(color: Colors.white, fontSize: 15),

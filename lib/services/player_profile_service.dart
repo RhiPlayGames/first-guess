@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'public_name_approval_service.dart';
+import 'public_name_filter.dart';
+
 class PlayerProfileService {
   PlayerProfileService._();
 
@@ -85,7 +88,7 @@ class PlayerProfileService {
       );
     }
 
-    if (_containsBlockedDisplayName(cleanedDisplayName)) {
+    if (PublicNameFilter.isBlocked(cleanedDisplayName)) {
       throw const PlayerProfileException(
         'Please choose another player name.',
       );
@@ -110,6 +113,17 @@ class PlayerProfileService {
       );
     }
 
+    // Approval is stored by a trusted Cloud Function. Do not attempt a
+    // direct Firestore write if moderation is unavailable.
+    try {
+      await PublicNameApprovalService.approve(
+        name: cleanedDisplayName,
+        scope: 'player',
+      );
+    } on PublicNameApprovalException catch (error) {
+      throw PlayerProfileException(error.message);
+    }
+
     final DocumentReference<Map<String, dynamic>> newNameDocument =
         _playerNameDocument(normalisedName);
 
@@ -123,6 +137,13 @@ class PlayerProfileService {
               profileSnapshot.data()?['displayName'] is String
                   ? (profileSnapshot.data()!['displayName'] as String).trim()
                   : '';
+
+          if (currentDisplayName.isNotEmpty &&
+              currentDisplayName != cleanedDisplayName) {
+            throw const PlayerProfileException(
+              'Your player name cannot be changed after it is saved.',
+            );
+          }
 
           final String currentNormalisedName =
               _normaliseForUniqueness(currentDisplayName);
@@ -193,69 +214,7 @@ class PlayerProfileService {
     }
   }
 
-  static String _normaliseForModeration(
-    String value,
-  ) {
-    String normalised = value.toLowerCase();
 
-    const Map<String, String> substitutions = <String, String>{
-      '0': 'o',
-      '1': 'i',
-      '3': 'e',
-      '4': 'a',
-      '5': 's',
-      '7': 't',
-      '@': 'a',
-      r'$': 's',
-    };
-
-    substitutions.forEach((String from, String to) {
-      normalised = normalised.replaceAll(from, to);
-    });
-
-    normalised = normalised.replaceAll(
-      RegExp(r'[^a-z0-9]+'),
-      '',
-    );
-
-    normalised = normalised.replaceAllMapped(
-      RegExp(r'(.)\1{2,}'),
-      (Match match) => '${match.group(1)}${match.group(1)}',
-    );
-
-    return normalised;
-  }
-
-  static bool _containsBlockedDisplayName(
-    String value,
-  ) {
-    final String normalised = _normaliseForModeration(value);
-
-    const List<String> blockedTerms = <String>[
-      'fuck',
-      'fuk',
-      'shit',
-      'sh1t',
-      'bitch',
-      'cunt',
-      'dick',
-      'cock',
-      'pussy',
-      'asshole',
-      'arsehole',
-      'wanker',
-      'twat',
-      'bastard',
-      'slut',
-      'whore',
-      'nigger',
-      'nigga',
-      'faggot',
-      'retard',
-    ];
-
-    return blockedTerms.any(normalised.contains);
-  }
 }
 
 class PlayerProfileException implements Exception {
