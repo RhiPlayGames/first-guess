@@ -437,7 +437,9 @@ extension _GameScreenView on _GameScreenState {
               ? activeCaseStage != null
                     ? 'CASE $activeCaseStage'
                     : 'CASE FILE'
-              : widget.categoryName,
+              : widget.launchedFromSurpriseMe
+                  ? 'SURPRISE ME'
+                  : _gameplayMainCategoryLabel,
           maxLines: 1,
           style: TextStyle(
             fontFamily: 'Oswald',
@@ -1171,11 +1173,26 @@ extension _GameScreenView on _GameScreenState {
         children: [
           Row(children: [
             Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
-              child: Text(widget.launchedFromCaseFile ? _caseFileQuestionPoolLabel(_caseFileCurrentQuestionPool) : (_mainStatsCategoryKeyForQuestionId(currentItem.id ?? '')?.replaceAll('_', ' ').toUpperCase() ?? widget.statsCategory.name.replaceAll(RegExp(r'(?<=[a-z])(?=[A-Z])'), ' ').toUpperCase()),
+              child: Text(widget.launchedFromCaseFile
+                  ? _gameplayMainCategoryLabel
+                  : _gameplaySubcategoryLabel,
               style: const TextStyle(fontFamily: 'Oswald', fontSize: 19,
                 fontWeight: FontWeight.w700, color: AppColors.white)))),
             LivesDisplay(lives: lives, maximumLives: _GameScreenState.maximumLives),
           ]),
+          if (widget.launchedFromCaseFile) ...[
+            const SizedBox(height: 3),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                _gameplaySubcategoryLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontFamily: 'Oswald', fontSize: 14,
+                  fontWeight: FontWeight.w500, color: AppColors.orange),
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           Row(children: [
             Expanded(child: Text('CLUE ${currentClueIndex + 1} OF ${currentItem.clues.length}',
@@ -1205,6 +1222,30 @@ extension _GameScreenView on _GameScreenState {
       ),
       child: Column(
         children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              widget.launchedFromCaseFile
+                  ? _gameplayMainCategoryLabel
+                  : _gameplaySubcategoryLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontFamily: 'Oswald', fontSize: 17,
+                  fontWeight: FontWeight.w700, color: AppColors.white),
+            ),
+          ),
+          if (widget.launchedFromCaseFile)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                _gameplaySubcategoryLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontFamily: 'Oswald', fontSize: 13,
+                    color: AppColors.orange),
+              ),
+            ),
+          const SizedBox(height: 5),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

@@ -80,6 +80,60 @@ extension _GameScreenLogic on _GameScreenState {
     return id;
   }
 
+  // Gameplay headings use the current Firestore question, not its ID prefix
+  // or the statistics bucket. This is display-only: scoring and tracking are
+  // deliberately unchanged.
+  String get _gameplayMainCategoryKey {
+    final String fromQuestion = (currentItem.firebaseCategory ?? '').trim();
+    if (fromQuestion.isNotEmpty) return fromQuestion.toLowerCase();
+    return _mainStatsCategoryKeyForQuestionId(currentItem.id ?? '') ?? '';
+  }
+
+  String get _gameplayMainCategoryLabel {
+    switch (_gameplayMainCategoryKey) {
+      case 'animals': return 'ANIMALS';
+      case 'books_authors': return 'BOOKS & AUTHORS';
+      case 'countries': return 'COUNTRIES';
+      case 'creative_world': return 'CREATIVE WORLD';
+      case 'famous_people': return 'FAMOUS PEOPLE';
+      case 'food_drink': return 'FOOD & DRINK';
+      case 'music': return 'MUSIC';
+      case 'past_present': return 'PAST & PRESENT';
+      case 'science_nature': return 'SCIENCE & NATURE';
+      case 'sports': return 'SPORTS';
+      case 'watch_play': return 'WATCH & PLAY';
+      default:
+        return _gameplayMainCategoryKey.isEmpty
+            ? 'FIRST GUESS'
+            : _gameplayMainCategoryKey.replaceAll('_', ' ').toUpperCase();
+    }
+  }
+
+  String get _gameplaySubcategoryLabel {
+    final String fromQuestion = (currentItem.firebaseSubcategory ?? '').trim();
+    if (fromQuestion.isNotEmpty &&
+        fromQuestion.toLowerCase() != 'general' &&
+        fromQuestion.toLowerCase() != 'other') {
+      return _caseFileQuestionPoolLabel(fromQuestion);
+    }
+    // Older local questions can lack Firestore classification. Preserve the
+    // selected subcategory only for non-mixed standard games.
+    final String explicit = (widget.subcategoryTitle ?? '').trim();
+    if (!widget.launchedFromCaseFile && explicit.isNotEmpty) {
+      return _caseFileQuestionPoolLabel(explicit);
+    }
+    if (widget.launchedFromCaseFile) {
+      final String inferred = _caseFileCurrentQuestionPool;
+      if (inferred.isNotEmpty && inferred != 'other' &&
+          inferred != 'general' && !inferred.contains('mixed') &&
+          inferred != widget.statsCategory.name) {
+        return _caseFileQuestionPoolLabel(inferred);
+      }
+    }
+    // Never mislabel a challenge as OTHER or GENERAL.
+    return 'QUESTION';
+  }
+
   String get _analyticsSource {
     if (widget.launchedFromCaseFile) {
       return widget.caseFileReplay ? 'case_file_replay' : 'case_file';
