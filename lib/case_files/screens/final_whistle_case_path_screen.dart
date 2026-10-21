@@ -458,11 +458,13 @@ class _CaseNode extends StatelessWidget {
     final isLocked = !caseCompleted && number > currentStage;
     final isFinal = number == 20;
 
-    final nodeSize = isFinal
+    // Final Whistle mission markers at 92% of their original size.
+    const double markerScale = 0.92;
+    final nodeSize = (isFinal
         ? 72.0
         : isCurrent
             ? 68.0
-            : 58.0;
+            : 58.0) * markerScale;
 
     const labelWidth = 110.0;
 
