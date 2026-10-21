@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'guest_progress_merge_service.dart';
@@ -32,66 +31,6 @@ class AccountAuthService {
 
   static Future<void>? _googleInitialisation;
   static OAuthCredential? _pendingExistingGoogleCredential;
-
-  // Diagnostic-only: enable in a TestFlight QA build with
-  // --dart-define=FIRST_GUESS_GOOGLE_SIGN_IN_DIAGNOSTICS=true.
-  // Never print user IDs, email addresses, credentials or tokens.
-  static const bool _googleSignInDiagnostics = bool.fromEnvironment(
-    'FIRST_GUESS_GOOGLE_SIGN_IN_DIAGNOSTICS',
-    defaultValue: false,
-  );
-
-  static void _googleDiagnostic(String flow, String stage, [Object? error]) {
-    if (!_googleSignInDiagnostics) return;
-    final String type = error == null ? 'none' : error.runtimeType.toString();
-    String code = 'none';
-    if (error is FirebaseAuthException) code = error.code;
-    if (error is GoogleSignInException) code = error.code.name;
-    debugPrint(
-      '[FG_GOOGLE_IOS_QA] flow=$flow stage=$stage '
-      'errorType=$type code=$code',
-    );
-  }
-
-
-  // TEMPORARY TESTFLIGHT QA DISPLAY. REMOVE AFTER GOOGLE SIGN-IN IS FIXED.
-  // Only show a controlled stage, exception class and machine error code.
-  // Never show raw exception messages, descriptions, IDs or credentials.
-  static String _googleQaErrorMessage(
-    String flow,
-    String stage,
-    Object error,
-    String normalMessage,
-  ) {
-    if (!_googleSignInDiagnostics || kIsWeb) return normalMessage;
-    String type = 'unexpected';
-    String code = 'unknown';
-    if (error is GoogleSignInException) {
-      type = 'GoogleSignInException';
-      code = error.code.name;
-    } else if (error is FirebaseAuthException) {
-      type = 'FirebaseAuthException';
-      code = error.code;
-    } else if (error is PlatformException) {
-      type = 'PlatformException';
-      code = error.code;
-    } else if (error is AccountAuthException) {
-      type = 'AccountAuthException';
-      code = error.code;
-    } else {
-      type = error.runtimeType.toString();
-    }
-    // Defensively restrict the displayed values to diagnostic identifiers.
-    String safe(String value) {
-      final String cleaned = value.replaceAll(RegExp(r'[^A-Za-z0-9_.-]'), '');
-      return cleaned.length > 64 ? cleaned.substring(0, 64) : cleaned;
-    }
-    return 'GOOGLE SIGN-IN QA ($flow)\n'
-        'Stage: ${safe(stage)}\n'
-        'Type: ${safe(type)}\n'
-        'Code: ${safe(code)}';
-  }
-
 
   static User? get currentUser => _auth.currentUser;
 
@@ -227,7 +166,6 @@ class AccountAuthService {
       );
     }
 
-    String stage = 'start';
     try {
       final UserCredential linkedCredential;
 
@@ -236,10 +174,7 @@ class AccountAuthService {
 
         linkedCredential = await user.linkWithPopup(provider);
       } else {
-        stage = 'initialise';
-        _googleDiagnostic('link', stage);
         await _initialiseGoogleSignIn();
-        stage = 'check-support';
 
         if (!_googleSignIn.supportsAuthenticate()) {
           throw const AccountAuthException(
@@ -248,13 +183,9 @@ class AccountAuthService {
           );
         }
 
-        stage = 'authenticate';
-        _googleDiagnostic('link', stage);
         final GoogleSignInAccount googleAccount = await _googleSignIn
             .authenticate();
 
-        stage = 'read-id-token';
-        _googleDiagnostic('link', stage);
         final GoogleSignInAuthentication googleAuthentication =
             googleAccount.authentication;
 
@@ -277,12 +208,9 @@ class AccountAuthService {
         // instead of showing the Android account chooser a second time.
         _pendingExistingGoogleCredential = googleCredential;
 
-        stage = 'firebase-link';
-        _googleDiagnostic('link', stage);
         linkedCredential = await user.linkWithCredential(googleCredential);
       }
 
-      stage = 'verify-linked-user';
       final User? linkedUser = linkedCredential.user;
 
       _pendingExistingGoogleCredential = null;
@@ -294,13 +222,11 @@ class AccountAuthService {
         );
       }
 
-      _googleDiagnostic('link', 'success');
       return AccountLinkResult(
         status: AccountLinkStatus.linked,
         user: linkedUser,
       );
     } on FirebaseAuthException catch (error) {
-      _googleDiagnostic('link', stage, error);
       switch (error.code) {
         case 'provider-already-linked':
           _pendingExistingGoogleCredential = null;
@@ -354,30 +280,16 @@ class AccountAuthService {
           );
       }
     } on GoogleSignInException catch (error) {
-      _googleDiagnostic('link', stage, error);
       throw AccountAuthException(
         code: 'google-sign-in-error',
-        message: _googleQaErrorMessage(
-          'link', stage, error,
-          error.description ?? 'Google sign-in could not be completed.',
-        ),
+        message: error.description ?? 'Google sign-in could not be completed.',
       );
-    } on AccountAuthException catch (error) {
-      _googleDiagnostic('link', stage, error);
-      if (_googleSignInDiagnostics && !kIsWeb) {
-        throw AccountAuthException(
-          code: error.code,
-          message: _googleQaErrorMessage('link', stage, error, error.message),
-        );
-      }
+    } on AccountAuthException {
       rethrow;
-    } catch (error) {
-      _googleDiagnostic('link', stage, error);
-      throw AccountAuthException(
+    } catch (_) {
+      throw const AccountAuthException(
         code: 'google-sign-in-error',
-        message: _googleQaErrorMessage(
-          'link', stage, error, 'Google sign-in could not be completed.',
-        ),
+        message: 'Google sign-in could not be completed.',
       );
     }
   }
@@ -395,7 +307,6 @@ class AccountAuthService {
       );
     }
 
-    String stage = 'start';
     try {
       final UserCredential signedInCredential;
 
@@ -406,10 +317,7 @@ class AccountAuthService {
         OAuthCredential? googleCredential = _pendingExistingGoogleCredential;
 
         if (googleCredential == null) {
-          stage = 'initialise';
-          _googleDiagnostic('restore', stage);
           await _initialiseGoogleSignIn();
-          stage = 'check-support';
 
           if (!_googleSignIn.supportsAuthenticate()) {
             throw const AccountAuthException(
@@ -418,13 +326,9 @@ class AccountAuthService {
             );
           }
 
-          stage = 'authenticate';
-          _googleDiagnostic('restore', stage);
           final GoogleSignInAccount googleAccount = await _googleSignIn
               .authenticate();
 
-          stage = 'read-id-token';
-          _googleDiagnostic('restore', stage);
           final GoogleSignInAuthentication googleAuthentication =
               googleAccount.authentication;
 
@@ -440,14 +344,11 @@ class AccountAuthService {
           googleCredential = GoogleAuthProvider.credential(idToken: idToken);
         }
 
-        stage = 'firebase-sign-in';
-        _googleDiagnostic('restore', stage);
         signedInCredential = await _auth.signInWithCredential(googleCredential);
 
         _pendingExistingGoogleCredential = null;
       }
 
-      stage = 'verify-signed-in-user';
       final User? signedInUser = signedInCredential.user;
 
       if (signedInUser == null) {
@@ -458,8 +359,6 @@ class AccountAuthService {
       }
 
       try {
-        stage = 'merge-guest-progress';
-        _googleDiagnostic('restore', stage);
         await GuestProgressMergeService.mergeIntoCurrentAccount(guestSnapshot);
       } on GuestProgressMergeException catch (error) {
         throw AccountAuthException(
@@ -471,10 +370,8 @@ class AccountAuthService {
       }
 
       _pendingExistingGoogleCredential = null;
-      _googleDiagnostic('restore', 'success');
       return signedInUser;
     } on FirebaseAuthException catch (error) {
-      _googleDiagnostic('restore', stage, error);
       switch (error.code) {
         case 'popup-closed-by-user':
         case 'cancelled-popup-request':
@@ -505,30 +402,18 @@ class AccountAuthService {
           );
       }
     } on GoogleSignInException catch (error) {
-      _googleDiagnostic('restore', stage, error);
       throw AccountAuthException(
         code: 'google-sign-in-error',
-        message: _googleQaErrorMessage(
-          'restore', stage, error,
-          error.description ?? 'Google account recovery could not be completed.',
-        ),
+        message:
+            error.description ??
+            'Google account recovery could not be completed.',
       );
-    } on AccountAuthException catch (error) {
-      _googleDiagnostic('restore', stage, error);
-      if (_googleSignInDiagnostics && !kIsWeb) {
-        throw AccountAuthException(
-          code: error.code,
-          message: _googleQaErrorMessage('restore', stage, error, error.message),
-        );
-      }
+    } on AccountAuthException {
       rethrow;
-    } catch (error) {
-      _googleDiagnostic('restore', stage, error);
-      throw AccountAuthException(
+    } catch (_) {
+      throw const AccountAuthException(
         code: 'google-recovery-error',
-        message: _googleQaErrorMessage(
-          'restore', stage, error, 'Google account recovery could not be completed.',
-        ),
+        message: 'Google account recovery could not be completed.',
       );
     }
   }
