@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'guest_progress_merge_service.dart';
@@ -50,6 +51,45 @@ class AccountAuthService {
       '[FG_GOOGLE_IOS_QA] flow=$flow stage=$stage '
       'errorType=$type code=$code',
     );
+  }
+
+
+  // TEMPORARY TESTFLIGHT QA DISPLAY. REMOVE AFTER GOOGLE SIGN-IN IS FIXED.
+  // Only show a controlled stage, exception class and machine error code.
+  // Never show raw exception messages, descriptions, IDs or credentials.
+  static String _googleQaErrorMessage(
+    String flow,
+    String stage,
+    Object error,
+    String normalMessage,
+  ) {
+    if (!_googleSignInDiagnostics || kIsWeb) return normalMessage;
+    String type = 'unexpected';
+    String code = 'unknown';
+    if (error is GoogleSignInException) {
+      type = 'GoogleSignInException';
+      code = error.code.name;
+    } else if (error is FirebaseAuthException) {
+      type = 'FirebaseAuthException';
+      code = error.code;
+    } else if (error is PlatformException) {
+      type = 'PlatformException';
+      code = error.code;
+    } else if (error is AccountAuthException) {
+      type = 'AccountAuthException';
+      code = error.code;
+    } else {
+      type = error.runtimeType.toString();
+    }
+    // Defensively restrict the displayed values to diagnostic identifiers.
+    String safe(String value) {
+      final String cleaned = value.replaceAll(RegExp(r'[^A-Za-z0-9_.-]'), '');
+      return cleaned.length > 64 ? cleaned.substring(0, 64) : cleaned;
+    }
+    return 'GOOGLE SIGN-IN QA ($flow)\n'
+        'Stage: ${safe(stage)}\n'
+        'Type: ${safe(type)}\n'
+        'Code: ${safe(code)}';
   }
 
 
@@ -317,16 +357,27 @@ class AccountAuthService {
       _googleDiagnostic('link', stage, error);
       throw AccountAuthException(
         code: 'google-sign-in-error',
-        message: error.description ?? 'Google sign-in could not be completed.',
+        message: _googleQaErrorMessage(
+          'link', stage, error,
+          error.description ?? 'Google sign-in could not be completed.',
+        ),
       );
     } on AccountAuthException catch (error) {
       _googleDiagnostic('link', stage, error);
+      if (_googleSignInDiagnostics && !kIsWeb) {
+        throw AccountAuthException(
+          code: error.code,
+          message: _googleQaErrorMessage('link', stage, error, error.message),
+        );
+      }
       rethrow;
     } catch (error) {
       _googleDiagnostic('link', stage, error);
-      throw const AccountAuthException(
+      throw AccountAuthException(
         code: 'google-sign-in-error',
-        message: 'Google sign-in could not be completed.',
+        message: _googleQaErrorMessage(
+          'link', stage, error, 'Google sign-in could not be completed.',
+        ),
       );
     }
   }
@@ -457,18 +508,27 @@ class AccountAuthService {
       _googleDiagnostic('restore', stage, error);
       throw AccountAuthException(
         code: 'google-sign-in-error',
-        message:
-            error.description ??
-            'Google account recovery could not be completed.',
+        message: _googleQaErrorMessage(
+          'restore', stage, error,
+          error.description ?? 'Google account recovery could not be completed.',
+        ),
       );
     } on AccountAuthException catch (error) {
       _googleDiagnostic('restore', stage, error);
+      if (_googleSignInDiagnostics && !kIsWeb) {
+        throw AccountAuthException(
+          code: error.code,
+          message: _googleQaErrorMessage('restore', stage, error, error.message),
+        );
+      }
       rethrow;
     } catch (error) {
       _googleDiagnostic('restore', stage, error);
-      throw const AccountAuthException(
+      throw AccountAuthException(
         code: 'google-recovery-error',
-        message: 'Google account recovery could not be completed.',
+        message: _googleQaErrorMessage(
+          'restore', stage, error, 'Google account recovery could not be completed.',
+        ),
       );
     }
   }
